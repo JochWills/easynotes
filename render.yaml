@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: "20"
+        value: "22"
       - key: SESSION_SECRET
         generateValue: true
       - key: BASE_URL
@@ -23,7 +23,7 @@ services:
       - key: PAYSTACK_SECRET_KEY
         sync: false
       - key: PLATFORM_FEE_PERCENT
-        value: "20"
+        value: "22"
       - key: PAYSTACK_FEE_BEARER
         value: account
       - key: MAX_DOWNLOADS

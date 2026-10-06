@@ -2,7 +2,7 @@
 
 A South African study-notes marketplace. Verified academics run their own storefronts and sell PDF notes; students buy as guests with Paystack and download straight away. Payments are split with Paystack subaccounts so each seller is paid directly and EasyNotes keeps a flat percentage.
 
-**Stack:** Node 20 + Express 5, server-rendered EJS, Supabase (Postgres + private file storage), Paystack, hosted on Render.
+**Stack:** Node 22 + Express 5, server-rendered EJS, Supabase (Postgres + private file storage), Paystack, hosted on Render.
 
 ---
 
