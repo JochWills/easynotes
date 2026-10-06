@@ -1,0 +1,27 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <div class="chips" style="margin-bottom:18px">
+    <a class="chip" href="/admin/sellers" <%- !status ? 'aria-current="page" style="background:var(--hi)"' : '' %>>All</a>
+    <% statuses.forEach(function (s) { %><a class="chip" href="/admin/sellers?status=<%= s %>" <%- status === s ? 'aria-current="page" style="background:var(--hi)"' : '' %>><%= { pending: 'In review', approved: 'Verified', rejected: 'Not approved', unsubmitted: 'Not started' }[s] %></a><% }) %>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Seller</th><th>Email</th><th>Degree</th><th>Status</th><th>Payouts</th><th>Joined</th></tr></thead>
+      <tbody>
+        <% sellers.forEach(function (s) { %>
+          <tr>
+            <td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td>
+            <td><%= s.users ? s.users.email : '' %></td>
+            <td><%= s.degree ? s.degree + ', ' + s.university : '—' %></td>
+            <td><%- include('../partials/status-pill', { status: s.verification_status }) %></td>
+            <td><%= s.paystack_subaccount_code ? 'Set up' : 'Missing' %></td>
+            <td><%= date(s.created_at) %></td>
+          </tr>
+        <% }) %>
+        <% if (!sellers.length) { %><tr><td colspan="6" class="muted">No sellers in this view.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

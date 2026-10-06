@@ -1,0 +1,43 @@
+<% var cp = locals.cp || ''; %><!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= locals.title ? title + ' | EasyNotes' : 'EasyNotes: study notes from verified academics' %></title>
+  <meta name="description" content="<%= locals.description || 'PDF study notes for South African university modules and professional exams, written by verified academics. Pay once, download instantly.' %>">
+  <% if (locals.noindex) { %><meta name="robots" content="noindex"><% } %>
+  <meta property="og:site_name" content="EasyNotes">
+  <meta property="og:title" content="<%= locals.title || 'EasyNotes' %>">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap">
+  <link rel="stylesheet" href="/css/style.css?v=1">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="EasyNotes home">
+      <svg width="26" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 2h16l7 7v21H5z" fill="#fff" stroke="#14213D" stroke-width="2.4" stroke-linejoin="round"/><path d="M21 2v7h7" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linejoin="round"/><rect x="8.5" y="13" width="15" height="6" fill="#FFE45C"/><path d="M9 16h14M9 23.5h10" stroke="#14213D" stroke-width="2.4" stroke-linecap="round"/></svg>
+      EasyNotes
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
+      <a href="/download" <%- cp === '/download' ? 'aria-current="page"' : '' %>>Re-download</a>
+      <% if (locals.user && user.role === 'admin') { %>
+        <a href="/admin" <%- cp.startsWith('/admin') ? 'aria-current="page"' : '' %>>Admin</a>
+      <% } else if (locals.user) { %>
+        <a href="/seller" <%- cp.startsWith('/seller') ? 'aria-current="page"' : '' %>>Seller dashboard</a>
+      <% } else { %>
+        <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>Sell your notes</a>
+        <a href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
+      <% } %>
+      <% if (locals.user) { %>
+        <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="linklike" type="submit">Log out</button></form>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<% if (locals.flash) { %><div class="flash flash-<%= flash.type %>" role="status"><%= flash.msg %></div><% } %>
+<main id="main">

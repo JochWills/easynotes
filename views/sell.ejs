@@ -1,0 +1,46 @@
+<%- include('partials/top', { description: 'Sell your study notes to South African students. Verified academics keep most of every sale, paid by Paystack.' }) %>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Sell the notes that got you through.</h1>
+      <p class="lede">Open a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale. Paystack pays your share straight into your South African bank account.</p>
+      <div class="form-actions" style="margin-top:28px">
+        <a class="btn btn-hi" href="/signup">Create a seller account</a>
+        <% if (!locals.user) { %><a class="btn btn-ghost" href="/login">I already have one</a><% } %>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:1.35rem">On a R120 set of notes</h2>
+      <dl class="facts" style="margin:12px 0 0">
+        <dt>Student pays</dt><dd>R120.00</dd>
+        <dt>EasyNotes keeps (<%= feePercent %>%)</dt><dd>R<%= (120 * feePercent / 100).toFixed(2) %></dd>
+        <dt>You receive</dt><dd>R<%= (120 * (100 - feePercent) / 100).toFixed(2) %></dd>
+      </dl>
+      <p class="fineprint">No listing fees or monthly costs. You set your own prices.</p>
+    </div>
+  </div>
+</section>
+<div class="wrap section">
+  <div class="two-col">
+    <section>
+      <h2>Who can sell</h2>
+      <ul class="checklist checklist-dark">
+        <li>You’ve completed a degree at a recognised university</li>
+        <li>You can upload your degree certificate or transcript, and your ID</li>
+        <li>The notes are your own original work</li>
+        <li>You have a South African bank account for payouts</li>
+      </ul>
+    </section>
+    <section>
+      <h2>What you can’t sell</h2>
+      <p>To keep EasyNotes trustworthy, and legal, we remove listings that contain:</p>
+      <ul class="checklist checklist-dark">
+        <li>Past exam papers, tests or memos from a university or institution</li>
+        <li>Lecturer slides, study guides or textbook pages copied in</li>
+        <li>Someone else’s notes, or assignments you’d be helping others submit</li>
+      </ul>
+      <p class="fineprint">Read the full <a href="/seller-terms">seller terms</a>.</p>
+    </section>
+  </div>
+</div>
+<%- include('partials/bottom') %>

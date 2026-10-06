@@ -1,0 +1,74 @@
+<%- include('partials/top') %>
+<% if (!live) { %>
+  <div class="preview-banner"><div class="wrap">
+    Preview only. Students can’t see these notes yet:
+    <% if (note.status !== 'published') { %>they’re <%= note.status === 'draft' ? 'a draft' : note.status %>.<% } else if (author.verification_status !== 'approved') { %>the seller isn’t verified.<% } else { %>the seller hasn’t added payout details.<% } %>
+  </div></div>
+<% } %>
+<div class="wrap note-page">
+  <article>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/notes">Notes</a> /
+      <a href="/notes<%= qs({ university: note.university }) %>"><%= note.university %></a>
+    </nav>
+    <% if (note.module_code) { %><span class="tab"><%= note.module_code %></span><% } %>
+    <h1><%= note.title %></h1>
+
+    <dl class="facts">
+      <dt>Subject</dt><dd><%= note.subject %></dd>
+      <dt>Institution</dt><dd><%= note.university %></dd>
+      <dt>Level</dt><dd><%= note.level %></dd>
+      <dt>Format</dt><dd>PDF<%= note.page_count ? ', ' + note.page_count + ' pages' : '' %><%= note.file_size ? ', ' + (note.file_size / 1048576).toFixed(1) + ' MB' : '' %></dd>
+      <dt>Last updated</dt><dd><%= date(note.updated_at) %></dd>
+    </dl>
+
+    <h2 class="sr-only">What’s inside</h2>
+    <div class="prose"><%= note.description %></div>
+
+    <% if (sampleUrl) { %>
+      <p><a class="btn btn-ghost" href="<%= sampleUrl %>" target="_blank" rel="noopener">Read a free sample (PDF)</a></p>
+    <% } %>
+
+    <section class="author" aria-label="About the seller">
+      <div class="avatar" aria-hidden="true"><%= initials(author.display_name) %></div>
+      <div>
+        <h3><a href="<%= storeUrl(author) %>"><%= author.display_name %></a></h3>
+        <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
+        <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
+        <% if (author.headline) { %><p class="muted"><%= author.headline %></p><% } %>
+      </div>
+    </section>
+
+    <% if (more.length) { %>
+      <h2 style="margin-top:48px">More from <%= author.display_name %></h2>
+      <div class="grid-notes">
+        <% more.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+      </div>
+    <% } %>
+  </article>
+
+  <aside class="buy-box" id="buy" aria-label="Buy these notes">
+    <span class="price"><%= rand(note.price_cents) %></span>
+    <span class="muted">Once-off. Instant PDF download.</span>
+    <% if (live) { %>
+      <form class="form" method="post" action="/checkout/<%= note.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field">
+          <label for="buy-email">Your email</label>
+          <input id="buy-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+          <span class="hint">Your receipt goes here. You’ll use it with your payment reference to download again.</span>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="accept" required>
+          <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
+        </label>
+        <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(note.price_cents) %> with Paystack</button>
+      </form>
+      <p class="fineprint">Payments are processed securely by Paystack. EasyNotes never sees your card details.</p>
+    <% } else { %>
+      <p class="fineprint">The buy button appears here once these notes are live.</p>
+    <% } %>
+    <p class="fineprint"><a href="mailto:<%= supportEmail %>?subject=<%= encodeURIComponent('Report notes ' + note.id) %>">Report these notes</a></p>
+  </aside>
+</div>
+<%- include('partials/bottom') %>

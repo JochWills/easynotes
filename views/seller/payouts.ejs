@@ -1,0 +1,40 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <div class="dash-grid">
+    <form class="form card" method="post" action="/seller/payouts" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% if (me.paystack_subaccount_code) { %>
+        <div class="alert alert-ok"><strong>Payouts are set up.</strong><p>Paying into <%= me.bank_name %> ••••<%= me.account_number_last4 %> (<%= me.business_name %>). Fill in the form to change account.</p></div>
+      <% } %>
+      <% if (errors.form) { %><div class="alert alert-error" role="alert"><%= errors.form %></div><% } %>
+      <% if (bankError) { %><div class="alert alert-error" role="alert"><%= bankError %></div><% } %>
+      <div class="field <%= errors.business_name ? 'has-error' : '' %>">
+        <label for="b-name">Account holder name</label>
+        <input id="b-name" type="text" name="business_name" value="<%= values.business_name || '' %>" required maxlength="100" autocomplete="name">
+        <span class="hint">Exactly as it appears on the bank account.</span>
+        <%- include('../partials/field-error', { name: 'business_name' }) %>
+      </div>
+      <div class="field <%= errors.bank_code ? 'has-error' : '' %>">
+        <label for="b-bank">Bank</label>
+        <select id="b-bank" name="bank_code" required>
+          <option value="">Choose your bank</option>
+          <% banks.forEach(function (b) { %><option value="<%= b.code %>" <%= values.bank_code === b.code ? 'selected' : '' %>><%= b.name %></option><% }) %>
+        </select>
+        <%- include('../partials/field-error', { name: 'bank_code' }) %>
+      </div>
+      <div class="field <%= errors.account_number ? 'has-error' : '' %>">
+        <label for="b-acc">Account number</label>
+        <input id="b-acc" type="text" name="account_number" inputmode="numeric" autocomplete="off" value="" required style="max-width:280px">
+        <%- include('../partials/field-error', { name: 'account_number' }) %>
+      </div>
+      <div class="form-actions"><button class="btn" type="submit"><%= me.paystack_subaccount_code ? 'Update payout account' : 'Save payout account' %></button></div>
+    </form>
+    <div>
+      <h2 style="font-size:1.2rem">How you get paid</h2>
+      <p>When a student buys your notes, Paystack splits the payment: <strong><%= 100 - feePercent %>%</strong> goes to you and <%= feePercent %>% to EasyNotes. Your share is settled into this account on Paystack’s normal schedule, usually the next working day.</p>
+      <p class="fineprint">EasyNotes stores only your bank name and the last four digits of your account number. The full details are held by Paystack.</p>
+    </div>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

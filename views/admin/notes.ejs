@@ -1,0 +1,39 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <form method="get" action="/admin/notes" class="search" style="margin:0 0 22px;box-shadow:none" role="search">
+    <label for="an-q" class="sr-only">Search notes</label>
+    <input id="an-q" type="search" name="q" value="<%= q %>" placeholder="Title or module code">
+    <button class="btn btn-sm" type="submit">Search</button>
+  </form>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Title</th><th>Seller</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        <% notes.forEach(function (n) { %>
+          <tr>
+            <td><a href="<%= noteUrl(n) %>"><%= n.title %></a><br><span class="small muted"><%= n.university %></span></td>
+            <td><% if (n.sellers) { %><a href="/admin/sellers/<%= n.sellers.id %>"><%= n.sellers.display_name %></a><% } %></td>
+            <td><%- include('../partials/status-pill', { status: n.status }) %></td>
+            <td class="num"><%= rand(n.price_cents) %></td>
+            <td class="num"><%= n.sales_count %></td>
+            <td>
+              <div class="actions">
+                <% if (n.status === 'published') { %>
+                  <form method="post" action="/admin/notes/<%= n.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" name="action" value="unpublish">Hide</button></form>
+                <% } %>
+                <% if (n.status !== 'removed') { %>
+                  <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm="Remove these notes? The seller won't be able to republish them. Past buyers can still download."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove</button></form>
+                <% } else { %>
+                  <form method="post" action="/admin/notes/<%= n.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" name="action" value="restore">Restore as hidden</button></form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!notes.length) { %><tr><td colspan="6" class="muted">No notes found.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

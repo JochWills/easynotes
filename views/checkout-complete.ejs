@@ -1,0 +1,58 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="wrap narrow doc">
+  <% if (order.status === 'paid') { %>
+    <dialog class="download" data-autoshow aria-labelledby="dl-title">
+      <button class="dialog-close" type="button" data-close aria-label="Close">×</button>
+      <div class="dialog-body">
+        <h2 id="dl-title">Payment received</h2>
+        <p><strong><%= note.title %></strong> is ready to download.</p>
+        <div class="ref-box">
+          <div class="ref-row"><span>Payment reference</span><span class="ref"><%= order.reference %></span></div>
+          <div class="ref-row"><span>Email</span><span class="ref-email"><%= order.email %></span></div>
+        </div>
+        <p class="small">Save your reference. With your email, it lets you download these notes again from any device, up to <%= maxDownloads %> times.</p>
+        <form method="post" action="/download" data-download>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input type="hidden" name="email" value="<%= order.email %>">
+          <input type="hidden" name="reference" value="<%= order.reference %>">
+          <div class="form-actions">
+            <button class="btn btn-hi" type="submit" autofocus>Download PDF</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-copy="<%= order.reference %>">Copy reference</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <h1>Your notes are ready</h1>
+    <p>Thanks for your purchase. If the download window closed, use the button below.</p>
+    <div class="card">
+      <h2 style="font-size:1.3rem"><%= note.title %></h2>
+      <div class="ref-box">
+        <div class="ref-row"><span>Payment reference</span><span class="ref"><%= order.reference %></span></div>
+        <div class="ref-row"><span>Email</span><span class="ref-email"><%= order.email %></span></div>
+      </div>
+      <form method="post" action="/download" data-download>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="email" value="<%= order.email %>">
+        <input type="hidden" name="reference" value="<%= order.reference %>">
+        <button class="btn btn-hi" type="submit">Download PDF</button>
+      </form>
+      <p class="fineprint">To download again later, go to <a href="/download">Re-download</a> and enter your email and reference.</p>
+    </div>
+  <% } else if (order.status === 'failed') { %>
+    <h1>Payment didn’t go through</h1>
+    <p>Paystack didn’t complete this payment, so you haven’t been charged for <strong><%= note.title %></strong>.</p>
+    <a class="btn" href="<%= noteUrl(note) %>#buy">Try again</a>
+  <% } else { %>
+    <h1>We’re waiting for Paystack to confirm</h1>
+    <p>Your payment for <strong><%= note.title %></strong> hasn’t been confirmed yet. This usually takes a few seconds. EFT payments can take longer.</p>
+    <div class="ref-box">
+      <div class="ref-row"><span>Payment reference</span><span class="ref"><%= order.reference %></span></div>
+    </div>
+    <div class="form-actions">
+      <a class="btn" href="/checkout/callback?reference=<%= encodeURIComponent(order.reference) %>">Check again</a>
+      <a class="btn btn-ghost" href="/download<%= qs({ email: order.email, reference: order.reference }) %>">Download later</a>
+    </div>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>

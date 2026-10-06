@@ -1,0 +1,69 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <% var st = me.verification_status; %>
+  <% if (st === 'approved') { %>
+    <div class="alert alert-ok"><strong>You’re verified.</strong><p><%= me.degree %>, <%= me.university %> (<%= me.graduation_year %>). Verified on <%= date(me.verified_at) %>.</p></div>
+  <% } else if (st === 'pending') { %>
+    <div class="alert alert-info"><strong>Your documents are in review.</strong><p>Submitted on <%= date(me.submitted_at) %>. We’ll update this page once a person on our team has checked them, usually within two working days.</p></div>
+  <% } else { %>
+    <% if (st === 'rejected') { %><div class="alert alert-error"><strong>Your last submission wasn’t approved.</strong><p><%= me.verification_note %></p></div><% } %>
+    <div class="dash-grid">
+      <form class="form card" method="post" action="/seller/verification" enctype="multipart/form-data" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <fieldset class="form">
+          <legend>Your degree</legend>
+          <div class="field <%= errors.degree ? 'has-error' : '' %>">
+            <label for="v-degree">Degree</label>
+            <input id="v-degree" type="text" name="degree" value="<%= values.degree || '' %>" placeholder="e.g. BCom Honours in Accounting" required>
+            <%- include('../partials/field-error', { name: 'degree' }) %>
+          </div>
+          <div class="field <%= errors.university ? 'has-error' : '' %>">
+            <label for="v-uni">University</label>
+            <select id="v-uni" name="university" required data-other="v-uni-other-wrap" data-other-value="<%= otherLabel %>">
+              <option value="">Choose a university</option>
+              <% universities.forEach(function (u) { %><option <%= values.university === u ? 'selected' : '' %>><%= u %></option><% }) %>
+              <option <%= values.university === otherLabel ? 'selected' : '' %>><%= otherLabel %></option>
+            </select>
+            <div id="v-uni-other-wrap" class="field" style="margin-top:10px" hidden>
+              <label for="v-uni-other">University name</label>
+              <input id="v-uni-other" type="text" name="university_other" value="<%= values.university_other || '' %>" placeholder="Full name and country">
+            </div>
+            <%- include('../partials/field-error', { name: 'university' }) %>
+          </div>
+          <div class="field <%= errors.graduation_year ? 'has-error' : '' %>">
+            <label for="v-year">Year you graduated</label>
+            <input id="v-year" type="number" name="graduation_year" value="<%= values.graduation_year || '' %>" min="1960" max="<%= new Date().getFullYear() %>" required style="max-width:160px">
+            <%- include('../partials/field-error', { name: 'graduation_year' }) %>
+          </div>
+        </fieldset>
+        <fieldset class="form">
+          <legend>Documents</legend>
+          <div class="field <%= errors.degree_doc ? 'has-error' : '' %>">
+            <label for="v-degree-doc">Degree certificate or academic transcript</label>
+            <input id="v-degree-doc" type="file" name="degree_doc" accept="application/pdf,image/jpeg,image/png" required>
+            <span class="hint">PDF, JPG or PNG, up to 10 MB. Your name and the degree must be readable.</span>
+            <%- include('../partials/field-error', { name: 'degree_doc' }) %>
+          </div>
+          <div class="field <%= errors.id_doc ? 'has-error' : '' %>">
+            <label for="v-id-doc">ID document, smart ID card or passport</label>
+            <input id="v-id-doc" type="file" name="id_doc" accept="application/pdf,image/jpeg,image/png" required>
+            <span class="hint">Used only to confirm the degree is yours. Stored privately.</span>
+            <%- include('../partials/field-error', { name: 'id_doc' }) %>
+          </div>
+        </fieldset>
+        <div class="form-actions"><button class="btn" type="submit">Send for review</button></div>
+      </form>
+      <div>
+        <h2 style="font-size:1.2rem">What we check</h2>
+        <ul class="checklist checklist-dark">
+          <li>The degree is complete and from a recognised university</li>
+          <li>The name on your degree matches your ID</li>
+          <li>The details you enter match the documents</li>
+        </ul>
+        <p class="fineprint">Only the EasyNotes team can see your documents. Students see your degree, university and graduation year. Read our <a href="/privacy">privacy policy</a>.</p>
+      </div>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

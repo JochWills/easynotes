@@ -1,0 +1,6 @@
+<div class="dash-title"><h1><%= title %></h1></div>
+<nav class="dash-nav" aria-label="Admin">
+  <% [['overview','/admin','Overview'],['sellers','/admin/sellers','Sellers'],['notes','/admin/notes','Notes'],['orders','/admin/orders','Orders']].forEach(function (t) { %>
+    <a href="<%= t[1] %>" <%- tab === t[0] ? 'aria-current="page"' : '' %>><%= t[2] %></a>
+  <% }) %>
+</nav>

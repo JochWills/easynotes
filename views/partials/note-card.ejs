@@ -1,0 +1,10 @@
+<article class="note-card">
+  <% if (n.module_code) { %><span class="tab"><%= n.module_code %></span><% } else { %><span class="tab tab-plain"><%= n.level %></span><% } %>
+  <h3><a href="<%= noteUrl(n) %>"><%= n.title %></a></h3>
+  <p class="note-meta"><%= n.subject %><br><%= n.university %></p>
+  <p class="note-by">By <%= n.sellers.display_name %></p>
+  <div class="note-foot">
+    <span class="price"><%= rand(n.price_cents) %></span>
+    <span class="pages"><%= n.page_count ? n.page_count + (n.page_count === 1 ? ' page' : ' pages') : 'PDF' %></span>
+  </div>
+</article>

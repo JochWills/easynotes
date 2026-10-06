@@ -1,0 +1,30 @@
+<%- include('partials/top') %>
+<section class="page-head">
+  <div class="wrap">
+    <div class="store-head">
+      <div class="avatar avatar-lg" aria-hidden="true"><%= initials(author.display_name) %></div>
+      <div>
+        <h1><%= author.display_name %></h1>
+        <%- include('partials/verified') %>
+        <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
+      </div>
+    </div>
+    <% if (author.headline || author.bio) { %>
+      <div class="store-bio">
+        <% if (author.headline) { %><p><strong><%= author.headline %></strong></p><% } %>
+        <% if (author.bio) { %><p class="prose"><%= author.bio %></p><% } %>
+      </div>
+    <% } %>
+  </div>
+</section>
+<section class="wrap section">
+  <div class="section-head"><h2><%= notes.length %> <%= notes.length === 1 ? 'set' : 'sets' %> of notes</h2></div>
+  <% if (notes.length) { %>
+    <div class="grid-notes">
+      <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty"><h3>No notes on sale yet</h3><p><%= author.display_name %> hasn’t published any notes. Check back soon.</p><a class="btn btn-ghost" href="/notes">Browse other notes</a></div>
+  <% } %>
+</section>
+<%- include('partials/bottom') %>

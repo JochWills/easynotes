@@ -1,0 +1,75 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+
+  <% var verified = me.verification_status === 'approved'; var payouts = !!me.paystack_subaccount_code; var hasNotes = notes.length > 0; %>
+  <% if (!(verified && payouts && hasNotes)) { %>
+    <h2 style="font-size:1.35rem">Get your storefront live</h2>
+    <ol class="setup">
+      <li class="<%= verified ? 'done' : '' %>">
+        <span class="num"><%= verified ? '✓' : '1' %></span>
+        <div><h3>Verify your degree</h3>
+          <p><% if (me.verification_status === 'pending') { %>We’re reviewing your documents. This usually takes up to two working days.<% } else if (me.verification_status === 'rejected') { %>Not approved: <%= me.verification_note %><% } else if (verified) { %>Verified on <%= date(me.verified_at) %>.<% } else { %>Upload your degree certificate or transcript and your ID.<% } %></p>
+        </div>
+        <% if (['unsubmitted','rejected'].includes(me.verification_status)) { %><a class="btn btn-sm" href="/seller/verification"><%= me.verification_status === 'rejected' ? 'Resubmit' : 'Start' %></a><% } else { %><%- include('../partials/status-pill', { status: me.verification_status }) %><% } %>
+      </li>
+      <li class="<%= payouts ? 'done' : '' %>">
+        <span class="num"><%= payouts ? '✓' : '2' %></span>
+        <div><h3>Add your payout account</h3><p><%= payouts ? 'Paying into ' + me.bank_name + ' ••••' + me.account_number_last4 + '.' : 'Tell us where Paystack should pay your share of each sale.' %></p></div>
+        <a class="btn btn-sm <%= payouts ? 'btn-ghost' : '' %>" href="/seller/payouts"><%= payouts ? 'Change' : 'Add' %></a>
+      </li>
+      <li class="<%= hasNotes ? 'done' : '' %>">
+        <span class="num"><%= hasNotes ? '✓' : '3' %></span>
+        <div><h3>Upload your first notes</h3><p><%= verified ? 'Add a PDF, price it and publish.' : 'Available once your degree is verified.' %></p></div>
+        <% if (verified) { %><a class="btn btn-sm" href="/seller/notes/new">Upload</a><% } %>
+      </li>
+    </ol>
+  <% } %>
+
+  <div class="stats">
+    <div class="stat"><b><%= rand(earnings) %></b><span>Your earnings, all time</span></div>
+    <div class="stat"><b><%= sales %></b><span><%= sales === 1 ? 'Sale' : 'Sales' %></span></div>
+    <div class="stat"><b><%= notes.filter(function (n) { return n.status === 'published'; }).length %></b><span>Published notes</span></div>
+  </div>
+
+  <h2 style="font-size:1.35rem">Your notes</h2>
+  <% if (notes.length) { %>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <% notes.forEach(function (n) { %>
+            <tr>
+              <td><a href="<%= noteUrl(n) %>"><%= n.title %></a><% if (n.module_code) { %> <span class="muted small"><%= n.module_code %></span><% } %></td>
+              <td><%- include('../partials/status-pill', { status: n.status }) %></td>
+              <td class="num"><%= rand(n.price_cents) %></td>
+              <td class="num"><%= n.sales_count %></td>
+              <td>
+                <div class="actions">
+                  <% if (n.status !== 'removed') { %>
+                    <a class="btn btn-ghost btn-sm" href="/seller/notes/<%= n.id %>/edit">Edit</a>
+                    <form method="post" action="/seller/notes/<%= n.id %>/status">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <% if (n.status === 'published') { %>
+                        <input type="hidden" name="action" value="unpublish"><button class="btn btn-ghost btn-sm" type="submit">Hide</button>
+                      <% } else { %>
+                        <input type="hidden" name="action" value="publish"><button class="btn btn-sm" type="submit" <%= verified ? '' : 'disabled' %>>Publish</button>
+                      <% } %>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <h3>No notes yet</h3>
+      <p><%= verified ? 'Upload a PDF to create your first listing.' : 'Once your degree is verified you can upload notes here.' %></p>
+      <% if (verified) { %><a class="btn" href="/seller/notes/new">Upload notes</a><% } %>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

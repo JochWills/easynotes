@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: easynotes
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: BASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PLATFORM_FEE_PERCENT
+        value: "20"
+      - key: PAYSTACK_FEE_BEARER
+        value: account
+      - key: MAX_DOWNLOADS
+        value: "10"
+      - key: SUPPORT_EMAIL
+        value: support@easynotes.co.za

@@ -1,0 +1,88 @@
+<%- include('partials/top') %>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Study notes from people who already passed the module.</h1>
+      <p class="lede">PDF notes for South African university modules and professional exams, sold by graduates whose degrees we’ve checked. Pay once and download straight away.</p>
+      <form class="search" action="/notes" method="get" role="search">
+        <label for="q" class="sr-only">Search notes</label>
+        <input id="q" name="q" type="search" placeholder="Module code or subject, e.g. ACC1006F" autocomplete="off">
+        <button class="btn" type="submit">Search</button>
+      </form>
+      <div class="chips">
+        <span class="chips-label">By university:</span>
+        <% popularUnis.slice(0, 8).forEach(function (u) { %>
+          <a class="chip" href="/notes<%= qs({ university: u.name }) %>"><%= u.short %></a>
+        <% }) %>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="sheet sheet-back"><span class="tab">MAM1000W</span><div class="line"></div><div class="line mid"></div><div class="line"></div><div class="line short"></div></div>
+      <div class="sheet sheet-mid"><span class="tab">TAX3761</span><div class="line mid"></div><div class="line"></div><div class="line short"></div></div>
+      <div class="sheet sheet-front">
+        <span class="tab">ACC1006F</span>
+        <p class="sheet-title">Financial Accounting I: exam summary</p>
+        <div class="line"></div>
+        <p class="sheet-text">Under IFRS 15, <span class="mark">revenue is recognised when control of the goods passes</span> to the customer, not when cash is received.</p>
+        <div class="line mid"></div>
+        <div class="line"></div>
+        <div class="line short"></div>
+        <div class="sheet-foot"><%- include('partials/verified') %><span>BCom Hons, UCT</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section">
+  <div class="section-head">
+    <h2>Recently added</h2>
+    <% if (total > notes.length) { %><a href="/notes">See all <%= total %> sets of notes</a><% } %>
+  </div>
+  <% if (notes.length) { %>
+    <div class="grid-notes">
+      <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <h3>The first notes are on their way</h3>
+      <p>We’re verifying our first sellers now. If you’re a graduate with notes that got you through a module, you could be first.</p>
+      <a class="btn" href="/sell">Sell your notes</a>
+    </div>
+  <% } %>
+</section>
+
+<section class="wrap section" aria-labelledby="buying">
+  <div class="section-head"><h2 id="buying">How buying works</h2></div>
+  <ol class="steps">
+    <li><h3>Find your module</h3><p>Search by module code, subject or university. Many sellers include a free sample so you can check the notes suit you.</p></li>
+    <li><h3>Pay with Paystack</h3><p>Card, EFT and other Paystack options. No account needed, just your email address.</p></li>
+    <li><h3>Download the PDF</h3><p>Your download opens as soon as payment clears. Keep your payment reference to download again later.</p></li>
+  </ol>
+</section>
+
+<section class="trust">
+  <div class="wrap">
+    <div>
+      <h2>Every seller is a verified academic</h2>
+      <p>Anyone can upload notes to a file-sharing site. On EasyNotes, a person checks every seller before a single page goes on sale.</p>
+      <p><a href="/how-it-works">How verification works</a></p>
+    </div>
+    <ul class="checklist">
+      <li>A completed degree from a recognised university, checked against their certificate or transcript</li>
+      <li>Their ID, matched to the name on the degree</li>
+      <li>Original notes only: no copied textbooks, past papers or lecturer slides</li>
+      <li>Each seller’s degree and university shown on every set of notes they sell</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div>
+      <h2>Your notes got you through. Now they can pay you.</h2>
+      <p>Set up a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
+    </div>
+    <a class="btn" href="/sell">Start selling</a>
+  </div>
+</section>
+<%- include('partials/bottom') %>

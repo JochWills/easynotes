@@ -1,0 +1,53 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <p><a href="/admin/sellers">All sellers</a></p>
+  <div class="dash-grid">
+    <div class="card">
+      <h2 style="font-size:1.35rem"><%= s.display_name %> <%- include('../partials/status-pill', { status: s.verification_status }) %></h2>
+      <dl class="facts">
+        <dt>Email</dt><dd><%= s.users ? s.users.email : '' %></dd>
+        <dt>Storefront</dt><dd><a href="<%= storeUrl(s) %>">/s/<%= s.slug %></a></dd>
+        <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
+        <dt>University</dt><dd><%= s.university || '—' %></dd>
+        <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>
+        <dt>Submitted</dt><dd><%= s.submitted_at ? date(s.submitted_at) : '—' %></dd>
+        <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %></dd>
+      </dl>
+      <h3>Documents</h3>
+      <p class="small muted">Links expire after 10 minutes. Refresh the page for new ones.</p>
+      <div class="form-actions">
+        <% if (degreeUrl) { %><a class="btn btn-ghost btn-sm" href="<%= degreeUrl %>" target="_blank" rel="noopener noreferrer">Open degree document</a><% } else { %><span class="muted">No degree document</span><% } %>
+        <% if (idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= idUrl %>" target="_blank" rel="noopener noreferrer">Open ID document</a><% } %>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:1.35rem">Decision</h2>
+      <% if (s.verification_note) { %><div class="alert alert-error"><strong>Last rejection reason</strong><p><%= s.verification_note %></p></div><% } %>
+      <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field">
+          <label for="a-note">Reason (shown to the seller if you reject)</label>
+          <textarea id="a-note" name="note" maxlength="500" placeholder="e.g. The transcript doesn't show a completed degree. Upload your degree certificate instead."></textarea>
+        </div>
+        <div class="form-actions">
+          <% if (s.verification_status !== 'approved') { %><button class="btn" type="submit" name="decision" value="approve">Approve seller</button><% } %>
+          <button class="btn btn-danger" type="submit" name="decision" value="reject"><%= s.verification_status === 'approved' ? 'Revoke verification' : 'Reject' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <h2 style="font-size:1.35rem;margin-top:34px">Notes (<%= notes.length %>)</h2>
+  <% if (notes.length) { %>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th></tr></thead>
+        <tbody>
+          <% notes.forEach(function (n) { %><tr><td><a href="<%= noteUrl(n) %>"><%= n.title %></a></td><td><%- include('../partials/status-pill', { status: n.status }) %></td><td class="num"><%= rand(n.price_cents) %></td><td class="num"><%= n.sales_count %></td></tr><% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %><p class="muted">No notes uploaded.</p><% } %>
+</div>
+<%- include('../partials/bottom') %>

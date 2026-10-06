@@ -1,0 +1,17 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="auth">
+  <div class="card">
+    <h1>Log in</h1>
+    <p class="muted">For sellers and the EasyNotes team. Students don’t need an account: <a href="/download">re-download a purchase here</a>.</p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form class="form" method="post" action="/login">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input type="hidden" name="next" value="<%= next %>">
+      <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" name="email" value="<%= email %>" required autocomplete="email"></div>
+      <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" name="password" required autocomplete="current-password"></div>
+      <button class="btn btn-block" type="submit">Log in</button>
+    </form>
+    <p class="fineprint">New here? <a href="/signup">Create a seller account</a>. Forgot your password? Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
+  </div>
+</div>
+<%- include('partials/bottom') %>

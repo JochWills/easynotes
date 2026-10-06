@@ -1,0 +1,44 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <div class="dash-grid">
+    <form class="form card" method="post" action="/seller/profile" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field <%= errors.display_name ? 'has-error' : '' %>">
+        <label for="p-name">Display name</label>
+        <input id="p-name" type="text" name="display_name" value="<%= values.display_name %>" required maxlength="80">
+        <%- include('../partials/field-error', { name: 'display_name' }) %>
+      </div>
+      <div class="field <%= errors.slug ? 'has-error' : '' %>">
+        <label for="p-slug">Storefront link</label>
+        <div class="prefix"><span>easynotes.co.za/s/</span><input id="p-slug" type="text" name="slug" value="<%= values.slug %>" maxlength="40" spellcheck="false"></div>
+        <span class="hint">Letters, numbers and dashes. Changing it breaks links you’ve already shared.</span>
+        <%- include('../partials/field-error', { name: 'slug' }) %>
+      </div>
+      <div class="field">
+        <label for="p-headline">Headline</label>
+        <input id="p-headline" type="text" name="headline" value="<%= values.headline || '' %>" maxlength="120" placeholder="e.g. CA(SA). Accounting notes for first and second years.">
+      </div>
+      <div class="field">
+        <label for="p-bio">About you</label>
+        <textarea id="p-bio" name="bio" maxlength="1500" placeholder="What you studied, how you got your marks, how your notes are structured."><%= values.bio || '' %></textarea>
+        <span class="hint">Students read this before buying. Mention marks or distinctions if you have them.</span>
+      </div>
+      <div class="form-actions"><button class="btn" type="submit">Save storefront</button></div>
+    </form>
+    <div>
+      <h2 style="font-size:1.2rem">What students see</h2>
+      <div class="author" style="margin-top:12px">
+        <div class="avatar" aria-hidden="true"><%= initials(values.display_name) %></div>
+        <div>
+          <h3><%= values.display_name %></h3>
+          <% if (me.verification_status === 'approved') { %><%- include('../partials/verified') %><% } %>
+          <p><%= me.degree || 'Your degree' %>, <%= me.university || 'your university' %></p>
+          <% if (values.headline) { %><p class="muted"><%= values.headline %></p><% } %>
+        </div>
+      </div>
+      <p class="fineprint">Your degree and university come from verification and can’t be edited here.</p>
+    </div>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

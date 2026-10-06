@@ -1,0 +1,37 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
+    <div class="chips">
+      <% ['paid','pending','failed'].forEach(function (s) { %><a class="chip" href="/admin/orders?status=<%= s %>" <%- !reference && status === s ? 'style="background:var(--hi)"' : '' %>><%= s[0].toUpperCase() + s.slice(1) %></a><% }) %>
+    </div>
+    <form method="get" action="/admin/orders" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
+      <label for="ao-ref" class="sr-only">Find by reference</label>
+      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Find by reference (EN…)">
+      <button class="btn btn-sm" type="submit">Find</button>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Reference</th><th>Date</th><th>Notes</th><th>Seller</th><th>Email</th><th>Status</th><th class="num">Amount</th><th class="num">Fee</th><th class="num">Downloads</th><th></th></tr></thead>
+      <tbody>
+        <% orders.forEach(function (o) { %>
+          <tr>
+            <td><strong><%= o.reference %></strong></td>
+            <td><%= date(o.paid_at || o.created_at) %></td>
+            <td><%= o.notes ? o.notes.title : '' %></td>
+            <td><%= o.sellers ? o.sellers.display_name : '' %></td>
+            <td><%= o.email %></td>
+            <td><%- include('../partials/status-pill', { status: o.status }) %></td>
+            <td class="num"><%= rand(o.amount_cents) %></td>
+            <td class="num"><%= rand(o.platform_fee_cents) %></td>
+            <td class="num"><%= o.download_count %>/<%= maxDownloads %></td>
+            <td><% if (o.status === 'paid' && o.download_count > 0) { %><form method="post" action="/admin/orders/<%= o.reference %>/reset-downloads"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm">Reset</button></form><% } %></td>
+          </tr>
+        <% }) %>
+        <% if (!orders.length) { %><tr><td colspan="10" class="muted">No orders found.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

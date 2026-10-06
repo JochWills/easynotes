@@ -1,0 +1,27 @@
+{
+  "name": "easynotes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EasyNotes: South African study notes marketplace (verified academics, Paystack split payments)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "preview": "node scripts/preview.js",
+    "create-admin": "node scripts/create-admin.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cookie-session": "^2.1.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.0.0",
+    "pdf-lib": "^1.17.1"
+  }
+}

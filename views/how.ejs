@@ -1,0 +1,32 @@
+<%- include('partials/top') %>
+<section class="page-head"><div class="wrap">
+  <h1>How EasyNotes works</h1>
+  <p>A marketplace for study notes where every seller is a graduate we’ve verified, and every sale is paid through Paystack.</p>
+</div></section>
+<div class="wrap doc">
+  <div class="two-col">
+    <section aria-labelledby="students">
+      <h2 id="students">For students</h2>
+      <ol class="steps steps-vertical">
+        <li><h3>Search for your module</h3><p>Use the module code, subject or university. Each listing shows who wrote the notes, their degree, the page count and often a free sample.</p></li>
+        <li><h3>Pay with Paystack</h3><p>Enter your email and pay. No account, no password. Paystack handles your card or EFT details; we never see them.</p></li>
+        <li><h3>Download your PDF</h3><p>A download window opens as soon as payment clears. Your Paystack receipt shows your payment reference (starting with EN). Use it with your email on the <a href="/download">re-download page</a> to get the file again, up to <%= maxDownloads %> times.</p></li>
+      </ol>
+      <h3 style="margin-top:32px">Before you buy</h3>
+      <p>Notes are digital downloads, so all sales are final and we can’t offer refunds once you’ve paid. Read the description and sample first. If a file is broken or isn’t what the listing describes, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll look into it.</p>
+    </section>
+    <section aria-labelledby="sellers">
+      <h2 id="sellers">For sellers</h2>
+      <ol class="steps steps-vertical">
+        <li><h3>Create your account</h3><p>Pick the name and link for your storefront.</p></li>
+        <li><h3>Verify your degree</h3><p>Upload your degree certificate or academic transcript and your ID. A person on our team checks them, usually within two working days.</p></li>
+        <li><h3>Add your bank account</h3><p>We set you up as a Paystack subaccount so your share of each sale is paid straight to you on Paystack’s settlement schedule.</p></li>
+        <li><h3>Upload and price your notes</h3><p>PDF only, up to 50 MB. Set your own price from R10 to R2,000 and add an optional free sample.</p></li>
+      </ol>
+      <h3 style="margin-top:32px">What it costs</h3>
+      <p>Nothing to list. EasyNotes keeps <%= feePercent %>% of each sale and you receive the rest. On a R100 set of notes, that’s R<%= 100 - feePercent %> to you.</p>
+      <p><a class="btn" href="/sell">Start selling</a></p>
+    </section>
+  </div>
+</div>
+<%- include('partials/bottom') %>
