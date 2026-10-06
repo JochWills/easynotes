@@ -12,12 +12,12 @@ const seller = { id: 's1', display_name: 'Thandi Mokoena', slug: 'thandi-mokoena
 const note = { id: '11111111-1111-1111-1111-111111111111', title: 'Financial Accounting I: complete exam summary', slug: 'financial-accounting-i', subject: 'Accounting', module_code: 'ACC1006F', university: 'University of Cape Town', level: 'Undergraduate', price_cents: 12000, page_count: 46, file_size: 2400000, sales_count: 12, status: 'published', description: 'Covers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.', created_at: new Date(), updated_at: new Date(), sellers: seller, sample_path: 'x' };
 const order = { reference: 'ENABC123DEF', email: 'student@example.com', status: 'paid', amount_cents: 12000, platform_fee_cents: 2400, seller_earnings_cents: 9600, paid_at: new Date(), created_at: new Date(), download_count: 1, notes: { title: note.title }, sellers: seller };
 
-const base = { ...helpers, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: { type: 'ok', msg: 'Saved.' }, user: null, me: seller };
+const base = { ...helpers, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
 const sellerBase = { ...base, user: { role: 'seller', email: 'a@b.c' } };
 const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 
 const cases = {
-  home: [{ ...base, title: null, notes: [note, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
+  home: [{ ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
   browse: [{ ...base, title: 'Browse', notes: [note], count: 30, filters: { q: 'acc', university: '', level: '', sort: 'new' }, page: 1, pages: 2, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...base, notes: [], count: 0, filters: { q: '', university: 'Rhodes University', level: 'Undergraduate', sort: 'new' }, page: 1, pages: 1, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],
   note: [{ ...base, title: 'x', note, author: seller, live: true, more: [note], sampleUrl: 'https://x' }, { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], sampleUrl: null }],
   storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
@@ -29,7 +29,7 @@ const cases = {
   how: [base], sell: [base], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],
   'seller/dashboard': [{ ...sellerBase, title: 'Seller dashboard', tab: 'overview', notes: [note, { ...note, status: 'draft' }, { ...note, status: 'removed' }], sales: 3, earnings: 28800 }, { ...sellerBase, me: { ...seller, verification_status: 'rejected', verification_note: 'Blurry', paystack_subaccount_code: null }, title: 'D', tab: 'overview', notes: [], sales: 0, earnings: 0 }],
-  'seller/profile': [{ ...sellerBase, title: 'Storefront', tab: 'profile', values: seller, errors: { slug: 'taken' } }],
+  'seller/profile': [{ ...sellerBase, flash: { type: 'ok', msg: 'Saved.' }, title: 'Storefront', tab: 'profile', values: seller, errors: { slug: 'taken' } }],
   'seller/verification': ['unsubmitted', 'rejected', 'pending', 'approved'].map(st => ({ ...sellerBase, me: { ...seller, verification_status: st, verification_note: 'x' }, title: 'V', tab: 'verification', values: {}, errors: { degree: 'x' }, universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY })),
   'seller/payouts': [{ ...sellerBase, title: 'P', tab: 'payouts', banks: [{ name: 'Capitec Bank', code: '470010' }], bankError: null, values: { bank_code: '470010' }, errors: { form: 'Paystack said no' } }],
   'seller/note-form': [{ ...sellerBase, title: 'Upload', tab: 'notes', note: null, values: {}, errors: { files: 'x', title: 'y' }, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...sellerBase, title: 'Edit', tab: 'notes', note, values: { ...note, price: '120.00' }, errors: {}, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],

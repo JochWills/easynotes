@@ -2,46 +2,75 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <h1>Study notes from people who already passed the module.</h1>
-      <p class="lede">PDF notes for South African university modules and professional exams, sold by graduates whose degrees we’ve checked. Pay once and download straight away.</p>
+      <ul class="badges" aria-label="Why EasyNotes">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z" fill="currentColor"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Verified academics</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Original notes only</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Instant download</li>
+      </ul>
+      <h1>Study notes from people who already <span class="accent"><span class="swoosh">passed</span> the module.</span></h1>
+      <p class="lede">PDF notes for South African university modules and professional exams, sold by graduates whose degrees we’ve verified. Pay once and download straight away.</p>
       <form class="search" action="/notes" method="get" role="search">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <label for="q" class="sr-only">Search notes</label>
-        <input id="q" name="q" type="search" placeholder="Module code or subject, e.g. ACC1006F" autocomplete="off">
-        <button class="btn" type="submit">Search</button>
+        <input id="q" name="q" type="search" placeholder="Search modules, e.g. ACC1006F" autocomplete="off">
+        <button class="btn" type="submit">Search <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>
       <div class="chips">
-        <span class="chips-label">By university:</span>
+        <span class="chips-label">Popular at</span>
         <% popularUnis.slice(0, 8).forEach(function (u) { %>
           <a class="chip" href="/notes<%= qs({ university: u.name }) %>"><%= u.short %></a>
         <% }) %>
+        <a class="chip chip-more" href="/notes">All universities <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
-      <div class="sheet sheet-back"><span class="tab">MAM1000W</span><div class="line"></div><div class="line mid"></div><div class="line"></div><div class="line short"></div></div>
-      <div class="sheet sheet-mid"><span class="tab">TAX3761</span><div class="line mid"></div><div class="line"></div><div class="line short"></div></div>
+      <span class="spark"></span>
+      <div class="sheet sheet-back"><span class="tab">MAM1000W</span><div class="line"></div><div class="line mid"></div><div class="line"></div><div class="line short"></div><div class="line"></div><div class="line mid"></div></div>
+      <div class="sheet sheet-mid"><p class="sheet-label">Notes</p><div class="line mid"></div><div class="line short"></div><div class="pie"></div><div class="bars"><i></i><i></i><i></i><i></i></div><div class="line"></div><div class="line mid"></div></div>
       <div class="sheet sheet-front">
+        <svg class="heart" width="22" height="22" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
         <span class="tab">ACC1006F</span>
         <p class="sheet-title">Financial Accounting I: exam summary</p>
-        <div class="line"></div>
-        <p class="sheet-text">Under IFRS 15, <span class="mark">revenue is recognised when control of the goods passes</span> to the customer, not when cash is received.</p>
-        <div class="line mid"></div>
-        <div class="line"></div>
-        <div class="line short"></div>
-        <div class="sheet-foot"><%- include('partials/verified') %><span>BCom Hons, UCT</span></div>
+        <p class="sheet-text">Under IFRS 15, <span class="mark">revenue is recognised when control of the goods passes to the customer,</span> not when cash is received.</p>
+        <p class="scribble"><svg width="22" height="26" viewBox="0 0 22 26"><path d="M14 24C6 20 4 12 8 3M8 3L3 8M8 3l5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Key point<br>for exams!</p>
+        <div class="sheet-foot"><%- include('partials/verified') %><span>BCom (Hons), UCT</span></div>
       </div>
+      <div class="sticker sticker-blue"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 5.5C5.5 4.5 8.5 4.5 12 6.5v13c-3.5-2-6.5-2-9-1zM21 5.5c-2.5-1-5.5-1-9 1v13c3.5-2 6.5-2 9-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Clear summaries</div>
+      <svg class="arrow arrow-1" width="70" height="50" viewBox="0 0 70 50"><path d="M66 6C40 4 18 14 8 40M8 40l-2-12M8 40l11-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="sticker sticker-yellow"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Written by people<br>who actually passed</span></div>
+      <svg class="arrow arrow-2" width="50" height="34" viewBox="0 0 50 34"><path d="M46 24C34 32 16 30 6 14M6 14l1 10M6 14l10 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
   </div>
 </section>
 
+<section class="promises" aria-label="What you get">
+  <ul class="wrap promise-list">
+    <li><span class="promise-icon"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" fill="currentColor"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><div><b>Verified academics</b><span>Every seller’s degree and ID checked</span></div></li>
+    <li><span class="promise-icon"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg></span><div><b>Pay once</b><span>No subscription, no account needed</span></div></li>
+    <li><span class="promise-icon"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Instant access</b><span>Download as soon as you pay</span></div></li>
+    <li><span class="promise-icon"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><div><b>Secure checkout</b><span>Card, EFT and more via Paystack</span></div></li>
+  </ul>
+</section>
+
 <section class="wrap section">
   <div class="section-head">
-    <h2>Recently added</h2>
-    <% if (total > notes.length) { %><a href="/notes">See all <%= total %> sets of notes</a><% } %>
+    <div>
+      <p class="eyebrow">Find your notes</p>
+      <h2>Recently added</h2>
+    </div>
+    <% var subjects = notes.map(function (n) { return n.subject; }).filter(function (s, i, a) { return s && a.indexOf(s) === i; }).slice(0, 6); %>
+    <% if (subjects.length > 1) { %>
+      <nav class="subject-tabs" aria-label="Browse by subject">
+        <a href="/notes" aria-current="page">All</a>
+        <% subjects.forEach(function (s) { %><a href="/notes<%= qs({ q: s }) %>"><%= s %></a><% }) %>
+      </nav>
+    <% } %>
   </div>
   <% if (notes.length) { %>
     <div class="grid-notes">
       <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
     </div>
+    <% if (total > notes.length) { %><p class="see-all"><a class="btn btn-ghost" href="/notes">See all <%= total %> sets of notes</a></p><% } %>
   <% } else { %>
     <div class="empty">
       <h3>The first notes are on their way</h3>
@@ -52,7 +81,7 @@
 </section>
 
 <section class="wrap section" aria-labelledby="buying">
-  <div class="section-head"><h2 id="buying">How buying works</h2></div>
+  <div class="section-head"><div><p class="eyebrow">Three steps</p><h2 id="buying">How buying works</h2></div></div>
   <ol class="steps">
     <li><h3>Find your module</h3><p>Search by module code, subject or university. Many sellers include a free sample so you can check the notes suit you.</p></li>
     <li><h3>Pay with Paystack</h3><p>Card, EFT and other Paystack options. No account needed, just your email address.</p></li>
@@ -82,7 +111,7 @@
       <h2>Your notes got you through. Now they can pay you.</h2>
       <p>Set up a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
     </div>
-    <a class="btn" href="/sell">Start selling</a>
+    <a class="btn btn-light" href="/sell">Start selling</a>
   </div>
 </section>
 <%- include('partials/bottom') %>

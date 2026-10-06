@@ -1,4 +1,4 @@
-<% var cp = locals.cp || ''; %><!doctype html>
+<% var cp = locals.cp || locals.currentPath || ''; %><!doctype html>
 <html lang="en-ZA">
 <head>
   <meta charset="utf-8">
@@ -11,31 +11,41 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=3">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
+  <link rel="stylesheet" href="/css/style.css?v=4">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="wrap">
     <a class="logo" href="/" aria-label="EasyNotes home">
-      <svg width="26" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 2h16l7 7v21H5z" fill="#fff" stroke="#14213D" stroke-width="2.4" stroke-linejoin="round"/><path d="M21 2v7h7" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linejoin="round"/><rect x="8.5" y="13" width="15" height="6" fill="#FFE45C"/><path d="M9 16h14M9 23.5h10" stroke="#14213D" stroke-width="2.4" stroke-linecap="round"/></svg>
-      EasyNotes
+      <svg width="28" height="32" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 2h16l7 7v21H5z" fill="#fff" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><path d="M21 2v7h7" fill="none" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><rect x="8.5" y="13" width="15" height="6" rx="1" fill="#FFE27A"/><path d="M9 16h14M9 23.5h10" stroke="#0E1A3A" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span>Easy<span class="logo-accent">Notes</span></span>
     </a>
+    <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only">
+    <label for="menu-toggle" class="menu-btn"><span class="sr-only">Menu</span><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></label>
     <nav class="nav" aria-label="Main">
-      <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
-      <a href="/download" <%- cp === '/download' ? 'aria-current="page"' : '' %>>Re-download</a>
-      <% if (locals.user && user.role === 'admin') { %>
-        <a href="/admin" <%- cp.startsWith('/admin') ? 'aria-current="page"' : '' %>>Admin</a>
-      <% } else if (locals.user) { %>
-        <a href="/seller" <%- cp.startsWith('/seller') ? 'aria-current="page"' : '' %>>Seller dashboard</a>
-      <% } else { %>
-        <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>Sell your notes</a>
-        <a class="nav-account" href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
-      <% } %>
-      <% if (locals.user) { %>
-        <form class="nav-account" method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="linklike" type="submit">Log out</button></form>
-      <% } %>
+      <div class="nav-links">
+        <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
+        <a href="/how-it-works" <%- cp === '/how-it-works' ? 'aria-current="page"' : '' %>>How it works</a>
+        <% if (locals.user && user.role === 'admin') { %>
+          <a href="/admin" <%- cp.startsWith('/admin') ? 'aria-current="page"' : '' %>>Admin</a>
+        <% } else if (locals.user) { %>
+          <a href="/seller" <%- cp.startsWith('/seller') ? 'aria-current="page"' : '' %>>Seller dashboard</a>
+        <% } else { %>
+          <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>For sellers</a>
+        <% } %>
+        <a href="/download" <%- cp === '/download' || cp === '/library' ? 'aria-current="page"' : '' %>>Re-download</a>
+      </div>
+      <div class="nav-actions">
+        <a class="icon-btn" href="/notes" aria-label="Search notes"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+        <% if (locals.user) { %>
+          <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="linklike" type="submit">Log out</button></form>
+        <% } else { %>
+          <a href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
+          <a class="btn btn-hi btn-sm" href="/sell">Start selling</a>
+        <% } %>
+      </div>
     </nav>
   </div>
 </header>
