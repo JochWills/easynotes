@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/style.css?v=5">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -28,18 +28,38 @@
       <div class="nav-links">
         <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
         <a href="/how-it-works" <%- cp === '/how-it-works' ? 'aria-current="page"' : '' %>>How it works</a>
-        <% if (locals.user && user.role === 'admin') { %>
-          <a href="/admin" <%- cp.startsWith('/admin') ? 'aria-current="page"' : '' %>>Admin</a>
-        <% } else if (locals.user) { %>
-          <a href="/seller" <%- cp.startsWith('/seller') ? 'aria-current="page"' : '' %>>Seller dashboard</a>
-        <% } else { %>
+        <% if (!locals.user) { %>
           <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>For sellers</a>
         <% } %>
         <a href="/download" <%- cp === '/download' || cp === '/library' ? 'aria-current="page"' : '' %>>Re-download</a>
       </div>
       <div class="nav-actions">
         <% if (locals.user) { %>
-          <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="linklike" type="submit">Log out</button></form>
+          <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? me.display_name : (isAdmin ? 'Admin' : user.email); %>
+          <details class="profile">
+            <summary aria-label="Account menu">
+              <span class="profile-avatar" aria-hidden="true"><%= initials(me ? me.display_name : user.email) %></span>
+              <span class="profile-name"><%= who %></span>
+              <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
+            <div class="profile-menu">
+              <div class="profile-head">
+                <strong><%= who %></strong>
+                <span><%= user.email %></span>
+              </div>
+              <% if (isAdmin) { %>
+                <a href="/admin" <%- cp === '/admin' ? 'aria-current="page"' : '' %>>Admin dashboard</a>
+                <a href="/admin/sellers" <%- cp.startsWith('/admin/sellers') ? 'aria-current="page"' : '' %>>Sellers</a>
+                <a href="/admin/orders" <%- cp === '/admin/orders' ? 'aria-current="page"' : '' %>>Orders</a>
+              <% } else { %>
+                <a href="/seller" <%- cp === '/seller' ? 'aria-current="page"' : '' %>>Seller dashboard</a>
+                <% if (me) { %><a href="<%= storeUrl(me) %>">View my storefront</a><% } %>
+                <a href="/seller/sales" <%- cp === '/seller/sales' ? 'aria-current="page"' : '' %>>Sales</a>
+                <a href="/seller/payouts" <%- cp === '/seller/payouts' ? 'aria-current="page"' : '' %>>Payouts</a>
+              <% } %>
+              <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button type="submit">Log out</button></form>
+            </div>
+          </details>
         <% } else { %>
           <a href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
           <a class="btn btn-hi btn-sm" href="/sell">Start selling</a>

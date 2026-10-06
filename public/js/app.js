@@ -8,6 +8,14 @@
     b.addEventListener('click', function () { b.closest('dialog').close(); });
   });
 
+  // Account dropdown: close on outside click or Escape
+  document.querySelectorAll('details.profile').forEach(function (d) {
+    document.addEventListener('click', function (e) { if (d.open && !d.contains(e.target)) d.open = false; });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && d.open) { d.open = false; d.querySelector('summary').focus(); }
+    });
+  });
+
   // Copy buttons
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
