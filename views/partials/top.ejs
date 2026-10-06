@@ -31,7 +31,6 @@
         <% if (!locals.user) { %>
           <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>For sellers</a>
         <% } %>
-        <a href="/download" <%- cp === '/download' || cp === '/library' ? 'aria-current="page"' : '' %>>Re-download</a>
       </div>
       <div class="nav-actions">
         <% if (locals.user) { %>
