@@ -94,23 +94,6 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
   });
 });
 
-router.get('/s/:slug', async (req, res, next) => {
-  const { data: author } = await db
-    .from('sellers')
-    .select('id,display_name,slug,headline,bio,degree,university,graduation_year,verification_status,created_at')
-    .eq('slug', String(req.params.slug).toLowerCase())
-    .maybeSingle();
-  if (!author || author.verification_status !== 'approved') return next();
-
-  const { data: notes } = await publicNotes().eq('seller_id', author.id).order('sales_count', { ascending: false });
-  res.render('storefront', {
-    title: `${author.display_name}'s notes`,
-    description: author.headline || `Study notes by ${author.display_name}, a verified academic on EasyNotes.`,
-    author,
-    notes: notes || [],
-  });
-});
-
 router.get('/how-it-works', (req, res) => res.render('how', { title: 'How EasyNotes works' }));
 router.get('/sell', (req, res) => res.render('sell', { title: 'Sell your notes' }));
 router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of sale' }));

@@ -7,7 +7,7 @@
       <h2 style="font-size:1.35rem"><%= s.display_name %> <%- include('../partials/status-pill', { status: s.verification_status }) %></h2>
       <dl class="facts">
         <dt>Email</dt><dd><%= s.users ? s.users.email : '' %></dd>
-        <dt>Storefront</dt><dd><a href="<%= storeUrl(s) %>">/s/<%= s.slug %></a></dd>
+        <dt>Storefront</dt><dd><a href="<%= storeUrl(s) %>">/<%= s.slug %></a></dd>
         <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
         <dt>University</dt><dd><%= s.university || '—' %></dd>
         <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>

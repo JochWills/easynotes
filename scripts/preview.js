@@ -20,6 +20,7 @@ const routes = [
   [/^\/seller\/sales$/, 'seller_sales-0'],
   [/^\/admin$/, 'admin_index-0'], [/^\/admin\/sellers$/, 'admin_sellers-0'], [/^\/admin\/sellers\//, 'admin_seller-0'],
   [/^\/admin\/notes$/, 'admin_notes-0'], [/^\/admin\/orders$/, 'admin_orders-0'],
+  [/^\/[a-z0-9-]+$/, 'storefront-0'], // any other single-segment path is a storefront
 ];
 
 // Re-render all templates so edits show up on refresh

@@ -9,6 +9,7 @@ const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
 const { slugify, str, isUuid } = require('../lib/helpers');
+const { RESERVED_SLUGS } = require('../lib/constants');
 const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY } = require('../lib/constants');
 
 const router = express.Router();
@@ -59,6 +60,7 @@ router.post('/profile', async (req, res) => {
   const errors = {};
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
+  else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
     if (taken) errors.slug = 'That link is taken. Try another.';

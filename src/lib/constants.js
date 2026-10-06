@@ -39,4 +39,13 @@ const OTHER_UNIVERSITY = 'Other (type it in)';
 
 const LEVELS = ['Undergraduate', 'Honours / postgraduate', 'Professional exam', 'Matric (NSC / IEB)'];
 
-module.exports = { UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
+// Storefronts live at /<slug>, so a seller can't take a name the site already uses (or may use later).
+const RESERVED_SLUGS = new Set([
+  'about', 'account', 'admin', 'api', 'app', 'assets', 'blog', 'browse', 'cart', 'checkout', 'contact', 'css',
+  'dashboard', 'download', 'downloads', 'easynotes', 'favicon', 'help', 'healthz', 'how-it-works', 'img', 'js',
+  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'register', 'robots', 'search', 'sell',
+  'seller', 'seller-terms', 'sellers', 'settings', 'signup', 'sitemap', 'static', 'store', 'support', 'terms',
+  'webhooks', 'www',
+]);
+
+module.exports = { RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };

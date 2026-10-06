@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const db = require('../lib/supabase');
 const flash = require('../lib/flash');
 const { slugify, str } = require('../lib/helpers');
+const { RESERVED_SLUGS } = require('../lib/constants');
 
 const router = express.Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
@@ -16,7 +17,7 @@ async function uniqueSlug(base) {
   let slug = slugify(base).slice(0, 40);
   for (let i = 0; i < 5; i++) {
     const { data } = await db.from('sellers').select('id').eq('slug', slug).maybeSingle();
-    if (!data) return slug;
+    if (!data && slug.length >= 3 && !RESERVED_SLUGS.has(slug)) return slug;
     slug = `${slugify(base).slice(0, 34)}-${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${slug}-${Date.now().toString(36)}`;

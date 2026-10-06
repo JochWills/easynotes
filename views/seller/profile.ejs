@@ -11,7 +11,7 @@
       </div>
       <div class="field <%= errors.slug ? 'has-error' : '' %>">
         <label for="p-slug">Storefront link</label>
-        <div class="prefix"><span>easynotes.co.za/s/</span><input id="p-slug" type="text" name="slug" value="<%= values.slug %>" maxlength="40" spellcheck="false"></div>
+        <div class="prefix"><span><%= (locals.baseUrl || 'https://easynotes.co.za').replace(/^https?:\/\//, '') %>/</span><input id="p-slug" type="text" name="slug" value="<%= values.slug %>" maxlength="40" spellcheck="false"></div>
         <span class="hint">Letters, numbers and dashes. Changing it breaks links you’ve already shared.</span>
         <%- include('../partials/field-error', { name: 'slug' }) %>
       </div>

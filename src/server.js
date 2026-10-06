@@ -80,6 +80,7 @@ app.use(require('./routes/auth'));
 app.use(require('./routes/checkout'));
 app.use('/seller', require('./routes/seller'));
 app.use('/admin', require('./routes/admin'));
+app.use(require('./routes/storefront'));
 
 app.use((req, res) => res.status(404).render('404', { title: 'Page not found' }));
 

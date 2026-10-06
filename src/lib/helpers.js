@@ -19,7 +19,7 @@ const slugify = (s) =>
 
 const fileName = (title) => `${slugify(title)}.pdf`;
 const noteUrl = (n) => `/note/${n.id}/${n.slug}`;
-const storeUrl = (s) => `/s/${s.slug}`;
+const storeUrl = (s) => `/${s.slug}`;
 
 const maskEmail = (email = '') => {
   const [user, domain] = email.split('@');
