@@ -12,7 +12,7 @@ const seller = { id: 's1', display_name: 'Thandi Mokoena', slug: 'thandi-mokoena
 const note = { id: '11111111-1111-1111-1111-111111111111', title: 'Financial Accounting I: complete exam summary', slug: 'financial-accounting-i', subject: 'Accounting', module_code: 'ACC1006F', university: 'University of Cape Town', level: 'Undergraduate', price_cents: 12000, page_count: 46, file_size: 2400000, sales_count: 12, status: 'published', description: 'Covers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.', created_at: new Date(), updated_at: new Date(), sellers: seller, sample_path: 'x' };
 const order = { reference: 'ENABC123DEF', email: 'student@example.com', status: 'paid', amount_cents: 12000, platform_fee_cents: 2400, seller_earnings_cents: 9600, paid_at: new Date(), created_at: new Date(), download_count: 1, notes: { title: note.title }, sellers: seller };
 
-const base = { ...helpers, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: { type: 'ok', msg: 'Saved.' }, user: null, me: seller };
+const base = { ...helpers, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: { type: 'ok', msg: 'Saved.' }, user: null, me: seller };
 const sellerBase = { ...base, user: { role: 'seller', email: 'a@b.c' } };
 const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 
@@ -22,6 +22,7 @@ const cases = {
   note: [{ ...base, title: 'x', note, author: seller, live: true, more: [note], sampleUrl: 'https://x' }, { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], sampleUrl: null }],
   storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
   'checkout-complete': ['paid', 'pending', 'failed'].map(s => ({ ...base, order: { ...order, status: s }, note })),
+  library: [{ ...base, title: 'Your notes', email: order.email, expires: new Date(Date.now() + 7 * 864e5), orders: [order, { ...order, reference: 'ENXYZ', download_count: 10 }], linkDays: 7 }, { ...base, email: order.email, expires: new Date(), orders: [], linkDays: 7 }, { ...base, title: 'Link expired', orders: null, linkDays: 7 }],
   download: [{ ...base, email: '', reference: '', error: null }, { ...base, email: 'a', reference: 'b', error: 'Nope' }],
   login: [{ ...base, email: '', error: 'bad', next: '' }],
   signup: [{ ...base, values: {}, errors: { email: 'Bad', accept: 'Tick' } }],

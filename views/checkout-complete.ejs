@@ -10,7 +10,7 @@
           <div class="ref-row"><span>Payment reference</span><span class="ref"><%= order.reference %></span></div>
           <div class="ref-row"><span>Email</span><span class="ref-email"><%= order.email %></span></div>
         </div>
-        <p class="small">Save your reference. With your email, it lets you download these notes again from any device, up to <%= maxDownloads %> times.</p>
+        <p class="small"><% if (locals.emailEnabled) { %>We’ve also emailed a download link to <%= order.email %>. <% } %>Save your reference. With your email, it lets you download these notes again from any device, up to <%= maxDownloads %> times.</p>
         <form method="post" action="/download" data-download>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <input type="hidden" name="email" value="<%= order.email %>">
@@ -37,7 +37,7 @@
         <input type="hidden" name="reference" value="<%= order.reference %>">
         <button class="btn btn-hi" type="submit">Download PDF</button>
       </form>
-      <p class="fineprint">To download again later, go to <a href="/download">Re-download</a> and enter your email and reference.</p>
+      <p class="fineprint"><% if (locals.emailEnabled) { %>We’ve emailed you a link to all your notes. <% } %>To download again later, go to <a href="/download">Re-download</a> and enter your email and reference.</p>
     </div>
   <% } else if (order.status === 'failed') { %>
     <h1>Payment didn’t go through</h1>

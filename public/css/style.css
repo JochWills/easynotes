@@ -325,6 +325,11 @@ dialog.download::backdrop { background: rgba(20, 33, 61, .6); }
 .ref-row span { color: var(--muted); font-size: .9rem; }
 .ref { font-family: var(--display); font-weight: 800; font-size: 1.25rem; letter-spacing: .03em; background: var(--hi); border: 1px solid var(--ink); border-radius: 4px; padding: .05em .45em; }
 .ref-email { font-weight: 700; word-break: break-all; }
+.lib-list { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 10px; }
+dialog .lib-list { max-height: 50vh; overflow-y: auto; }
+.lib-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; background: var(--page); border: 1px solid var(--rule); border-radius: 10px; }
+.lib-item div { display: grid; gap: 2px; }
+.lib-item form { margin: 0; }
 
 /* ---------- Long-form pages ---------- */
 .doc { padding-top: 40px; padding-bottom: 76px; }

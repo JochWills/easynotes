@@ -1,0 +1,24 @@
+<% if (!orders.length) { %>
+  <p>We couldn’t find any paid purchases for this email.</p>
+<% } else { %>
+  <ul class="lib-list">
+    <% orders.forEach(function (o) { %>
+      <li class="lib-item">
+        <div>
+          <strong><%= o.notes.title %></strong>
+          <span class="small muted"><%= date(o.paid_at) %> · <%= o.reference %></span>
+        </div>
+        <% if (o.download_count >= maxDownloads) { %>
+          <span class="pill pill-muted">Download limit reached</span>
+        <% } else { %>
+          <form method="post" action="/download" data-download>
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="hidden" name="email" value="<%= o.email %>">
+            <input type="hidden" name="reference" value="<%= o.reference %>">
+            <button class="btn btn-hi btn-sm" type="submit">Download</button>
+          </form>
+        <% } %>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>

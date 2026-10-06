@@ -13,6 +13,7 @@ A South African study-notes marketplace. Verified academics run their own storef
 - Enter email, tick "all sales are final", pay on Paystack.
 - On return, a popup shows their payment reference + email and a Download button.
 - Re-download any time at `/download` with email + reference (limit set by `MAX_DOWNLOADS`).
+- If email is set up: after paying they're emailed a link to `/library`, a popup listing every notepack bought with that email. The link is signed with `SESSION_SECRET` and lasts 7 days; `/download` has an "Email me all my notes" box to get a fresh one.
 - Each download is a signed Supabase URL that expires after 60 seconds, so links can't be shared.
 
 **Sellers**
@@ -54,7 +55,15 @@ Notes only appear to students when **all three** are true: note published, selle
 3. Set the **Webhook URL** to `https://YOUR-DOMAIN/webhooks/paystack`.
 4. Leave the callback URL blank in the dashboard – the app sends it per transaction.
 
-### 3. Render
+### 3. Email (optional, Resend)
+Render's free plan blocks SMTP, so emails go through Resend's HTTP API (free up to 3,000/month).
+1. Sign up at resend.com → **Domains → Add domain** → add the DNS records it shows at your domain registrar, then wait for "Verified".
+2. **API Keys → Create API key** (sending access).
+3. Set `RESEND_API_KEY` and `MAIL_FROM` (e.g. `EasyNotes <noreply@easynotes.co.za>`) on Render.
+
+Without `RESEND_API_KEY` the site works as before and simply sends no emails.
+
+### 4. Render
 1. Push this folder to a GitHub repo.
 2. Render → **New → Blueprint** → pick the repo (it reads `render.yaml`), or create a Web Service manually with:
    - Build: `npm ci`  Start: `npm start`  Health check: `/healthz`
@@ -63,7 +72,7 @@ Notes only appear to students when **all three** are true: note published, selle
 
 The Starter plan is recommended: the free plan sleeps after inactivity, which makes the first page load slow and can delay Paystack webhooks.
 
-### 4. Create your admin login
+### 5. Create your admin login
 Locally, with a `.env` filled in (copy `.env.example`), or from Render's Shell tab:
 ```bash
 npm run create-admin -- you@easynotes.co.za "a-long-password"
@@ -93,6 +102,8 @@ Paystack can't reach `localhost` for webhooks, but the browser callback still co
 | `PLATFORM_FEE_PERCENT` | `20` | Your cut of each sale |
 | `PAYSTACK_FEE_BEARER` | `account` | Who pays Paystack's fee |
 | `MAX_DOWNLOADS` | `10` | Downloads allowed per purchase |
+| `RESEND_API_KEY` | — | Optional. Sends buyers their download link |
+| `MAIL_FROM` | `EasyNotes <noreply@easynotes.co.za>` | Sender address (domain must be verified in Resend) |
 | `SUPPORT_EMAIL` | `support@easynotes.co.za` | Shown across the site |
 
 Changing `PLATFORM_FEE_PERCENT` applies to new sales immediately. Existing subaccounts keep their old default percentage in Paystack, but the app overrides it on every transaction, so that doesn't matter.
@@ -123,7 +134,6 @@ supabase/schema.sql    database + buckets
 - Buyer emails are masked in the seller's sales view.
 
 ## Ideas for later
-- Email the download link + reference after payment (Resend/Postmark, triggered from `markPaid`).
 - Email admins when a seller submits verification.
 - Password reset by email.
 - Watermark each PDF with the buyer's email at download time (discourages sharing).

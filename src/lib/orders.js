@@ -1,4 +1,5 @@
 const db = require('./supabase');
+const { sendPurchaseEmail } = require('./library');
 
 // Idempotent: safe to call from both the browser callback and the webhook.
 async function markPaid(reference, tx) {
@@ -27,6 +28,8 @@ async function markPaid(reference, tx) {
   if (updated) {
     const { error: rpcErr } = await db.rpc('increment_note_sales', { p_note_id: order.note_id });
     if (rpcErr) console.error('[orders] sales count not incremented', rpcErr.message);
+    // Only the call that flips the order to paid sends the email, so the callback and webhook don't both send one.
+    sendPurchaseEmail(updated).catch((err) => console.error('[orders] purchase email not sent', err.message));
     return updated;
   }
   return { ...order, status: 'paid' };

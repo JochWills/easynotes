@@ -1,0 +1,26 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="wrap narrow doc">
+  <% if (!orders) { %>
+    <h1>This link has expired</h1>
+    <p>Download links work for <%= linkDays %> days. Enter your email on the Re-download page and we’ll send you a new one.</p>
+    <a class="btn btn-hi" href="/download#email-link">Get a new link</a>
+  <% } else { %>
+    <dialog class="download" data-autoshow aria-labelledby="lib-title">
+      <button class="dialog-close" type="button" data-close aria-label="Close">×</button>
+      <div class="dialog-body">
+        <h2 id="lib-title">Your notes</h2>
+        <p class="small">Bought with <span class="ref-email"><%= email %></span></p>
+        <%- include('partials/library-list') %>
+        <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times. This link works until <%= date(expires) %>.</p>
+      </div>
+    </dialog>
+
+    <h1>Your notes</h1>
+    <p>Everything bought with <span class="ref-email"><%= email %></span>.</p>
+    <div class="card">
+      <%- include('partials/library-list') %>
+    </div>
+    <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times. This link works until <%= date(expires) %>. After that, get a new one from <a href="/download#email-link">Re-download</a>.</p>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>

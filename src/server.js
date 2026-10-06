@@ -63,6 +63,7 @@ app.use((req, res, next) => {
   res.locals.supportEmail = config.supportEmail;
   res.locals.maxDownloads = config.maxDownloads;
   res.locals.baseUrl = config.baseUrl;
+  res.locals.emailEnabled = Boolean(config.resendApiKey);
   Object.assign(res.locals, helpers);
   next();
 });

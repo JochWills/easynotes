@@ -16,7 +16,25 @@
       </div>
       <button class="btn btn-hi btn-block" type="submit">Download PDF</button>
     </form>
-    <p class="fineprint">Lost your reference? Search your inbox for the Paystack receipt, or email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> with the email you paid from.</p>
+    <% if (locals.emailEnabled) { %>
+      <p class="fineprint">Lost your reference? Use the box below instead.</p>
+    <% } else { %>
+      <p class="fineprint">Lost your reference? Search your inbox for the Paystack receipt, or email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> with the email you paid from.</p>
+    <% } %>
   </div>
+  <% if (locals.emailEnabled) { %>
+    <div class="card" id="email-link" style="margin-top:24px">
+      <h2 style="font-size:1.3rem">Email me all my notes</h2>
+      <p>We’ll send a link that shows every notepack you’ve bought, ready to download. No reference needed.</p>
+      <form class="form" method="post" action="/download/link">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field">
+          <label for="l-email">Email you paid with</label>
+          <input id="l-email" type="email" name="email" required autocomplete="email">
+        </div>
+        <button class="btn btn-block" type="submit">Send me a link</button>
+      </form>
+    </div>
+  <% } %>
 </div>
 <%- include('partials/bottom') %>

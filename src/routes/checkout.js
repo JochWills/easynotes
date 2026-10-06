@@ -6,6 +6,7 @@ const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
 const storage = require('../lib/storage');
 const { markPaid } = require('../lib/orders');
+const library = require('../lib/library');
 const { isPublic } = require('../lib/queries');
 const { isUuid, feeFor, fileName, noteUrl, str } = require('../lib/helpers');
 const flash = require('../lib/flash');
@@ -14,6 +15,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const checkoutLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false });
 const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: 'draft-7', legacyHeaders: false });
+const linkLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false });
 
 const newReference = () => `EN${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
@@ -140,6 +142,41 @@ router.post('/download', downloadLimiter, async (req, res) => {
     .eq('id', order.id);
   res.set('Cache-Control', 'no-store');
   res.redirect(303, url);
+});
+
+// Emailed link: lists every paid purchase for one email, each downloadable through POST /download.
+router.get('/library', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const link = library.readToken(req.query.t);
+  if (!link) return res.render('library', { title: 'Link expired', orders: null, linkDays: library.LINK_DAYS });
+
+  const { data: orders, error } = await db
+    .from('orders')
+    .select('reference,email,paid_at,download_count,notes(title,page_count)')
+    .eq('email', link.email)
+    .eq('status', 'paid')
+    .order('paid_at', { ascending: false });
+  if (error) throw error;
+  res.render('library', { title: 'Your notes', email: link.email, expires: link.expires, orders, linkDays: library.LINK_DAYS });
+});
+
+// "Email me my notes": always gives the same answer so it can't be used to check who has bought what.
+router.post('/download/link', linkLimiter, async (req, res) => {
+  const email = str(req.body.email, 200).toLowerCase();
+  if (!EMAIL_RE.test(email)) {
+    flash(req, 'error', 'Enter the email address you paid with.');
+    return res.redirect('/download#email-link');
+  }
+  const { count } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('email', email).eq('status', 'paid');
+  if (count) {
+    try {
+      await library.sendLibraryLink(email);
+    } catch (err) {
+      console.error('[download] link email not sent', err.message);
+    }
+  }
+  flash(req, 'ok', `If ${email} has bought notes on EasyNotes, a download link is on its way. Check your spam folder if it doesn’t arrive in a few minutes.`);
+  res.redirect('/download');
 });
 
 module.exports = router;

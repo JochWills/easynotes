@@ -28,5 +28,9 @@ services:
         value: account
       - key: MAX_DOWNLOADS
         value: "10"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
       - key: SUPPORT_EMAIL
         value: support@easynotes.co.za

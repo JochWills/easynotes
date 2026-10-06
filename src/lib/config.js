@@ -21,4 +21,7 @@ module.exports = {
   feeBearer: process.env.PAYSTACK_FEE_BEARER === 'subaccount' ? 'subaccount' : 'account',
   maxDownloads: Number(process.env.MAX_DOWNLOADS || 10),
   supportEmail: process.env.SUPPORT_EMAIL || 'support@easynotes.co.za',
+  // Optional: without a Resend key the site works but sends no emails
+  resendApiKey: process.env.RESEND_API_KEY || '',
+  mailFrom: process.env.MAIL_FROM || 'EasyNotes <noreply@easynotes.co.za>',
 };
