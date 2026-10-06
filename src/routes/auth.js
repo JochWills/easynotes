@@ -5,6 +5,7 @@ const db = require('../lib/supabase');
 const flash = require('../lib/flash');
 const { slugify, str } = require('../lib/helpers');
 const { RESERVED_SLUGS } = require('../lib/constants');
+const emails = require('../lib/emails');
 
 const router = express.Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
@@ -78,6 +79,52 @@ router.post('/login', limiter, async (req, res) => {
   }
   req.session.userId = user.id;
   res.redirect(next || (user.role === 'admin' ? '/admin' : '/seller'));
+});
+
+/* ---------- Password reset ---------- */
+
+router.get('/forgot', (req, res) => {
+  res.render('forgot', { title: 'Reset your password', email: str(req.query.email, 200), sent: false });
+});
+
+// Same answer whether or not the account exists, so this can't be used to find out who has one.
+router.post('/forgot', limiter, async (req, res) => {
+  const email = str(req.body.email, 200).toLowerCase();
+  if (!EMAIL_RE.test(email)) return res.status(400).render('forgot', { title: 'Reset your password', email, sent: false, error: 'Enter the email you log in with.' });
+  const { data: user } = await db.from('users').select('id,email,password_hash').eq('email', email).maybeSingle();
+  if (user) {
+    try {
+      await emails.sendPasswordReset(user);
+    } catch (err) {
+      console.error('[auth] reset email not sent', err.message);
+    }
+  }
+  res.render('forgot', { title: 'Check your email', email, sent: true });
+});
+
+router.get('/reset', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const user = await emails.readResetToken(req.query.t);
+  res.render('reset', { title: 'Choose a new password', token: user ? str(req.query.t, 1000) : null, errors: {} });
+});
+
+router.post('/reset', limiter, async (req, res) => {
+  const token = str(req.body.t, 1000);
+  const user = await emails.readResetToken(token);
+  if (!user) return res.status(400).render('reset', { title: 'Choose a new password', token: null, errors: {} });
+
+  const password = String(req.body.password || '');
+  const errors = {};
+  const min = user.role === 'admin' ? 10 : 8;
+  if (password.length < min) errors.password = `Use at least ${min} characters.`;
+  else if (password !== String(req.body.confirm || '')) errors.confirm = 'The two passwords don’t match.';
+  if (Object.keys(errors).length) return res.status(400).render('reset', { title: 'Choose a new password', token, errors });
+
+  const { error } = await db.from('users').update({ password_hash: await bcrypt.hash(password, 12) }).eq('id', user.id);
+  if (error) throw error;
+  req.session.userId = user.id;
+  flash(req, 'ok', 'Password changed. You’re logged in.');
+  res.redirect(user.role === 'admin' ? '/admin' : '/seller');
 });
 
 router.post('/logout', (req, res) => {

@@ -1,0 +1,28 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="auth">
+  <div class="card">
+    <% if (!token) { %>
+      <h1>This link has expired</h1>
+      <p>Reset links work once and expire after an hour. Ask for a new one and use the latest email.</p>
+      <a class="btn btn-hi" href="/forgot">Send a new link</a>
+    <% } else { %>
+      <h1>Choose a new password</h1>
+      <form class="form" method="post" action="/reset">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="t" value="<%= token %>">
+        <div class="field<%= errors.password ? ' has-error' : '' %>">
+          <label for="r-pass">New password</label>
+          <input id="r-pass" type="password" name="password" required minlength="8" autocomplete="new-password">
+          <%- include('partials/field-error', { name: 'password' }) %>
+        </div>
+        <div class="field<%= errors.confirm ? ' has-error' : '' %>">
+          <label for="r-confirm">Type it again</label>
+          <input id="r-confirm" type="password" name="confirm" required minlength="8" autocomplete="new-password">
+          <%- include('partials/field-error', { name: 'confirm' }) %>
+        </div>
+        <button class="btn btn-hi btn-block" type="submit">Save new password</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/bottom') %>

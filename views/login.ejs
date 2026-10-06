@@ -11,7 +11,8 @@
       <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" name="password" required autocomplete="current-password"></div>
       <button class="btn btn-block" type="submit">Log in</button>
     </form>
-    <p class="fineprint">New here? <a href="/signup">Create a seller account</a>. Forgot your password? Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
+    <p class="fineprint">New here? <a href="/signup">Create a seller account</a>.
+      <% if (locals.emailEnabled) { %><a href="/forgot">Forgot your password?</a><% } else { %>Forgot your password? Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.<% } %></p>
   </div>
 </div>
 <%- include('partials/bottom') %>

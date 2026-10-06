@@ -6,7 +6,7 @@ const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
 const storage = require('../lib/storage');
 const { markPaid } = require('../lib/orders');
-const library = require('../lib/library');
+const emails = require('../lib/emails');
 const { isPublic } = require('../lib/queries');
 const { isUuid, feeFor, fileName, noteUrl, str } = require('../lib/helpers');
 const flash = require('../lib/flash');
@@ -147,8 +147,8 @@ router.post('/download', downloadLimiter, async (req, res) => {
 // Emailed link: lists every paid purchase for one email, each downloadable through POST /download.
 router.get('/library', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const link = library.readToken(req.query.t);
-  if (!link) return res.render('library', { title: 'Link expired', orders: null, linkDays: library.LINK_DAYS });
+  const link = emails.readLibraryToken(req.query.t);
+  if (!link) return res.render('library', { title: 'Link expired', orders: null, linkDays: emails.LIBRARY_DAYS });
 
   const { data: orders, error } = await db
     .from('orders')
@@ -157,7 +157,7 @@ router.get('/library', async (req, res) => {
     .eq('status', 'paid')
     .order('paid_at', { ascending: false });
   if (error) throw error;
-  res.render('library', { title: 'Your notes', email: link.email, expires: link.expires, orders, linkDays: library.LINK_DAYS });
+  res.render('library', { title: 'Your notes', email: link.email, expires: link.expires, orders, linkDays: emails.LIBRARY_DAYS });
 });
 
 // "Email me my notes": always gives the same answer so it can't be used to check who has bought what.
@@ -170,7 +170,7 @@ router.post('/download/link', linkLimiter, async (req, res) => {
   const { count } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('email', email).eq('status', 'paid');
   if (count) {
     try {
-      await library.sendLibraryLink(email);
+      await emails.sendLibraryLink(email);
     } catch (err) {
       console.error('[download] link email not sent', err.message);
     }

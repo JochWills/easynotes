@@ -25,6 +25,8 @@ const cases = {
   library: [{ ...base, title: 'Your notes', email: order.email, expires: new Date(Date.now() + 7 * 864e5), orders: [order, { ...order, reference: 'ENXYZ', download_count: 10 }], linkDays: 7 }, { ...base, email: order.email, expires: new Date(), orders: [], linkDays: 7 }, { ...base, title: 'Link expired', orders: null, linkDays: 7 }],
   download: [{ ...base, email: '', reference: '', error: null }, { ...base, email: 'a', reference: 'b', error: 'Nope' }],
   login: [{ ...base, email: '', error: 'bad', next: '' }],
+  forgot: [{ ...base, email: '', sent: false }, { ...base, email: 'a@b.co', sent: false, error: 'Enter the email' }, { ...base, email: 'a@b.co', sent: true }, { ...base, emailEnabled: false, email: '', sent: false }],
+  reset: [{ ...base, token: 'tok', errors: {} }, { ...base, token: 'tok', errors: { confirm: 'No match' } }, { ...base, token: null, errors: {} }],
   signup: [{ ...base, values: {}, errors: { email: 'Bad', accept: 'Tick' } }],
   how: [base], sell: [base], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],

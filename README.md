@@ -61,7 +61,12 @@ Render's free plan blocks SMTP, so emails go through Resend's HTTP API (free up 
 2. **API Keys → Create API key** (sending access).
 3. Set `RESEND_API_KEY` and `MAIL_FROM` (e.g. `EasyNotes <noreply@easynotes.co.za>`) on Render.
 
-Without `RESEND_API_KEY` the site works as before and simply sends no emails.
+All emails come from `MAIL_FROM` and replies go to `SUPPORT_EMAIL`:
+- **Buyers:** a link to every purchase after paying, and on request from `/download`.
+- **Sellers and admins:** password reset links (`/forgot`, valid once, for an hour).
+- **Sellers:** an email when they're approved or rejected, with the reason.
+
+Without `RESEND_API_KEY` the site works as before and simply sends no emails. "Forgot password" then tells people to email support.
 
 ### 4. Render
 1. Push this folder to a GitHub repo.
@@ -134,7 +139,5 @@ supabase/schema.sql    database + buckets
 - Buyer emails are masked in the seller's sales view.
 
 ## Ideas for later
-- Email admins when a seller submits verification.
-- Password reset by email.
 - Watermark each PDF with the buyer's email at download time (discourages sharing).
 - Reviews/ratings from verified buyers.

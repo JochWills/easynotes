@@ -1,5 +1,5 @@
 const db = require('./supabase');
-const { sendPurchaseEmail } = require('./library');
+const { sendPurchaseEmail } = require('./emails');
 
 // Idempotent: safe to call from both the browser callback and the webhook.
 async function markPaid(reference, tx) {

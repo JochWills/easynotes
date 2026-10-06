@@ -4,6 +4,7 @@ const storage = require('../lib/storage');
 const flash = require('../lib/flash');
 const { requireAdmin } = require('../lib/auth');
 const { isUuid, str } = require('../lib/helpers');
+const emails = require('../lib/emails');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -66,6 +67,9 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
     }
     await db.from('sellers').update({ verification_status: 'rejected', verification_note: note, verified_at: null }).eq('id', req.params.id);
     flash(req, 'ok', 'Seller rejected. All their notes are hidden from students.');
+  }
+  if (decision === 'approve' || decision === 'reject') {
+    emails.sendVerificationDecision(req.params.id).catch((err) => console.error('[admin] decision email not sent', err.message));
   }
   res.redirect(`/admin/sellers/${req.params.id}`);
 });

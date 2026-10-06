@@ -42,8 +42,8 @@ const LEVELS = ['Undergraduate', 'Honours / postgraduate', 'Professional exam', 
 // Storefronts live at /<slug>, so a seller can't take a name the site already uses (or may use later).
 const RESERVED_SLUGS = new Set([
   'about', 'account', 'admin', 'api', 'app', 'assets', 'blog', 'browse', 'cart', 'checkout', 'contact', 'css',
-  'dashboard', 'download', 'downloads', 'easynotes', 'favicon', 'help', 'healthz', 'how-it-works', 'img', 'js',
-  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'register', 'robots', 'search', 'sell',
+  'dashboard', 'download', 'downloads', 'easynotes', 'favicon', 'forgot', 'help', 'healthz', 'how-it-works', 'img', 'js',
+  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'register', 'reset', 'robots', 'search', 'sell',
   'seller', 'seller-terms', 'sellers', 'settings', 'signup', 'sitemap', 'static', 'store', 'support', 'terms',
   'webhooks', 'www',
 ]);

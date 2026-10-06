@@ -1,0 +1,24 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="auth">
+  <div class="card">
+    <% if (sent) { %>
+      <h1>Check your email</h1>
+      <p>If <strong><%= email %></strong> has an EasyNotes account, we’ve sent it a link to choose a new password. It expires in an hour.</p>
+      <p class="fineprint">Nothing after a few minutes? Check your spam folder, or <a href="/forgot<%= qs({ email: email }) %>">try again</a>.</p>
+    <% } else if (!locals.emailEnabled) { %>
+      <h1>Reset your password</h1>
+      <p>Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> from the address you log in with and we’ll reset it for you.</p>
+    <% } else { %>
+      <h1>Reset your password</h1>
+      <p>Enter the email you log in with and we’ll send you a link to choose a new password.</p>
+      <% if (locals.error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <form class="form" method="post" action="/forgot">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field"><label for="f-email">Email</label><input id="f-email" type="email" name="email" value="<%= email %>" required autocomplete="email"></div>
+        <button class="btn btn-hi btn-block" type="submit">Send reset link</button>
+      </form>
+    <% } %>
+    <p class="fineprint"><a href="/login">Back to log in</a></p>
+  </div>
+</div>
+<%- include('partials/bottom') %>

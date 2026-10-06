@@ -13,7 +13,7 @@ const port = process.env.PREVIEW_PORT || 3001;
 const routes = [
   [/^\/$/, 'home-0'], [/^\/notes$/, 'browse-0'], [/^\/note\//, 'note-0'], [/^\/s\//, 'storefront-0'],
   [/^\/how-it-works$/, 'how-0'], [/^\/sell$/, 'sell-0'], [/^\/terms$/, 'terms-0'], [/^\/seller-terms$/, 'seller-terms-0'],
-  [/^\/privacy$/, 'privacy-0'], [/^\/download$/, 'download-0'], [/^\/library$/, 'library-0'], [/^\/login$/, 'login-0'], [/^\/signup$/, 'signup-0'],
+  [/^\/privacy$/, 'privacy-0'], [/^\/download$/, 'download-0'], [/^\/library$/, 'library-0'], [/^\/login$/, 'login-0'], [/^\/forgot$/, 'forgot-0'], [/^\/reset$/, 'reset-0'], [/^\/signup$/, 'signup-0'],
   [/^\/checkout\//, 'checkout-complete-0'],
   [/^\/seller$/, 'seller_dashboard-0'], [/^\/seller\/profile$/, 'seller_profile-0'], [/^\/seller\/verification$/, 'seller_verification-0'],
   [/^\/seller\/payouts$/, 'seller_payouts-0'], [/^\/seller\/notes\/new$/, 'seller_note-form-0'], [/^\/seller\/notes\/.+\/edit$/, 'seller_note-form-1'],
