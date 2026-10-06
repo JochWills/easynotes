@@ -3,7 +3,7 @@ const config = require('./config');
 const rand = (cents) => 'R' + (Number(cents || 0) / 100).toFixed(2).replace(/\.00$/, '');
 
 const date = (d) =>
-  d ? new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
 const initials = (name = '') =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || 'EN';

@@ -32,6 +32,18 @@
     });
   });
 
+  // Label table cells with their column heading so tables can stack into cards on phones
+  document.querySelectorAll('table.data').forEach(function (t) {
+    var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) {
+      return th.querySelector('.sr-only') ? '' : th.textContent.trim();
+    });
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (td, i) {
+        if (heads[i]) td.setAttribute('data-label', heads[i]);
+      });
+    });
+  });
+
   // Confirm destructive actions
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) {

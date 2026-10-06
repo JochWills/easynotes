@@ -39,12 +39,6 @@
       </div>
     </section>
 
-    <% if (more.length) { %>
-      <h2 style="margin-top:48px">More from <%= author.display_name %></h2>
-      <div class="grid-notes">
-        <% more.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
-      </div>
-    <% } %>
   </article>
 
   <aside class="buy-box" id="buy" aria-label="Buy these notes">
@@ -70,5 +64,14 @@
     <% } %>
     <p class="fineprint"><a href="mailto:<%= supportEmail %>?subject=<%= encodeURIComponent('Report notes ' + note.id) %>">Report these notes</a></p>
   </aside>
+
+  <% if (more.length) { %>
+    <section class="note-more">
+      <h2>More from <%= author.display_name %></h2>
+      <div class="grid-notes">
+        <% more.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+      </div>
+    </section>
+  <% } %>
 </div>
 <%- include('partials/bottom') %>
