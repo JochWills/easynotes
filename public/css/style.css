@@ -80,8 +80,6 @@ small, .small { font-size: .9rem; }
 .nav a[aria-current="page"] { color: var(--blue); font-weight: 600; }
 .nav form { margin: 0; }
 .linklike { background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
-.icon-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper); box-shadow: var(--shadow-sm); }
-.icon-btn:hover { border-color: var(--rule-strong); }
 .menu-btn { display: none; margin-left: auto; width: 44px; height: 44px; place-items: center; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper); cursor: pointer; color: var(--ink); }
 .menu-toggle:focus-visible + .menu-btn { outline: 3px solid var(--blue); outline-offset: 2px; }
 
@@ -441,7 +439,6 @@ dialog .lib-list { max-height: 50vh; overflow-y: auto; }
   .nav-links { flex-direction: column; align-items: stretch; gap: 0; margin: 0; }
   .nav-links a { padding: 12px 4px; border-bottom: 1px solid var(--rule); }
   .nav-actions { padding-top: 14px; gap: 14px; flex-wrap: wrap; }
-  .nav-actions .icon-btn { display: none; }
   .nav-actions .btn { flex: 1; }
 }
 @media (max-width: 560px) {
