@@ -28,9 +28,6 @@
       <div class="nav-links">
         <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
         <a href="/how-it-works" <%- cp === '/how-it-works' ? 'aria-current="page"' : '' %>>How it works</a>
-        <% if (!locals.user) { %>
-          <a href="/sell" <%- cp === '/sell' ? 'aria-current="page"' : '' %>>For sellers</a>
-        <% } %>
       </div>
       <div class="nav-actions">
         <% if (locals.user) { %>
