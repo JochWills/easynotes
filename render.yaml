@@ -33,4 +33,4 @@ services:
       - key: MAIL_FROM
         sync: false
       - key: SUPPORT_EMAIL
-        value: support@easynotes.co.za
+        sync: false
