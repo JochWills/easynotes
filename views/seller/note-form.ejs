@@ -60,8 +60,16 @@
           </div>
           <div class="field <%= errors.pdf ? 'has-error' : '' %>">
             <label for="n-pdf"><%= editing ? 'Replace PDF' : 'Notes PDF' %></label>
+            <% if (editing && note.file_path) { %>
+              <a class="current-file" href="/seller/notes/<%= note.id %>/file" target="_blank" rel="noopener">
+                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 13h6M9 16.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <span><strong>View current PDF</strong><small><%= [note.page_count ? note.page_count + (note.page_count === 1 ? ' page' : ' pages') : null, note.file_size ? (note.file_size < 1048576 ? Math.max(1, Math.round(note.file_size / 1024)) + ' KB' : (note.file_size / 1048576).toFixed(1) + ' MB') : null, (/-(\d{13})\.pdf$/.test(note.file_path) ? 'uploaded ' + date(new Date(Number(note.file_path.match(/-(\d{13})\.pdf$/)[1]))) : null)].filter(Boolean).join(' · ') %></small></span>
+                <svg class="current-file-ext" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="sr-only">(opens in a new tab)</span>
+              </a>
+            <% } %>
             <input id="n-pdf" type="file" name="pdf" accept="application/pdf" <%= editing ? '' : 'required' %>>
-            <span class="hint"><%= editing ? 'Leave empty to keep the current file' + (note.page_count ? ' (' + note.page_count + ' pages)' : '') + '. Past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %> Students see a preview of the first 2½ pages on your listing (less for short notes).</span>
+            <span class="hint"><%= editing ? 'Leave empty to keep the current file. If you choose a new one, past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %> Students see a preview of the first 2½ pages on your listing (less for short notes).</span>
             <%- include('../partials/field-error', { name: 'pdf' }) %>
           </div>
           <div class="field <%= errors.own_work ? 'has-error' : '' %>"><label class="check"><input type="checkbox" name="own_work"> <span>These notes are my own work and contain no copied textbooks, slides or past papers.</span></label><%- include('../partials/field-error', { name: 'own_work' }) %></div>

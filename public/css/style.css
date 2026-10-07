@@ -352,6 +352,13 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .payouts h2, .payout-account-title { font-size: 1.3rem; margin: 0 0 14px; }
 .stats.payout-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
 .payouts-empty { padding: 28px 20px; }
+.current-file { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); text-decoration: none; transition: border-color .15s, background .15s; }
+.current-file:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--ink); }
+.current-file > svg:first-child { flex: none; color: var(--blue); }
+.current-file span:not(.sr-only) { display: grid; min-width: 0; flex: 1; }
+.current-file strong { font-size: .95rem; color: var(--blue); }
+.current-file small { font-size: .84rem; color: var(--muted); }
+.current-file-ext { flex: none; color: var(--muted); }
 .delete-card { margin-top: 20px; }
 .delete-card h1 { font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
 .delete-card .checklist { margin: 4px 0 18px; }

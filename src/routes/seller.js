@@ -359,6 +359,13 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
   res.redirect('/seller');
 });
 
+// Lets the seller open the PDF they uploaded, through a short-lived link (the notes bucket is private).
+router.get('/notes/:id/file', ownNote, async (req, res) => {
+  const url = await storage.signedUrl('notes', req.note.file_path, 120);
+  res.set('Cache-Control', 'no-store');
+  res.redirect(url);
+});
+
 router.get('/notes/:id/edit', ownNote, (req, res) => {
   const n = req.note;
   res.render('seller/note-form', formLocals({ title: 'Edit notes', note: n, values: { ...n, price: (n.price_cents / 100).toFixed(2) }, errors: {} }));
