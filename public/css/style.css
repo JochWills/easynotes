@@ -472,6 +472,22 @@ dialog .lib-list { max-height: 50vh; overflow-y: auto; }
 .site-footer a:hover { color: var(--blue); text-decoration: underline; }
 .site-footer p { margin: 6px 0 0; }
 
+/* ---------- Page transitions & loading ---------- */
+@view-transition { navigation: auto; }
+.site-header { view-transition-name: site-header; }
+::view-transition-old(root) { animation: page-out .14s ease-in both; }
+::view-transition-new(root) { animation: page-in .26s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes page-out { to { opacity: 0; } }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+main > * { animation: rise-in .38s cubic-bezier(.2, .7, .2, 1) both; }
+main > :nth-child(2) { animation-delay: .04s; }
+main > :nth-child(3) { animation-delay: .08s; }
+main > :nth-child(n+4) { animation-delay: .12s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } }
+.load-bar { position: fixed; top: 0; left: 0; z-index: 60; height: 3px; width: 100%; background: var(--blue); transform-origin: left; transform: scaleX(0); opacity: 0; pointer-events: none; }
+.load-bar.is-loading { opacity: 1; animation: load-crawl 8s cubic-bezier(.1, .7, .2, 1) forwards; }
+@keyframes load-crawl { 0% { transform: scaleX(0); } 10% { transform: scaleX(.35); } 100% { transform: scaleX(.92); } }
+
 /* ---------- Responsive & motion ---------- */
 @media (max-width: 1080px) {
   .nav-links { gap: 20px; }

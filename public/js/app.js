@@ -1,4 +1,23 @@
 (function () {
+  // Thin loading bar while a page that wasn't loaded ahead of time is on its way.
+  var bar = document.createElement('div');
+  bar.className = 'load-bar';
+  bar.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(bar);
+  var startBar = function () { bar.classList.remove('is-loading'); void bar.offsetWidth; bar.classList.add('is-loading'); };
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.target === '_blank' || a.hasAttribute('download') || a.origin !== location.origin) return;
+    if (a.pathname === location.pathname && a.search === location.search && a.hash) return;
+    startBar();
+  });
+  document.addEventListener('submit', function (e) {
+    if (!e.defaultPrevented && !e.target.hasAttribute('data-download')) startBar();
+  });
+  // Coming back with the Back button: don't leave the bar running.
+  window.addEventListener('pageshow', function () { bar.classList.remove('is-loading'); });
+
   // Open the download dialog straight after payment
   document.querySelectorAll('dialog[data-autoshow]').forEach(function (d) {
     if (typeof d.showModal === 'function') d.showModal();

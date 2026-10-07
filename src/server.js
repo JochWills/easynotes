@@ -36,7 +36,14 @@ app.use(
   })
 );
 app.use(compression());
-app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: config.isProd ? '1d' : 0 }));
+app.use(
+  express.static(path.join(__dirname, '..', 'public'), {
+    maxAge: config.isProd ? '1d' : 0,
+    setHeaders: (res, file) => {
+      if (file.endsWith('speculation-rules.json')) res.type('application/speculationrules+json');
+    },
+  })
+);
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
@@ -56,8 +63,15 @@ app.use(
 );
 app.use(csrf);
 app.use((req, res, next) => {
-  res.locals.flash = req.session.flash || null;
-  delete req.session.flash;
+  // Pages loaded ahead of a click (hover prerender) leave the one-off message for the page actually shown.
+  if (/prefetch/i.test(req.get('sec-purpose') || '')) {
+    res.locals.flash = null;
+  } else {
+    res.locals.flash = req.session.flash || null;
+    delete req.session.flash;
+  }
+  // Chrome/Edge load same-site pages on hover so clicks feel instant (rules in public/speculation-rules.json).
+  res.set('Speculation-Rules', '"/speculation-rules.json"');
   res.locals.currentPath = req.path;
   res.locals.feePercent = config.platformFeePercent;
   res.locals.supportEmail = config.supportEmail;

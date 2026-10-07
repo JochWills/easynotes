@@ -1,0 +1,21 @@
+{
+  "prerender": [
+    {
+      "where": {
+        "and": [
+          { "href_matches": "/*" },
+          { "not": { "href_matches": [
+            { "pathname": "/logout" },
+            { "pathname": "/checkout/*" },
+            { "pathname": "/library" },
+            { "pathname": "/reset" },
+            { "pathname": "/webhooks/*" },
+            { "pathname": "/admin/health" }
+          ] } },
+          { "not": { "selector_matches": "[target=_blank], [download], [data-no-prerender]" } }
+        ]
+      },
+      "eagerness": "moderate"
+    }
+  ]
+}

@@ -6,15 +6,16 @@ async function loadUser(req, res, next) {
   const id = req.session && req.session.userId;
   if (!id) return next();
 
-  const { data: user } = await db.from('users').select('id,email,role').eq('id', id).maybeSingle();
-  if (!user) {
+  const { data: row } = await db.from('users').select('id,email,role,sellers(*)').eq('id', id).maybeSingle();
+  if (!row) {
     req.session = null;
     return next();
   }
+  const { sellers, ...user } = row;
   req.user = user;
   res.locals.user = user;
   if (user.role === 'seller') {
-    const { data: me } = await db.from('sellers').select('*').eq('user_id', user.id).maybeSingle();
+    const me = (Array.isArray(sellers) ? sellers[0] : sellers) || null;
     req.seller = me;
     res.locals.me = me;
   }
