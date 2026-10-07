@@ -5,6 +5,7 @@ const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
 const storage = require('../lib/storage');
 const upload = require('../lib/upload');
+const preview = require('../lib/preview');
 const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
@@ -264,19 +265,16 @@ function validateNote(body) {
   return { values, errors };
 }
 
-const noteFiles = upload.fields([{ name: 'pdf', maxCount: 1 }, { name: 'sample', maxCount: 1 }]);
+const noteFiles = upload.fields([{ name: 'pdf', maxCount: 1 }]);
 
 function checkFiles(req, errors, { pdfRequired }) {
   const pdf = req.files?.pdf?.[0];
-  const sample = req.files?.sample?.[0];
   if (!pdf && pdfRequired) errors.pdf = 'Choose the PDF of your notes.';
   if (pdf && !storage.isPdf(pdf.buffer)) errors.pdf = 'This file isn’t a PDF. Export your notes as PDF and try again.';
-  if (sample && !storage.isPdf(sample.buffer)) errors.sample = 'The sample must be a PDF.';
-  if (sample && sample.size > 10 * MB) errors.sample = 'Keep the sample under 10 MB.';
-  if (Object.keys(errors).some((k) => k !== 'pdf' && k !== 'sample') && (pdf || sample)) {
-    errors.files = 'Fix the fields marked below, then choose your files again: browsers clear file fields when a form is sent back.';
+  if (Object.keys(errors).some((k) => k !== 'pdf') && pdf) {
+    errors.files = 'Fix the fields marked below, then choose your PDF again: browsers clear file fields when a form is sent back.';
   }
-  return { pdf, sample };
+  return { pdf };
 }
 
 const formLocals = (extra) => ({ tab: 'notes', institutions: NOTE_INSTITUTIONS, levels: LEVELS, feePercent: config.platformFeePercent, ...extra });
@@ -287,7 +285,7 @@ router.get('/notes/new', requireApproved, (req, res) => {
 
 router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/notes/new'), verifyCsrf, async (req, res) => {
   const { values, errors } = validateNote(req.body);
-  const { pdf, sample } = checkFiles(req, errors, { pdfRequired: true });
+  const { pdf } = checkFiles(req, errors, { pdfRequired: true });
   if (Object.keys(errors).length) {
     return res.status(400).render('seller/note-form', formLocals({ title: 'Upload notes', note: null, values: { ...values, price: req.body.price }, errors }));
   }
@@ -296,12 +294,8 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
   const stamp = Date.now();
   const filePath = `${req.seller.id}/${id}-${stamp}.pdf`;
   await storage.upload('notes', filePath, pdf.buffer, 'application/pdf');
-  let samplePath = null;
-  if (sample) {
-    samplePath = `${req.seller.id}/${id}-${stamp}.pdf`;
-    await storage.upload('samples', samplePath, sample.buffer, 'application/pdf');
-  }
 
+  const pageCount = await storage.countPages(pdf.buffer);
   const { error } = await db.from('notes').insert({
     id,
     seller_id: req.seller.id,
@@ -309,15 +303,14 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
     slug: slugify(values.title),
     file_path: filePath,
     file_size: pdf.size,
-    sample_path: samplePath,
-    page_count: await storage.countPages(pdf.buffer),
+    page_count: pageCount,
     status: req.body.publish === '1' ? 'published' : 'draft',
   });
   if (error) {
     await storage.remove('notes', [filePath]);
-    await storage.remove('samples', [samplePath]);
     throw error;
   }
+  await preview.makePreview(filePath, pdf.buffer, pageCount);
 
   const live = req.body.publish === '1';
   const noPayouts = !req.seller.paystack_subaccount_code;
@@ -345,34 +338,29 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
     return res.redirect('/seller');
   }
   const { values, errors } = validateNote(req.body);
-  const { pdf, sample } = checkFiles(req, errors, { pdfRequired: false });
+  const { pdf } = checkFiles(req, errors, { pdfRequired: false });
   if (Object.keys(errors).length) {
     return res.status(400).render('seller/note-form', formLocals({ title: 'Edit notes', note: n, values: { ...n, ...values, price: req.body.price }, errors }));
   }
 
   const update = { ...values, slug: slugify(values.title) };
   const stamp = Date.now();
-  const oldFiles = { notes: [], samples: [] };
+  const oldFiles = [];
   if (pdf) {
     update.file_path = `${req.seller.id}/${n.id}-${stamp}.pdf`;
     update.file_size = pdf.size;
     update.page_count = await storage.countPages(pdf.buffer);
     await storage.upload('notes', update.file_path, pdf.buffer, 'application/pdf');
-    oldFiles.notes.push(n.file_path);
-  }
-  if (sample) {
-    update.sample_path = `${req.seller.id}/${n.id}-${stamp}.pdf`;
-    await storage.upload('samples', update.sample_path, sample.buffer, 'application/pdf');
-    oldFiles.samples.push(n.sample_path);
-  } else if (req.body.remove_sample === 'on' && n.sample_path) {
-    update.sample_path = null;
-    oldFiles.samples.push(n.sample_path);
+    oldFiles.push(n.file_path);
   }
 
   const { error } = await db.from('notes').update(update).eq('id', n.id);
   if (error) throw error;
-  await storage.remove('notes', oldFiles.notes);
-  await storage.remove('samples', oldFiles.samples);
+  if (pdf) {
+    await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
+    await preview.removePreview(n.file_path, n.page_count);
+  }
+  await storage.remove('notes', oldFiles);
   flash(req, 'ok', pdf ? 'Changes saved. Past buyers will get the new file when they download again.' : 'Changes saved.');
   res.redirect('/seller');
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../lib/supabase');
-const storage = require('../lib/storage');
+const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
 const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
 const { isUuid, noteUrl } = require('../lib/helpers');
@@ -90,7 +90,8 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     author: note.sellers,
     live,
     more: more || [],
-    sampleUrl: note.sample_path ? storage.publicUrl('samples', note.sample_path) : null,
+    previewImages: preview.previewUrls(note),
+    previewPlan: preview.previewPlan(note.page_count),
   });
 });
 

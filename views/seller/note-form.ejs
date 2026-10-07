@@ -60,15 +60,8 @@
           <div class="field <%= errors.pdf ? 'has-error' : '' %>">
             <label for="n-pdf"><%= editing ? 'Replace PDF' : 'Notes PDF' %></label>
             <input id="n-pdf" type="file" name="pdf" accept="application/pdf" <%= editing ? '' : 'required' %>>
-            <span class="hint"><%= editing ? 'Leave empty to keep the current file' + (note.page_count ? ' (' + note.page_count + ' pages)' : '') + '. Past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %></span>
+            <span class="hint"><%= editing ? 'Leave empty to keep the current file' + (note.page_count ? ' (' + note.page_count + ' pages)' : '') + '. Past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %> Students see a preview of the first 2½ pages on your listing (less for short notes).</span>
             <%- include('../partials/field-error', { name: 'pdf' }) %>
-          </div>
-          <div class="field <%= errors.sample ? 'has-error' : '' %>">
-            <label for="n-sample">Free sample <span class="muted">(optional)</span></label>
-            <input id="n-sample" type="file" name="sample" accept="application/pdf">
-            <span class="hint">A few pages anyone can read before buying. Listings with samples sell better. Up to 10 MB.</span>
-            <% if (editing && note.sample_path) { %><label class="check" style="margin-top:8px"><input type="checkbox" name="remove_sample"> <span>Remove the current sample</span></label><% } %>
-            <%- include('../partials/field-error', { name: 'sample' }) %>
           </div>
           <div class="field <%= errors.own_work ? 'has-error' : '' %>"><label class="check"><input type="checkbox" name="own_work"> <span>These notes are my own work and contain no copied textbooks, slides or past papers.</span></label><%- include('../partials/field-error', { name: 'own_work' }) %></div>
         </div>

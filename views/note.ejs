@@ -1,4 +1,13 @@
 <%- include('partials/top') %>
+<%
+  var inCart = (locals.cartIds || []).indexOf(note.id) > -1;
+  var size = note.file_size ? (note.file_size < 1048576 ? Math.max(1, Math.round(note.file_size / 1024)) + ' KB' : (note.file_size / 1048576).toFixed(1) + ' MB') : '';
+  var lede = (note.description || '').split('\n')[0].trim();
+  if (lede.length > 180) lede = lede.slice(0, 177).replace(/\s+\S*$/, '') + '…';
+  var shown = previewPlan.full + (previewPlan.half ? 0.5 : 0);
+  var shownLabel = shown === 0.5 ? 'half a page' : (shown % 1 ? Math.floor(shown) + '½' : shown) + ' pages';
+  var morePages = note.page_count ? Math.max(0, note.page_count - previewPlan.full) : 0;
+%>
 <% if (!live) { %>
   <div class="preview-banner"><div class="wrap">
     Preview only. Students can’t see these notes yet:
@@ -6,75 +15,174 @@
   </div></div>
 <% } %>
 <div class="wrap note-page">
-  <article>
+  <header class="note-head">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/notes">Notes</a> /
-      <a href="/notes<%= qs({ university: note.university }) %>"><%= note.university %></a>
+      <a href="/notes">Notes</a> <span aria-hidden="true">/</span>
+      <a href="/notes<%= qs({ university: note.university }) %>"><%= note.university %></a> <span aria-hidden="true">/</span>
+      <span aria-current="page"><%= note.title %></span>
     </nav>
     <% if (note.module_code) { %><span class="tab"><%= note.module_code %></span><% } %>
     <h1><%= note.title %></h1>
+    <% if (lede) { %><p class="note-lede"><%= lede %></p><% } %>
+  </header>
 
-    <dl class="facts">
-      <dt>Subject</dt><dd><%= note.subject %></dd>
-      <dt>Institution</dt><dd><%= note.university %></dd>
-      <dt>Level</dt><dd><%= note.level %></dd>
-      <dt>Format</dt><dd>PDF<%= note.page_count ? ', ' + note.page_count + ' pages' : '' %><%= note.file_size ? ', ' + (note.file_size / 1048576).toFixed(1) + ' MB' : '' %></dd>
-      <dt>Last updated</dt><dd><%= date(note.updated_at) %></dd>
-    </dl>
-
-    <h2 class="sr-only">What’s inside</h2>
-    <div class="prose"><%= note.description %></div>
-
-    <% if (sampleUrl) { %>
-      <p><a class="btn btn-ghost" href="<%= sampleUrl %>" target="_blank" rel="noopener">Read a free sample (PDF)</a></p>
+  <div class="note-view">
+    <% if (previewImages.length) { %>
+      <section class="viewer" id="preview" data-viewer aria-label="Preview of the first pages">
+        <div class="viewer-bar">
+          <span class="viewer-count"><span class="viewer-num" data-viewer-page>1</span><span class="viewer-of">/ <%= note.page_count %></span></span>
+          <div class="viewer-zoom">
+            <button type="button" data-zoom="-1" aria-label="Zoom out"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+            <span class="viewer-level" data-zoom-level aria-live="polite">100%</span>
+            <button type="button" data-zoom="1" aria-label="Zoom in"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+          </div>
+          <button type="button" class="viewer-full" data-fullscreen aria-label="Full screen" hidden><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="viewer-body">
+          <div class="viewer-scroll" data-viewer-scroll tabindex="0" aria-label="Preview pages, scroll to read">
+            <div class="viewer-stack" data-viewer-stack>
+              <% previewImages.forEach(function (src, i) { var half = previewPlan.half && i === previewImages.length - 1; %>
+                <figure class="viewer-page<%= half ? ' is-half' : '' %>" id="preview-p<%= i + 1 %>" data-page="<%= i + 1 %>">
+                  <img src="<%= src %>" alt="Page <%= i + 1 %> of the notes<%= half ? ' (top half)' : '' %>" <%- i ? 'loading="lazy"' : 'fetchpriority="high"' %> decoding="async" draggable="false">
+                </figure>
+              <% }) %>
+              <div class="viewer-end">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M8 10.5V8a4 4 0 018 0v2.5" fill="none" stroke="currentColor" stroke-width="1.9"/></svg>
+                <strong>That’s the free preview</strong>
+                <span>You’ve seen <%= shownLabel %> of <%= note.page_count %>. Buy to download the full PDF.</span>
+                <% if (live) { %><a class="btn btn-hi btn-sm" href="#buy">Get all <%= note.page_count %> pages · <%= rand(note.price_cents) %></a><% } %>
+              </div>
+            </div>
+          </div>
+          <div class="viewer-thumbs" aria-label="Pages">
+            <% previewImages.forEach(function (src, i) { %>
+              <a class="viewer-thumb<%= i === 0 ? ' is-current' : '' %>" href="#preview-p<%= i + 1 %>" data-thumb="<%= i + 1 %>" aria-label="Go to page <%= i + 1 %>">
+                <img src="<%= src %>" alt="" loading="lazy" decoding="async" draggable="false">
+                <span><%= i + 1 %></span>
+              </a>
+            <% }) %>
+            <% if (morePages > 0) { %>
+              <a class="viewer-thumb viewer-locked" href="#buy">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M8 10.5V8a4 4 0 018 0v2.5" fill="none" stroke="currentColor" stroke-width="1.9"/></svg>
+                <strong>+<%= morePages %></strong>
+                <small>more <%= morePages === 1 ? 'page' : 'pages' %></small>
+              </a>
+            <% } %>
+          </div>
+        </div>
+        <div class="viewer-missing" data-viewer-missing hidden>
+          <strong>The preview is still being prepared.</strong>
+          <span>Check back in a minute.</span>
+        </div>
+      </section>
+    <% } else { %>
+      <section class="viewer viewer-none" id="preview" aria-label="Preview">
+        <div class="viewer-missing">
+          <strong>No preview for these notes yet.</strong>
+        </div>
+      </section>
     <% } %>
+  </div>
 
-    <section class="author" aria-label="About the seller">
-      <div class="avatar" aria-hidden="true"><%= initials(author.display_name) %></div>
-      <div>
-        <h3><a href="<%= storeUrl(author) %>"><%= author.display_name %></a></h3>
-        <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
-        <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
-        <% if (author.headline) { %><p class="muted"><%= author.headline %></p><% } %>
+  <div class="note-main">
+    <div class="note-tabs" role="tablist" aria-label="About these notes" data-tabs>
+      <button type="button" role="tab" id="tab-desc" aria-controls="panel-desc" aria-selected="true">Description</button>
+      <button type="button" role="tab" id="tab-author" aria-controls="panel-author" aria-selected="false" tabindex="-1">About the author</button>
+    </div>
+    <section class="tab-panel" id="panel-desc" role="tabpanel" aria-labelledby="tab-desc">
+      <h2>About these notes</h2>
+      <div class="prose"><%= note.description %></div>
+    </section>
+    <section class="tab-panel" id="panel-author" role="tabpanel" aria-labelledby="tab-author">
+      <h2 class="sr-only">About the author</h2>
+      <div class="author">
+        <div class="avatar" aria-hidden="true"><%= initials(author.display_name) %></div>
+        <div>
+          <h3><a href="<%= storeUrl(author) %>"><%= author.display_name %></a></h3>
+          <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
+          <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
+          <% if (author.headline) { %><p class="muted"><%= author.headline %></p><% } %>
+          <p><a href="<%= storeUrl(author) %>">See all notes by <%= author.display_name %> →</a></p>
+        </div>
       </div>
     </section>
+  </div>
 
-  </article>
-
-  <aside class="buy-box" id="buy" aria-label="Buy these notes">
-    <span class="price"><%= rand(note.price_cents) %></span>
-    <span class="muted">Once-off. Instant PDF download.</span>
-    <% if (live) { %>
-      <form class="form" method="post" action="/checkout/<%= note.id %>">
-        <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <div class="field">
-          <label for="buy-email">Your email</label>
-          <input id="buy-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
-          <span class="hint">Your receipt goes here. You’ll use it with your payment reference to download again.</span>
-        </div>
-        <label class="check">
-          <input type="checkbox" name="accept" required>
-          <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
-        </label>
-        <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(note.price_cents) %></button>
-      </form>
-      <div class="or-cart">
-        <% if ((locals.cartIds || []).indexOf(note.id) > -1) { %>
-          <a class="btn btn-ghost btn-block" href="/cart">✓ In your cart · View cart</a>
-        <% } else { %>
-          <form method="post" action="/cart/add/<%= note.id %>">
-            <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <button class="btn btn-ghost btn-block" type="submit">Add to cart</button>
-          </form>
-          <span class="hint">Buying notes for a few modules? Add them all and pay once.</span>
-        <% } %>
+  <div class="note-side">
+    <aside class="buy-box" id="buy" aria-label="Buy these notes">
+      <div class="buy-top">
+        <span class="price"><%= rand(note.price_cents) %></span>
+        <span class="instant"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z" fill="currentColor"/></svg>Instant download</span>
       </div>
-      <p class="fineprint">Secure checkout with card, EFT and more. EasyNotes never sees your card details.</p>
-    <% } else { %>
-      <p class="fineprint">The buy button appears here once these notes are live.</p>
+      <p class="buy-sub">Once-off. Instant PDF download.</p>
+
+      <dl class="note-facts">
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Subject</dt><dd><%= note.subject %></dd></div>
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 4l9 5.5 M5 10v8 M9.5 10v8 M14.5 10v8 M19 10v8 M3 20.5h18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Institution</dt><dd><%= note.university %></dd></div>
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z M6.5 11.5v4.2c1.4 1.4 3.4 2.3 5.5 2.3s4.1-.9 5.5-2.3v-4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Level</dt><dd><%= note.level %></dd></div>
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Format</dt><dd>PDF<%= note.page_count ? ', ' + note.page_count + (note.page_count === 1 ? ' page' : ' pages') : '' %><%= size ? ', ' + size : '' %></dd></div>
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 10h16M8.5 3v4M15.5 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Last updated</dt><dd><%= date(note.updated_at) %></dd></div>
+      </dl>
+
+      <% if (live) { %>
+        <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <div class="buy-fields" data-buy-fields>
+            <div class="field">
+              <label for="buy-email">Your email</label>
+              <input id="buy-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+              <span class="hint">Your receipt and download link go here.</span>
+            </div>
+            <label class="check">
+              <input type="checkbox" name="accept" required>
+              <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
+            </label>
+          </div>
+          <button class="btn btn-hi btn-block btn-lg" type="submit" data-buy-btn data-pay-label="Pay <%= rand(note.price_cents) %>">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
+            <span data-buy-label>Buy now – <%= rand(note.price_cents) %></span>
+          </button>
+        </form>
+        <% if (inCart) { %>
+          <a class="btn btn-ghost btn-block btn-lg" href="/cart">✓ In your cart · View cart</a>
+        <% } else { %>
+          <form method="post" action="/cart/add/<%= note.id %>" class="buy-cart">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn btn-ghost btn-block btn-lg" type="submit">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
+              Add to cart
+            </button>
+          </form>
+        <% } %>
+
+        <ul class="buy-ticks">
+          <li>Instant PDF download</li>
+          <li>Secure checkout (card, EFT and more)</li>
+          <li>Download again later with your email</li>
+          <li>Supports the academic who wrote them</li>
+        </ul>
+
+        <div class="buy-secure">
+          <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z M8.8 12l2.2 2.2 4.3-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          <div><strong>Secure and trusted</strong><span>Your payment is processed securely. EasyNotes never sees your card details.</span></div>
+        </div>
+      <% } else { %>
+        <p class="fineprint">The buy button appears here once these notes are live.</p>
+      <% } %>
+    </aside>
+
+    <% if (live) { %>
+      <aside class="multi-card" aria-label="Buying for several modules">
+        <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="4.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 12.5v8h14v-8 M12 8v12.5 M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <div>
+          <strong>Buying notes for multiple modules?</strong>
+          <span>Add a few to your cart and pay once.</span>
+          <a href="/notes">Browse more notes →</a>
+        </div>
+      </aside>
     <% } %>
-    <p class="fineprint"><a href="mailto:<%= supportEmail %>?subject=<%= encodeURIComponent('Report notes ' + note.id) %>">Report these notes</a></p>
-  </aside>
+    <p class="fineprint note-report"><a href="mailto:<%= supportEmail %>?subject=<%= encodeURIComponent('Report notes ' + note.id) %>">Report these notes</a></p>
+  </div>
 
   <% if (more.length) { %>
     <section class="note-more">

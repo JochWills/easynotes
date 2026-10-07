@@ -8,10 +8,14 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "preview": "node scripts/preview.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "make-previews": "node scripts/make-previews.js"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.100",
     "@supabase/supabase-js": "^2.45.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
@@ -22,6 +26,7 @@
     "express-rate-limit": "^7.4.0",
     "helmet": "^8.0.0",
     "multer": "^2.0.0",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.10.38"
   }
 }

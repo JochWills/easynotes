@@ -9,7 +9,7 @@ const helpers = require('../src/lib/helpers');
 const C = require('../src/lib/constants');
 
 const seller = { id: 's1', display_name: 'Thandi Mokoena', slug: 'thandi-mokoena', headline: 'CA(SA). Accounting notes that stick.', bio: 'Distinctions in Accounting I–III.', degree: 'BCom Honours in Accounting', university: 'University of Cape Town', graduation_year: 2023, verification_status: 'approved', verified_at: new Date(), paystack_subaccount_code: 'ACCT_x', bank_name: 'Capitec Bank', account_number_last4: '1234', business_name: 'T Mokoena', submitted_at: new Date(), users: { email: 'thandi@example.com' } };
-const note = { id: '11111111-1111-1111-1111-111111111111', title: 'Financial Accounting I: complete exam summary', slug: 'financial-accounting-i', subject: 'Accounting', module_code: 'ACC1006F', university: 'University of Cape Town', level: 'Undergraduate', price_cents: 12000, page_count: 46, file_size: 2400000, sales_count: 12, status: 'published', description: 'Covers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.', created_at: new Date(), updated_at: new Date(), sellers: seller, sample_path: 'x' };
+const note = { id: '11111111-1111-1111-1111-111111111111', title: 'Financial Accounting I: complete exam summary', slug: 'financial-accounting-i', subject: 'Accounting', module_code: 'ACC1006F', university: 'University of Cape Town', level: 'Undergraduate', price_cents: 12000, page_count: 46, file_size: 2400000, sales_count: 12, status: 'published', description: 'Covers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.', created_at: new Date(), updated_at: new Date(), sellers: seller };
 const order = { reference: 'ENABC123DEF', email: 'student@example.com', status: 'paid', amount_cents: 12000, platform_fee_cents: 2400, seller_earnings_cents: 9600, paid_at: new Date(), created_at: new Date(), download_count: 1, notes: { title: note.title }, sellers: seller };
 
 const base = { ...helpers, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
@@ -19,7 +19,11 @@ const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 const cases = {
   home: [{ ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
   browse: [{ ...base, title: 'Browse', notes: [note], count: 30, filters: { q: 'acc', university: '', level: '', sort: 'new' }, page: 1, pages: 2, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...base, notes: [], count: 0, filters: { q: '', university: 'Rhodes University', level: 'Undergraduate', sort: 'new' }, page: 1, pages: 1, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],
-  note: [{ ...base, cartIds: [], title: 'x', note, author: seller, live: true, more: [note], sampleUrl: 'https://x' }, { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], sampleUrl: null }],
+  note: [
+    { ...base, cartIds: [], title: 'x', note: { ...note, page_count: 12, description: 'Explanations, questions and exam traps. The best notes I have made by a landslide.\nCovers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.' }, author: seller, live: true, more: [note, note], previewImages: [1, 2, 3].map((i) => `/_preview/long-p${i}.webp`), previewPlan: { full: 2, half: true, images: 3 } },
+    { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], previewImages: [], previewPlan: { full: 0, half: false, images: 0 } },
+    { ...base, cartIds: [note.id], note: { ...note, page_count: 2, file_size: 46560 }, author: seller, live: true, more: [], previewImages: ['/_preview/missing.webp'], previewPlan: { full: 0, half: true, images: 1 } },
+  ],
   storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
   'checkout-complete': [
     ...['paid', 'pending', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENABC123DEF', email: order.email, total: 12000, orders: [{ ...order, note_id: note.id, notes: note }] })),

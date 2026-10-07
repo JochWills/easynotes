@@ -1,0 +1,2 @@
+/* Loaded only when JavaScript is off: show things that JS would otherwise reveal. */
+.buy-form .buy-fields { display: grid; }

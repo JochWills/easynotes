@@ -464,6 +464,122 @@
     update();
   });
 
+  // Note page: "Buy now" first opens the email + terms fields, then becomes the Pay button.
+  // (Handled on click, before the browser checks the still-hidden required fields.)
+  document.querySelectorAll('[data-buy-form]').forEach(function (f) {
+    var btn = f.querySelector('[data-buy-btn]');
+    btn.addEventListener('click', function (e) {
+      if (f.classList.contains('is-open')) return;
+      e.preventDefault();
+      f.classList.add('is-open');
+      f.querySelector('[data-buy-fields]').classList.add('is-revealed');
+      f.querySelector('[data-buy-label]').textContent = btn.getAttribute('data-pay-label');
+      f.querySelector('input[type="email"]').focus();
+    });
+  });
+
+  // Note page tabs (all panels show without JS)
+  document.querySelectorAll('[data-tabs]').forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    var select = function (tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) tab.focus();
+    };
+    document.documentElement.classList.add('tabs-on');
+    select(tabs[0]);
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(t); });
+      t.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length], true); }
+      });
+    });
+  });
+
+  // Note preview viewer: page number, zoom, thumbnails and full screen
+  document.querySelectorAll('[data-viewer]').forEach(function (v) {
+    var scroller = v.querySelector('[data-viewer-scroll]');
+    var stack = v.querySelector('[data-viewer-stack]');
+    var pages = Array.prototype.slice.call(v.querySelectorAll('[data-page]'));
+    var thumbs = Array.prototype.slice.call(v.querySelectorAll('[data-thumb]'));
+    var num = v.querySelector('[data-viewer-page]');
+
+    // If the preview images aren't there (still being made), say so instead of showing empty pages
+    var first = pages[0] && pages[0].querySelector('img');
+    var broken = function () {
+      v.classList.add('is-broken');
+      v.querySelector('[data-viewer-missing]').hidden = false;
+    };
+    if (first) {
+      if (first.complete && first.naturalWidth === 0) broken();
+      first.addEventListener('error', broken);
+    }
+
+    var setCurrent = function (n) {
+      num.textContent = n;
+      thumbs.forEach(function (t) { t.classList.toggle('is-current', Number(t.getAttribute('data-thumb')) === n); });
+    };
+    if ('IntersectionObserver' in window) {
+      var seen = {};
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { seen[en.target.getAttribute('data-page')] = en.intersectionRatio; });
+        var best = 1, max = -1;
+        Object.keys(seen).forEach(function (k) { if (seen[k] > max) { max = seen[k]; best = Number(k); } });
+        setCurrent(best);
+      }, { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 1] });
+      pages.forEach(function (p) { io.observe(p); });
+    }
+    var goTo = function (n) {
+      var p = pages[n - 1];
+      if (p) scroller.scrollTo({ top: p.offsetTop - stack.offsetTop, behavior: 'smooth' });
+      setCurrent(n);
+    };
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function (e) { e.preventDefault(); goTo(Number(t.getAttribute('data-thumb'))); });
+    });
+
+    var levels = [0.75, 1, 1.25, 1.5, 2];
+    var at = 1;
+    var label = v.querySelector('[data-zoom-level]');
+    var out = v.querySelector('[data-zoom="-1"]');
+    var inn = v.querySelector('[data-zoom="1"]');
+    var zoom = function (d) {
+      var ratio = scroller.scrollTop / Math.max(1, scroller.scrollHeight);
+      at = Math.max(0, Math.min(levels.length - 1, at + d));
+      stack.style.setProperty('--zoom', levels[at]);
+      label.textContent = Math.round(levels[at] * 100) + '%';
+      out.disabled = at === 0;
+      inn.disabled = at === levels.length - 1;
+      // Keep roughly the same spot in view once the width transition finishes
+      setTimeout(function () { scroller.scrollTop = ratio * scroller.scrollHeight; }, 220);
+    };
+    out.addEventListener('click', function () { zoom(-1); });
+    inn.addEventListener('click', function () { zoom(1); });
+
+    var full = v.querySelector('[data-fullscreen]');
+    if (v.requestFullscreen) {
+      full.hidden = false;
+      full.addEventListener('click', function () {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else v.requestFullscreen().catch(function () {});
+      });
+      document.addEventListener('fullscreenchange', function () {
+        full.setAttribute('aria-label', document.fullscreenElement === v ? 'Exit full screen' : 'Full screen');
+      });
+    }
+    // Links to #buy inside full screen: leave full screen first so the buy box is visible
+    v.querySelectorAll('a[href="#buy"]').forEach(function (a) {
+      a.addEventListener('click', function () { if (document.fullscreenElement) document.exitFullscreen(); });
+    });
+    // The preview is a taste, not a download: no right-click save on the page images
+    v.addEventListener('contextmenu', function (e) { if (e.target.closest('.viewer-page, .viewer-thumb')) e.preventDefault(); });
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
     f.addEventListener('submit', function () {

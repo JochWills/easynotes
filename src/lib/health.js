@@ -30,7 +30,7 @@ const checks = {
       else if (data.public !== isPublic) problems.push(`"${id}" should be ${isPublic ? 'public' : 'private'}`);
     }
     if (problems.length) return { status: 'fail', detail: problems.join('; ') + '.', fix: 'Run supabase/schema.sql in the Supabase SQL Editor.' };
-    return { status: 'ok', detail: 'notes (private), samples (public) and verification (private) are set up.' };
+    return { status: 'ok', detail: 'notes (private), samples (public, for previews) and verification (private) are set up.' };
   },
 
   async paystack() {

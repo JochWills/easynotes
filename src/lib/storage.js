@@ -1,7 +1,7 @@
 const db = require('./supabase');
 
-async function upload(bucket, path, buffer, contentType) {
-  const { error } = await db.storage.from(bucket).upload(path, buffer, { contentType, upsert: false });
+async function upload(bucket, path, buffer, contentType, { upsert = false } = {}) {
+  const { error } = await db.storage.from(bucket).upload(path, buffer, { contentType, upsert });
   if (error) throw error;
   return path;
 }
