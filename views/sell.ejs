@@ -5,7 +5,8 @@
       <h1>Sell the notes that got you through.</h1>
       <p class="lede">Open a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale. Your share is paid straight into your South African bank account.</p>
       <div class="form-actions" style="margin-top:28px">
-        <a class="btn btn-hi" href="/signup">Create a seller account</a>
+        <% var cta = locals.user ? sellCta(locals.user, locals.me) : { href: '/signup', label: 'Create a seller account' }; %>
+        <% if (cta) { %><a class="btn btn-hi" href="<%= cta.href %>"><%= cta.label %></a><% } %>
         <% if (!locals.user) { %><a class="btn btn-ghost" href="/login">I already have one</a><% } %>
       </div>
     </div>

@@ -17,7 +17,7 @@ const sellerBase = { ...base, user: { role: 'seller', email: 'a@b.c' } };
 const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 
 const cases = {
-  home: [{ ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
+  home: [{ ...sellerBase, title: null, notes: [], total: 0, popularUnis: [] }, { ...adminBase, notes: [], total: 0, popularUnis: [] }, { ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
   browse: [{ ...base, title: 'Browse', notes: [note], count: 30, filters: { q: 'acc', university: '', level: '', sort: 'new' }, page: 1, pages: 2, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...base, notes: [], count: 0, filters: { q: '', university: 'Rhodes University', level: 'Undergraduate', sort: 'new' }, page: 1, pages: 1, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],
   note: [
     { ...base, cartIds: [], title: 'x', note: { ...note, page_count: 12, description: 'Explanations, questions and exam traps. The best notes I have made by a landslide.\nCovers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.' }, author: seller, live: true, isOwner: false, more: [note, note], previewImages: [1, 2, 3].map((i) => `/_preview/long-p${i}.webp`), previewPlan: { full: 2, half: true, images: 3 } },
@@ -38,7 +38,7 @@ const cases = {
   forgot: [{ ...base, email: '', sent: false }, { ...base, email: 'a@b.co', sent: false, error: 'Enter the email' }, { ...base, email: 'a@b.co', sent: true }, { ...base, emailEnabled: false, email: '', sent: false }],
   reset: [{ ...base, token: 'tok', errors: {} }, { ...base, token: 'tok', errors: { confirm: 'No match' } }, { ...base, token: null, errors: {} }],
   signup: [{ ...base, values: {}, errors: { email: 'Bad', accept: 'Tick' } }],
-  how: [base], sell: [base], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
+  how: [base, sellerBase, adminBase], sell: [base, sellerBase, adminBase], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],
   'seller/dashboard': [{ ...sellerBase, title: 'Seller dashboard', tab: 'overview', notes: [note, { ...note, status: 'draft' }, { ...note, status: 'removed' }], sales: 3, earnings: 28800 }, { ...sellerBase, me: { ...seller, verification_status: 'rejected', verification_note: 'Blurry', paystack_subaccount_code: null }, title: 'D', tab: 'overview', notes: [], sales: 0, earnings: 0 }],
   'seller/note-delete': [{ ...sellerBase, title: 'Delete notes', note: { ...note, status: 'published' }, sold: 3 }, { ...sellerBase, title: 'Delete notes', note: { ...note, status: 'draft' }, sold: 0 }],

@@ -78,7 +78,8 @@
         <div class="earn-total"><dt>You receive, per sale</dt><dd data-earn-you>R<%= keep %>.00</dd></div>
       </dl>
       <p class="fineprint">Nothing to list, no monthly fees. You keep <%= keep %>% of every sale.</p>
-      <a class="btn btn-hi btn-block" href="/sell">Start selling</a>
+      <% var cta = sellCta(locals.user, locals.me); %>
+      <% if (cta) { %><a class="btn btn-hi btn-block" href="<%= cta.href %>"><%= cta.label %></a><% } %>
     </div>
   </div>
 </section>
@@ -117,11 +118,11 @@
   <div class="wrap">
     <div>
       <h2>Ready when you are</h2>
-      <p>Find notes for your module, or start selling the ones that got you through.</p>
+      <p><%= cta ? 'Find notes for your module, or start selling the ones that got you through.' : 'Find notes for your module.' %></p>
     </div>
     <div class="form-actions">
       <a class="btn btn-light" href="/notes">Browse notes</a>
-      <a class="btn btn-outline-light" href="/sell">Start selling</a>
+      <% if (cta) { %><a class="btn btn-outline-light" href="<%= cta.href %>"><%= cta.label %></a><% } %>
     </div>
   </div>
 </section>

@@ -40,4 +40,12 @@ const str = (v, max) => String(v ?? '').trim().slice(0, max);
 
 const feeFor = (priceCents) => Math.round((priceCents * config.platformFeePercent) / 100);
 
-module.exports = { rand, date, initials, slugify, fileName, noteUrl, storeUrl, maskEmail, qs, isUuid, str, feeFor };
+// Where a "Start selling" button should send whoever is looking (null: don't show one, e.g. admins).
+function sellCta(user, me) {
+  if (!user) return { href: '/sell', label: 'Start selling' };
+  if (user.role === 'admin') return null;
+  if (me && me.verification_status === 'approved') return { href: '/seller/notes/new', label: 'Upload notes' };
+  return { href: '/seller', label: 'Go to your dashboard' };
+}
+
+module.exports = { sellCta, rand, date, initials, slugify, fileName, noteUrl, storeUrl, maskEmail, qs, isUuid, str, feeFor };

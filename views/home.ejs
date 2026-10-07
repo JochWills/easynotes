@@ -104,13 +104,21 @@
   </div>
 </section>
 
+<% var cta = sellCta(locals.user, locals.me); %>
+<% if (cta) { %>
 <section class="band">
   <div class="wrap">
     <div>
-      <h2>Your notes got you through. Now they can pay you.</h2>
-      <p>Set up a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
+      <% if (locals.user) { %>
+        <h2>Got notes for another module?</h2>
+        <p>Upload them too and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
+      <% } else { %>
+        <h2>Your notes got you through. Now they can pay you.</h2>
+        <p>Set up a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
+      <% } %>
     </div>
-    <a class="btn btn-light" href="/sell">Start selling</a>
+    <a class="btn btn-light" href="<%= cta.href %>"><%= cta.label %></a>
   </div>
 </section>
+<% } %>
 <%- include('partials/bottom') %>
