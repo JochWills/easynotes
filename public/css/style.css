@@ -331,6 +331,13 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .card-cart.is-in:hover { background: var(--ok); color: #fff; }
 .btn-danger-ghost { color: var(--bad); }
 .btn-danger-ghost:hover { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
+.prefix.prefix-copy input { min-width: 0; border-radius: 0 !important; }
+.copy-in { flex: none; display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0 14px; border: 1px solid var(--rule-strong); border-left: 0; border-radius: 0 10px 10px 0; background: var(--page); color: var(--blue); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
+.copy-in:hover { background: var(--blue-soft); }
+.copy-in:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
+.copy-in.is-copied { background: var(--ok); color: #fff; }
+.copy-in[disabled] { color: var(--muted); cursor: not-allowed; background: var(--page); }
+@media (max-width: 420px) { .copy-in [data-copy-label] { display: none; } .prefix-copy > span { padding: 0 .6em; font-size: .88rem; } }
 .delete-card { margin-top: 20px; }
 .delete-card h1 { font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
 .delete-card .checklist { margin: 4px 0 18px; }
@@ -485,7 +492,7 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .dd-opt[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 .dd-empty { margin: 0; padding: .6em .9em; color: var(--muted); font-size: .92rem; }
 .prefix { display: flex; align-items: stretch; }
-.prefix span { display: grid; place-items: center; padding: 0 .9em; font-weight: 600; background: var(--page); border: 1px solid var(--rule-strong); border-right: 0; border-radius: 10px 0 0 10px; }
+.prefix > span { display: grid; place-items: center; padding: 0 .9em; font-weight: 600; background: var(--page); border: 1px solid var(--rule-strong); border-right: 0; border-radius: 10px 0 0 10px; }
 .prefix input { border-radius: 0 10px 10px 0 !important; }
 .check, .field > label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-bottom: 0; }
 .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--blue); flex: none; }

@@ -259,10 +259,25 @@
     b.addEventListener('click', function () {
       if (!navigator.clipboard) return;
       navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
-        var label = b.textContent;
-        b.textContent = 'Copied';
-        setTimeout(function () { b.textContent = label; }, 1600);
+        var target = b.querySelector('[data-copy-label]') || b;
+        var label = target.textContent;
+        target.textContent = 'Copied!';
+        b.classList.add('is-copied');
+        setTimeout(function () { target.textContent = label; b.classList.remove('is-copied'); }, 1800);
       });
+    });
+  });
+
+  // Storefront link: the copy button copies the saved link, so it's off while an unsaved change is typed
+  document.querySelectorAll('[data-saved-slug]').forEach(function (input) {
+    var btn = input.parentNode.querySelector('.copy-in');
+    if (!btn) return;
+    var label = btn.querySelector('[data-copy-label]');
+    input.addEventListener('input', function () {
+      var changed = input.value.trim().toLowerCase() !== input.getAttribute('data-saved-slug');
+      btn.disabled = changed;
+      label.textContent = changed ? 'Save first' : 'Copy';
+      btn.title = changed ? 'Save your new link before copying it' : '';
     });
   });
 

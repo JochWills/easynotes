@@ -11,7 +11,8 @@
       </div>
       <div class="field <%= errors.slug ? 'has-error' : '' %>">
         <label for="p-slug">Storefront link</label>
-        <div class="prefix"><span><%= (locals.baseUrl || 'https://easynotes.co.za').replace(/^https?:\/\//, '') %>/</span><input id="p-slug" type="text" name="slug" value="<%= values.slug %>" maxlength="40" spellcheck="false"></div>
+        <% var shareUrl = (locals.baseUrl || 'https://easynotes.co.za') + storeUrl(me); %>
+        <div class="prefix prefix-copy"><span><%= (locals.baseUrl || 'https://easynotes.co.za').replace(/^https?:\/\//, '') %>/</span><input id="p-slug" type="text" name="slug" value="<%= values.slug %>" maxlength="40" spellcheck="false" data-saved-slug="<%= me.slug %>"><% if (me.verification_status === 'approved') { %><button class="copy-in" type="button" data-copy="<%= shareUrl %>" aria-label="Copy your storefront link"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" fill="none" stroke="currentColor" stroke-width="2"/></svg><span data-copy-label>Copy</span></button><% } %></div>
         <span class="hint">Letters, numbers and dashes. Changing it breaks links you’ve already shared.</span>
         <%- include('../partials/field-error', { name: 'slug' }) %>
       </div>
