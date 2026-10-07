@@ -1,0 +1,13 @@
+{
+  "name": "EasyNotes",
+  "short_name": "EasyNotes",
+  "description": "Study notes from people who already passed the module.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#F6F8FC",
+  "theme_color": "#1E5BD8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
