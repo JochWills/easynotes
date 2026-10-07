@@ -338,6 +338,10 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .copy-in.is-copied { background: var(--ok); color: #fff; }
 .copy-in[disabled] { color: var(--muted); cursor: not-allowed; background: var(--page); }
 @media (max-width: 420px) { .copy-in [data-copy-label] { display: none; } .prefix-copy > span { padding: 0 .6em; font-size: .88rem; } }
+.payouts { margin-bottom: 40px; }
+.payouts h2, .payout-account-title { font-size: 1.3rem; margin: 0 0 14px; }
+.stats.payout-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
+.payouts-empty { padding: 28px 20px; }
 .delete-card { margin-top: 20px; }
 .delete-card h1 { font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
 .delete-card .checklist { margin: 4px 0 18px; }

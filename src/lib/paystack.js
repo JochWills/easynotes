@@ -41,6 +41,33 @@ const updateSubaccount = (code, payload) => call('PUT', `/subaccount/${encodeURI
 const initialize = (payload) => call('POST', '/transaction/initialize', payload);
 const verify = (reference) => call('GET', `/transaction/verify/${encodeURIComponent(reference)}`);
 
+// Settlements are Paystack's payouts. The list is filtered by the subaccount's numeric id, so look it up once.
+const subaccountIds = new Map();
+async function subaccountId(code) {
+  if (!subaccountIds.has(code)) {
+    const sub = await call('GET', `/subaccount/${encodeURIComponent(code)}`);
+    subaccountIds.set(code, sub.id);
+  }
+  return subaccountIds.get(code);
+}
+
+const settlementCache = new Map(); // short cache so reloading the page doesn't hit Paystack every time
+async function listSettlements(code) {
+  const hit = settlementCache.get(code);
+  if (hit && Date.now() - hit.at < 2 * 60 * 1000) return hit.list;
+  const id = await subaccountId(code);
+  const data = await call('GET', `/settlement?subaccount=${encodeURIComponent(id)}&perPage=100`);
+  const list = (Array.isArray(data) ? data : []).map((s) => ({
+    id: s.id,
+    status: String(s.status || '').toLowerCase(),
+    amount: Number(s.effective_amount ?? s.total_amount ?? s.total_processed ?? 0),
+    fees: Number(s.total_fees || 0),
+    date: s.settlement_date || s.settled_at || s.settledAt || s.createdAt || s.created_at || null,
+  }));
+  settlementCache.set(code, { at: Date.now(), list });
+  return list;
+}
+
 function validSignature(rawBody, signature) {
   if (!signature || !Buffer.isBuffer(rawBody)) return false;
   const expected = crypto.createHmac('sha512', config.paystackSecret).update(rawBody).digest('hex');
@@ -49,4 +76,4 @@ function validSignature(rawBody, signature) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-module.exports = { listBanks, createSubaccount, updateSubaccount, initialize, verify, validSignature };
+module.exports = { listBanks, createSubaccount, updateSubaccount, initialize, verify, listSettlements, validSignature };

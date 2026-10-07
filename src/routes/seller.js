@@ -172,7 +172,33 @@ async function renderPayouts(res, req, values, errors, status = 200) {
     console.error('[payouts] bank list failed', err.message);
     bankError = 'The bank list didn’t load from Paystack. Refresh the page to try again.';
   }
-  res.status(status).render('seller/payouts', { title: 'Payout details', tab: 'payouts', banks, bankError, values, errors });
+  // Payout history comes straight from Paystack; the page still works if that call fails.
+  const s = req.seller;
+  let payouts = [];
+  let payoutsError = null;
+  const [{ data: totals }] = await Promise.all([
+    db.rpc('seller_totals', { p_seller_id: s.id }),
+    s.paystack_subaccount_code
+      ? paystack.listSettlements(s.paystack_subaccount_code).then((list) => { payouts = list; }).catch((err) => {
+          console.error('[payouts] settlements failed', err.message);
+          payoutsError = 'Your payout history didn’t load from Paystack. Refresh the page to try again.';
+        })
+      : null,
+  ]);
+  const t = (totals && totals[0]) || { sales: 0, earnings: 0 };
+  res.status(status).render('seller/payouts', {
+    title: 'Payouts',
+    tab: 'payouts',
+    banks,
+    bankError,
+    values,
+    errors,
+    payouts,
+    payoutsError,
+    earned: Number(t.earnings) || 0,
+    paidOut: payouts.filter((p) => p.status === 'success').reduce((sum, p) => sum + p.amount, 0),
+    testMode: !config.paystackSecret.startsWith('sk_live_'),
+  });
 }
 
 router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}));

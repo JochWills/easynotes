@@ -1,6 +1,43 @@
 <%- include('../partials/top', { noindex: true }) %>
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
+  <% var payLabels = { success: ['pill-ok', 'Paid'], processing: ['pill-wait', 'On its way'], pending: ['pill-wait', 'Scheduled'], failed: ['pill-bad', 'Failed'] }; %>
+  <section class="payouts" aria-labelledby="payouts-title">
+    <h2 id="payouts-title">Your payouts</h2>
+    <div class="stats payout-stats">
+      <div class="stat"><b><%= rand(earned) %></b><span>Earned from sales</span></div>
+      <div class="stat"><b><%= rand(paidOut) %></b><span>Paid into your bank</span></div>
+    </div>
+    <% if (payoutsError) { %>
+      <div class="alert alert-error" role="alert"><%= payoutsError %></div>
+    <% } else if (!me.paystack_subaccount_code) { %>
+      <div class="empty payouts-empty"><h3>No payout account yet</h3><p>Add your bank details below. Your payouts will be listed here once students start buying.</p></div>
+    <% } else if (!payouts.length) { %>
+      <div class="empty payouts-empty">
+        <h3>No payouts yet</h3>
+        <p>After a sale, Paystack pays your share into your bank account, usually the next working day. Each payout will be listed here.</p>
+        <% if (testMode) { %><p class="fineprint">EasyNotes is in test mode, so no real money moves and this list stays empty until live payments are switched on.</p><% } %>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Date</th><th>Status</th><th class="num">Amount</th></tr></thead>
+          <tbody>
+            <% payouts.forEach(function (p) { var lab = payLabels[p.status] || ['pill-muted', p.status || 'Unknown']; %>
+              <tr>
+                <td><%= p.date ? date(p.date) : '—' %></td>
+                <td><span class="pill <%= lab[0] %>"><%= lab[1] %></span></td>
+                <td class="num"><strong><%= rand(p.amount) %></strong></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p class="fineprint">Amounts are what Paystack paid into your bank account. A payout can cover several sales.</p>
+    <% } %>
+  </section>
+
+  <h2 class="payout-account-title">Payout account</h2>
   <div class="dash-grid">
     <form class="form card" method="post" action="/seller/payouts" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
