@@ -415,7 +415,7 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 
 /* ---------- Browse ---------- */
 .browse { display: grid; grid-template-columns: 270px 1fr; gap: 32px; padding-top: 36px; padding-bottom: 80px; align-items: start; }
-.filters { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px; position: sticky; top: 92px; display: grid; gap: 16px; box-shadow: var(--shadow-sm); }
+.filters { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px; position: sticky; top: 92px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; box-shadow: var(--shadow-sm); }
 .results-bar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .pagination { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 36px; }
 
@@ -446,7 +446,8 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .dd-btn:hover { border-color: var(--ink-soft); }
 .dd-btn:focus-visible, .dd.is-open .dd-btn { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-soft); }
 .dd-btn.is-placeholder .dd-value { color: #8390A8; }
-.dd-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd { min-width: 0; }
+.dd-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dd-chevron { flex: none; color: var(--muted); transition: transform .2s; }
 .dd.is-open .dd-chevron { transform: rotate(180deg); }
 .field.has-error .dd-btn, .dd.is-invalid .dd-btn { border-color: var(--bad); }
