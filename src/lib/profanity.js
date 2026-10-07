@@ -4,7 +4,7 @@
 
 // Matched anywhere inside a word ("motherfucker", "bullshit"), unless the word is a known exception.
 const STEMS = ['fuck', 'shit', 'cunt', 'nigger', 'nigga', 'kaffir', 'kaffer', 'faggot', 'bitch', 'whore', 'slut', 'asshole', 'arsehole', 'dickhead'];
-const STEM_EXCEPTIONS = new Set(['shiitake', 'shitake', 'scunthorpe']);
+const STEM_EXCEPTIONS = new Set(['shiitake', 'shitake', 'scunthorpe', 'slutsky', 'snigger', 'sniggered', 'sniggering']); // Slutsky: economics
 
 // Matched as whole words only (plurals and -ing/-ed forms are handled below).
 const WORDS = new Set([
@@ -57,8 +57,9 @@ function isProfane(text) {
   for (const token of tokens(text)) {
     if (maskedHit(token)) return true;
     const word = token.replace(/\*/g, '');
-    if (!word || STEM_EXCEPTIONS.has(word)) continue;
-    for (const v of variants(word)) {
+    const forms = word ? variants(word) : [];
+    if (!word || forms.some((v) => STEM_EXCEPTIONS.has(v))) continue;
+    for (const v of forms) {
       if (WORDS.has(v)) return true;
       if (STEMS.some((s) => v.includes(s))) return true;
     }

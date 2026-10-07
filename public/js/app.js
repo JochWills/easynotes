@@ -521,14 +521,19 @@
   // (Handled on click, before the browser checks the still-hidden required fields.)
   document.querySelectorAll('[data-buy-form]').forEach(function (f) {
     var btn = f.querySelector('[data-buy-btn]');
-    btn.addEventListener('click', function (e) {
-      if (f.classList.contains('is-open')) return;
-      e.preventDefault();
+    var open = function (focus) {
       f.classList.add('is-open');
       f.querySelector('[data-buy-fields]').classList.add('is-revealed');
       f.querySelector('[data-buy-label]').textContent = btn.getAttribute('data-pay-label');
-      f.querySelector('[data-buy-fields] input').focus();
+      if (focus) f.querySelector('[data-buy-fields] input').focus();
+    };
+    btn.addEventListener('click', function (e) {
+      if (f.classList.contains('is-open')) return;
+      e.preventDefault();
+      open(true);
     });
+    // Checkout problems send the buyer back to #buy: show the fields again so they can fix them.
+    if (location.hash === '#buy') open(false);
   });
 
   // Note page tabs (all panels show without JS)

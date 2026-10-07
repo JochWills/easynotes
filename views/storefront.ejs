@@ -1,12 +1,15 @@
-<%- include('partials/top') %>
+<%- include('partials/top', { noindex: locals.noindex }) %>
+<% if (locals.live === false) { %>
+  <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until the degree is verified.</div></div>
+<% } %>
 <section class="page-head">
   <div class="wrap">
     <div class="store-head">
       <div class="avatar avatar-lg" aria-hidden="true"><%= initials(author.display_name) %></div>
       <div>
         <h1><%= author.display_name %></h1>
-        <%- include('partials/verified') %>
-        <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
+        <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
+        <% if (author.degree) { %><p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p><% } %>
       </div>
     </div>
     <% if (author.headline || author.bio) { %>

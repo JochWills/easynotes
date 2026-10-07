@@ -20,11 +20,17 @@ router.get('/:slug', async (req, res, next) => {
     .select('id,display_name,slug,headline,bio,degree,university,graduation_year,verification_status,created_at')
     .eq('slug', slug)
     .maybeSingle();
-  if (!author || author.verification_status !== 'approved') return next();
+  if (!author) return next();
+  // Unverified storefronts are hidden, except from their own seller and admins (who see a preview banner).
+  const live = author.verification_status === 'approved';
+  const canPreview = (req.seller && req.seller.id === author.id) || req.user?.role === 'admin';
+  if (!live && !canPreview) return next();
 
   const { data: notes } = await publicNotes().eq('seller_id', author.id).order('sales_count', { ascending: false });
   res.render('storefront', {
     title: `${author.display_name}'s notes`,
+    noindex: !live,
+    live,
     description: author.headline || `Study notes by ${author.display_name}, a verified academic on EasyNotes.`,
     author,
     notes: notes || [],

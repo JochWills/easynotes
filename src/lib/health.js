@@ -112,7 +112,8 @@ async function runAll(reqHost) {
   const live = await Promise.all(
     Object.entries(checks).map(async ([key, fn]) => {
       try {
-        return { name: LABELS[key], ...(await withTimeout(fn())) };
+        // Rendering a test preview is slow on a cold, small server, so it gets longer.
+        return { name: LABELS[key], ...(await withTimeout(fn(), key === 'previews' ? 25000 : 8000)) };
       } catch (err) {
         return { name: LABELS[key], status: 'fail', detail: err.message || 'Check failed.' };
       }
