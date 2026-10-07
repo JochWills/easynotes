@@ -33,6 +33,21 @@ const checks = {
     return { status: 'ok', detail: 'notes (private), samples (public, for previews) and verification (private) are set up.' };
   },
 
+  // Makes a one-page PDF and turns it into a preview image, the same way note uploads do.
+  async previews() {
+    const { PDFDocument, StandardFonts } = require('pdf-lib');
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([300, 200]);
+    page.drawText('EasyNotes preview check', { x: 20, y: 100, size: 16, font: await doc.embedFont(StandardFonts.Helvetica) });
+    const [image] = await require('./preview').renderImages(Buffer.from(await doc.save()), 1);
+    if (!image || !image.length) throw new Error('No image was produced.');
+    const { data: bucket } = await db.storage.getBucket('samples');
+    if (!bucket || (bucket.allowed_mime_types && !bucket.allowed_mime_types.includes('image/webp'))) {
+      return { status: 'fail', detail: 'Previews render, but the samples bucket won’t accept the images.', fix: 'In Supabase → Storage → samples → Edit bucket, add image/webp to the allowed file types.' };
+    }
+    return { status: 'ok', detail: 'Note previews can be made and saved.' };
+  },
+
   async paystack() {
     const key = config.paystackSecret;
     const mode = key.startsWith('sk_live_') ? 'live' : key.startsWith('sk_test_') ? 'test' : null;
@@ -91,7 +106,7 @@ function configChecks(reqHost) {
   return out;
 }
 
-const LABELS = { database: 'Database', storage: 'File storage', paystack: 'Paystack', webhook: 'Paystack webhook', email: 'Email (Resend)' };
+const LABELS = { database: 'Database', storage: 'File storage', previews: 'Note previews', paystack: 'Paystack', webhook: 'Paystack webhook', email: 'Email (Resend)' };
 
 async function runAll(reqHost) {
   const live = await Promise.all(

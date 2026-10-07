@@ -123,7 +123,7 @@ alter table orders enable row level security;
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
   ('notes', 'notes', false, 52428800, array['application/pdf']),
-  ('samples', 'samples', true, 10485760, array['application/pdf']),
+  ('samples', 'samples', true, 10485760, array['application/pdf','image/webp']),
   ('verification', 'verification', false, 10485760, array['application/pdf','image/jpeg','image/png'])
 on conflict (id) do nothing;
 
