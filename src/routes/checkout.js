@@ -138,7 +138,7 @@ router.get('/cart/panel', async (req, res) => {
 
 router.post('/cart/add/:noteId', async (req, res, next) => {
   if (!isUuid(req.params.noteId)) return next();
-  const { data } = await publicNotes('id,title').eq('id', req.params.noteId).maybeSingle();
+  const { data } = await publicNotes('id,title,sellers!inner(verification_status,paystack_subaccount_code)').eq('id', req.params.noteId).maybeSingle();
   if (!data) return next();
   const result = cart.add(req, data.id);
   // The add-to-cart buttons on note cards ask for JSON so the page doesn't reload.
