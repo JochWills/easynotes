@@ -20,9 +20,10 @@ const cases = {
   home: [{ ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
   browse: [{ ...base, title: 'Browse', notes: [note], count: 30, filters: { q: 'acc', university: '', level: '', sort: 'new' }, page: 1, pages: 2, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...base, notes: [], count: 0, filters: { q: '', university: 'Rhodes University', level: 'Undergraduate', sort: 'new' }, page: 1, pages: 1, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],
   note: [
-    { ...base, cartIds: [], title: 'x', note: { ...note, page_count: 12, description: 'Explanations, questions and exam traps. The best notes I have made by a landslide.\nCovers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.' }, author: seller, live: true, more: [note, note], previewImages: [1, 2, 3].map((i) => `/_preview/long-p${i}.webp`), previewPlan: { full: 2, half: true, images: 3 } },
-    { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], previewImages: [], previewPlan: { full: 0, half: false, images: 0 } },
-    { ...base, cartIds: [note.id], note: { ...note, page_count: 2, file_size: 46560 }, author: seller, live: true, more: [], previewImages: ['/_preview/missing.webp'], previewPlan: { full: 0, half: true, images: 1 } },
+    { ...base, cartIds: [], title: 'x', note: { ...note, page_count: 12, description: 'Explanations, questions and exam traps. The best notes I have made by a landslide.\nCovers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.' }, author: seller, live: true, isOwner: false, more: [note, note], previewImages: [1, 2, 3].map((i) => `/_preview/long-p${i}.webp`), previewPlan: { full: 2, half: true, images: 3 } },
+    { ...sellerBase, note: { ...note, seller_id: 's1' }, author: seller, live: true, isOwner: true, more: [{ ...note, seller_id: 's1' }], previewImages: [], previewPlan: { full: 0, half: false, images: 0 } },
+    { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, isOwner: true, more: [], previewImages: [], previewPlan: { full: 0, half: false, images: 0 } },
+    { ...base, cartIds: [note.id], note: { ...note, page_count: 2, file_size: 46560 }, author: seller, live: true, isOwner: false, more: [], previewImages: ['/_preview/missing.webp'], previewPlan: { full: 0, half: true, images: 1 } },
   ],
   storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
   'checkout-complete': [

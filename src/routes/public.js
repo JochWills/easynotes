@@ -89,6 +89,7 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     note,
     author: note.sellers,
     live,
+    isOwner,
     more: more || [],
     previewImages: preview.previewUrls(note),
     previewPlan: preview.previewPlan(note.page_count),

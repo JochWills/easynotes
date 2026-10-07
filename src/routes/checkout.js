@@ -45,6 +45,16 @@ async function startCheckout(req, res, notes, back) {
     return res.redirect(back);
   }
 
+  // Sellers can't buy their own notes: not while logged in, and not by paying with their account email.
+  const sellerIds = [...new Set(notes.map((n) => n.seller_id))];
+  const { data: owners, error: ownersErr } = await db.from('sellers').select('id,users(email)').in('id', sellerIds);
+  if (ownersErr) throw ownersErr;
+  const ownEmail = (owners || []).some((o) => (o.users?.email || '').toLowerCase() === email);
+  if (ownEmail || (req.seller && sellerIds.includes(req.seller.id))) {
+    flash(req, 'error', notes.length === 1 ? 'You can’t buy your own notes.' : 'Your cart has notes you’re selling. Remove them, then check out.');
+    return res.redirect(back);
+  }
+
   const paymentRef = newReference();
   const rows = notes.map((n, i) => {
     const fee = feeFor(n.price_cents);
@@ -138,14 +148,15 @@ router.get('/cart/panel', async (req, res) => {
 
 router.post('/cart/add/:noteId', async (req, res, next) => {
   if (!isUuid(req.params.noteId)) return next();
-  const { data } = await publicNotes('id,title,sellers!inner(verification_status,paystack_subaccount_code)').eq('id', req.params.noteId).maybeSingle();
+  const { data } = await publicNotes('id,title,seller_id,sellers!inner(verification_status,paystack_subaccount_code)').eq('id', req.params.noteId).maybeSingle();
   if (!data) return next();
-  const result = cart.add(req, data.id);
+  const result = req.seller && req.seller.id === data.seller_id ? 'own' : cart.add(req, data.id);
   // The add-to-cart buttons on note cards ask for JSON so the page doesn't reload.
   if (req.get('accept') === 'application/json') {
     return res.json({ result, count: cart.ids(req).length, max: cart.MAX_ITEMS });
   }
-  if (result === 'full') flash(req, 'error', `Your cart is full (${cart.MAX_ITEMS} sets of notes). Check out, then start a new cart.`);
+  if (result === 'own') flash(req, 'error', 'You can’t buy your own notes.');
+  else if (result === 'full') flash(req, 'error', `Your cart is full (${cart.MAX_ITEMS} sets of notes). Check out, then start a new cart.`);
   else flash(req, 'ok', result === 'already' ? 'That’s already in your cart.' : 'Added to your cart.');
   res.redirect(303, backTo(req, '/cart'));
 });

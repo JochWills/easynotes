@@ -1,4 +1,4 @@
-<% var inCart = (locals.cartIds || []).indexOf(n.id) > -1; %>
+<% var inCart = (locals.cartIds || []).indexOf(n.id) > -1; var own = !!(locals.me && n.seller_id === locals.me.id); %>
 <article class="note-card">
   <div class="note-top">
     <% if (n.module_code) { %><span class="tab"><%= n.module_code %></span><% } else { %><span class="tab tab-plain"><%= n.level %></span><% } %>
@@ -9,7 +9,9 @@
   <p class="note-by">By <%= n.sellers.display_name %></p>
   <div class="note-foot">
     <span class="price"><%= rand(n.price_cents) %></span>
-    <% if (inCart) { %>
+    <% if (own) { %>
+      <a class="card-cart is-own" href="/seller/notes/<%= n.id %>/edit">Your notes · Edit</a>
+    <% } else if (inCart) { %>
       <a class="card-cart is-in" href="/cart" data-note="<%= n.id %>">✓ In cart</a>
     <% } else { %>
       <form method="post" action="/cart/add/<%= n.id %>" data-cart-add data-note="<%= n.id %>">

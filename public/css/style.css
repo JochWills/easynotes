@@ -329,6 +329,10 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .card-cart[disabled] { opacity: .6; cursor: progress; }
 .card-cart.is-in { border-color: var(--ok); color: var(--ok); }
 .card-cart.is-in:hover { background: var(--ok); color: #fff; }
+.card-cart.is-own { border-color: var(--rule-strong); color: var(--ink-soft); }
+.card-cart.is-own:hover { background: var(--page); color: var(--ink); }
+.own-note { display: grid; gap: 8px; padding: 18px; border-radius: 12px; background: var(--page); border: 1px solid var(--rule); }
+.own-note span { color: var(--ink-soft); font-size: .93rem; margin-bottom: 6px; }
 
 .verified { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 600; font-size: .88rem; }
 .verified svg { flex: none; }

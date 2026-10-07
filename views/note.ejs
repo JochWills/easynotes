@@ -124,7 +124,13 @@
         <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 10h16M8.5 3v4M15.5 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Last updated</dt><dd><%= date(note.updated_at) %></dd></div>
       </dl>
 
-      <% if (live) { %>
+      <% if (isOwner) { %>
+        <div class="own-note">
+          <strong>These are your notes</strong>
+          <span><%= live ? 'Students see the buy buttons here.' : 'Students will see the buy buttons here once they’re live.' %> You can’t buy your own notes.</span>
+          <a class="btn btn-ghost btn-block" href="/seller/notes/<%= note.id %>/edit">Edit these notes</a>
+        </div>
+      <% } else if (live) { %>
         <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="buy-fields" data-buy-fields>
@@ -171,7 +177,7 @@
       <% } %>
     </aside>
 
-    <% if (live) { %>
+    <% if (live && !isOwner) { %>
       <aside class="multi-card" aria-label="Buying for several modules">
         <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="4.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 12.5v8h14v-8 M12 8v12.5 M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         <div>

@@ -189,6 +189,11 @@
       if (!r.ok) throw new Error(r.status);
       return r.json();
     }).then(function (data) {
+      if (data.result === 'own') {
+        btn.disabled = false;
+        showToast('You can’t buy your own notes.', 'error');
+        return;
+      }
       if (data.result === 'full') {
         btn.disabled = false;
         showToast('Your cart is full (' + data.max + ' sets of notes). Check out, then start a new cart.', 'error');
