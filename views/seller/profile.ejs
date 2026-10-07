@@ -15,14 +15,16 @@
         <span class="hint">Letters, numbers and dashes. Changing it breaks links you’ve already shared.</span>
         <%- include('../partials/field-error', { name: 'slug' }) %>
       </div>
-      <div class="field">
+      <div class="field <%= errors.headline ? 'has-error' : '' %>">
         <label for="p-headline">Headline</label>
         <input id="p-headline" type="text" name="headline" value="<%= values.headline || '' %>" maxlength="120" placeholder="e.g. CA(SA). Accounting notes for first and second years.">
+        <%- include('../partials/field-error', { name: 'headline' }) %>
       </div>
-      <div class="field">
+      <div class="field <%= errors.bio ? 'has-error' : '' %>">
         <label for="p-bio">About you</label>
         <textarea id="p-bio" name="bio" maxlength="1500" placeholder="What you studied, how you got your marks, how your notes are structured."><%= values.bio || '' %></textarea>
         <span class="hint">Students read this before buying. Mention marks or distinctions if you have them.</span>
+        <%- include('../partials/field-error', { name: 'bio' }) %>
       </div>
       <div class="form-actions"><button class="btn" type="submit">Save storefront</button></div>
     </form>

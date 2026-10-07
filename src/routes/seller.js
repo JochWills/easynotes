@@ -7,6 +7,7 @@ const storage = require('../lib/storage');
 const upload = require('../lib/upload');
 const preview = require('../lib/preview');
 const events = require('../lib/events');
+const profanity = require('../lib/profanity');
 const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
@@ -63,6 +64,7 @@ router.post('/profile', async (req, res) => {
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
   else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
+  profanity.checkFields(values, ['display_name', 'headline', 'bio', 'slug'], errors);
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
     if (taken) errors.slug = 'That link is taken. Try another.';
@@ -111,6 +113,7 @@ router.post(
       errors.university = 'Choose the university that awarded your degree.';
     if (!(values.graduation_year >= 1960 && values.graduation_year <= thisYear))
       errors.graduation_year = `Enter a year between 1960 and ${thisYear}.`;
+    profanity.checkFields(values, ['degree', 'university'], errors);
 
     const docs = {};
     for (const [field, label] of [['degree_doc', 'degree certificate or academic transcript'], ['id_doc', 'ID document']]) {
@@ -263,6 +266,7 @@ function validateNote(body) {
   if (!LEVELS.includes(values.level)) errors.level = 'Choose a level.';
   if (!(values.price_cents >= 1000 && values.price_cents <= 200000)) errors.price = 'Set a price between R10 and R2,000.';
   if (body.own_work !== 'on') errors.own_work = 'Confirm these notes are your own original work.';
+  profanity.checkFields(values, ['title', 'description', 'subject', 'module_code'], errors);
   return { values, errors };
 }
 

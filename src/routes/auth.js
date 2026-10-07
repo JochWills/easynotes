@@ -7,6 +7,7 @@ const { slugify, str } = require('../lib/helpers');
 const { RESERVED_SLUGS } = require('../lib/constants');
 const emails = require('../lib/emails');
 
+const profanity = require('../lib/profanity');
 const router = express.Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -40,6 +41,7 @@ router.post('/signup', limiter, async (req, res) => {
   if (!EMAIL_RE.test(values.email)) errors.email = 'Enter a valid email address.';
   if (password.length < 8) errors.password = 'Use at least 8 characters.';
   if (req.body.accept !== 'on') errors.accept = 'You need to accept the seller terms to continue.';
+  profanity.checkFields(values, ['display_name'], errors);
 
   if (!errors.email) {
     const { data: existing } = await db.from('users').select('id').eq('email', values.email).maybeSingle();

@@ -11,6 +11,7 @@ const emails = require('../lib/emails');
 const { isPublic, publicNotes } = require('../lib/queries');
 const { isUuid, feeFor, fileName, noteUrl, str } = require('../lib/helpers');
 const flash = require('../lib/flash');
+const profanity = require('../lib/profanity');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -39,6 +40,10 @@ async function startCheckout(req, res, notes, back) {
   const email = str(req.body.email, 200).toLowerCase();
   if (name.length < 2) {
     flash(req, 'error', 'Enter your name.');
+    return res.redirect(back);
+  }
+  if (profanity.isProfane(name)) {
+    flash(req, 'error', 'Please enter your real name.');
     return res.redirect(back);
   }
   if (!EMAIL_RE.test(email)) {

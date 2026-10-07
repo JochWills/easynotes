@@ -18,9 +18,10 @@
             <input id="n-subject" type="text" name="subject" value="<%= values.subject || '' %>" maxlength="80" required placeholder="e.g. Accounting">
             <%- include('../partials/field-error', { name: 'subject' }) %>
           </div>
-          <div class="field">
+          <div class="field <%= errors.module_code ? 'has-error' : '' %>">
             <label for="n-code">Module code <span class="muted">(optional)</span></label>
             <input id="n-code" type="text" name="module_code" value="<%= values.module_code || '' %>" maxlength="20" placeholder="e.g. ACC1006F" spellcheck="false">
+            <%- include('../partials/field-error', { name: 'module_code' }) %>
           </div>
         </div>
         <div class="row-2">
