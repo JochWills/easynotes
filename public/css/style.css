@@ -82,10 +82,12 @@ small, .small { font-size: .9rem; }
 .linklike { background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
 /* Account dropdown */
 .profile { position: relative; }
-.profile summary { display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); cursor: pointer; list-style: none; color: var(--ink-soft); box-shadow: var(--shadow-sm); }
+.profile summary { display: flex; align-items: center; gap: 4px; padding: 3px 6px 3px 3px; border-radius: 999px; cursor: pointer; list-style: none; color: var(--muted); transition: background .15s, color .15s; }
 .profile summary::-webkit-details-marker { display: none; }
-.profile summary:hover, .profile[open] summary { border-color: var(--rule-strong); }
-.profile-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue); font-family: var(--display); font-weight: 800; font-size: .88rem; }
+.profile summary:hover, .profile[open] summary { background: var(--page); color: var(--ink); }
+.profile summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.profile-avatar { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); color: #fff; font-family: var(--display); font-weight: 700; font-size: .82rem; letter-spacing: .02em; }
+.profile-chevron { transition: transform .2s; }
 .profile-name { display: none; }
 .profile[open] .profile-chevron { transform: rotate(180deg); }
 .profile-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 230px; padding: 6px; background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg), var(--shadow); }
@@ -683,7 +685,7 @@ main > :nth-child(n+4) { animation-delay: .12s; }
   .nav-actions { padding-top: 14px; gap: 14px; flex-wrap: wrap; }
   .nav-actions .btn { flex: 1; }
   .profile { width: 100%; }
-  .profile summary { border-radius: 12px; padding: 6px 12px 6px 6px; box-shadow: none; }
+  .profile summary { border: 1px solid var(--rule); border-radius: 12px; padding: 6px 12px 6px 6px; }
   .profile-name { display: block; flex: 1; font-weight: 600; color: var(--ink); }
   .profile-menu { position: static; min-width: 0; padding: 4px 0 0; border: 0; box-shadow: none; background: none; }
   .profile-head { display: none; }
