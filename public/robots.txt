@@ -1,5 +1,15 @@
 User-agent: *
-Disallow: /seller
-Disallow: /admin
-Disallow: /checkout
-Disallow: /download
+# Exact paths only ($ and trailing /), so storefronts like /cartwright or /adminton stay crawlable.
+Disallow: /seller$
+Disallow: /seller/
+Disallow: /admin$
+Disallow: /admin/
+Disallow: /checkout$
+Disallow: /checkout/
+Disallow: /download$
+Disallow: /download/
+Disallow: /library$
+Disallow: /cart$
+Disallow: /cart/
+
+Sitemap: https://easynotes.co.za/sitemap.xml

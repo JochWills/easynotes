@@ -1,9 +1,10 @@
 const express = require('express');
 const db = require('../lib/supabase');
+const config = require('../lib/config');
 const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
 const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
-const { isUuid, noteUrl } = require('../lib/helpers');
+const { isUuid, noteUrl, storeUrl } = require('../lib/helpers');
 
 const router = express.Router();
 const PAGE_SIZE = 24;
@@ -95,6 +96,27 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     previewImages: preview.previewUrls(note),
     previewPlan: preview.previewPlan(note.page_count),
   });
+});
+
+// For search engines: the main pages, every live note and every verified seller's storefront.
+const xmlEscape = (v) => String(v).replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]);
+router.get('/sitemap.xml', async (req, res) => {
+  const [{ data: notes, error: notesErr }, { data: sellers, error: sellersErr }] = await Promise.all([
+    publicNotes('id,slug,updated_at,sellers!inner(verification_status,paystack_subaccount_code)').order('updated_at', { ascending: false }).limit(45000),
+    db.from('sellers').select('slug').eq('verification_status', 'approved'),
+  ]);
+  if (notesErr) throw notesErr;
+  if (sellersErr) throw sellersErr;
+  const urls = [
+    ...['/', '/notes', '/how-it-works', '/sell', '/terms', '/seller-terms', '/privacy'].map((p) => ({ loc: p })),
+    ...(notes || []).map((n) => ({ loc: noteUrl(n), lastmod: n.updated_at })),
+    ...(sellers || []).map((s) => ({ loc: storeUrl(s) })),
+  ];
+  const body = urls
+    .map((u) => `  <url><loc>${xmlEscape(config.baseUrl + u.loc)}</loc>${u.lastmod ? `<lastmod>${new Date(u.lastmod).toISOString()}</lastmod>` : ''}</url>`)
+    .join('\n');
+  res.set('Cache-Control', 'max-age=3600');
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`);
 });
 
 router.get('/how-it-works', (req, res) => res.render('how', { title: 'How EasyNotes works' }));
