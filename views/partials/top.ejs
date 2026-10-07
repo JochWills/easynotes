@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=5">
+  <link rel="stylesheet" href="/css/style.css?v=6">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -64,5 +64,11 @@
     </nav>
   </div>
 </header>
-<% if (locals.flash) { %><div class="flash flash-<%= flash.type %>" role="status"><%= flash.msg %></div><% } %>
+<% if (locals.flash) { %>
+  <div class="toast toast-<%= flash.type %>" role="<%= flash.type === 'error' ? 'alert' : 'status' %>" data-toast>
+    <span class="toast-icon" aria-hidden="true"><%= flash.type === 'error' ? '!' : flash.type === 'info' ? 'i' : '✓' %></span>
+    <p><%= flash.msg %></p>
+    <button class="toast-close" type="button" aria-label="Dismiss">×</button>
+  </div>
+<% } %>
 <main id="main">

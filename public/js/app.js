@@ -8,6 +8,23 @@
     b.addEventListener('click', function () { b.closest('dialog').close(); });
   });
 
+  // Notification popups: slide away after 5 seconds (paused while hovered or focused), or on ×
+  document.querySelectorAll('[data-toast]').forEach(function (t) {
+    var timer;
+    var hide = function () {
+      t.classList.add('is-hiding');
+      setTimeout(function () { t.remove(); }, 400);
+    };
+    var start = function () { clearTimeout(timer); timer = setTimeout(hide, 5000); };
+    var pause = function () { clearTimeout(timer); };
+    t.querySelector('.toast-close').addEventListener('click', hide);
+    t.addEventListener('mouseenter', pause);
+    t.addEventListener('mouseleave', start);
+    t.addEventListener('focusin', pause);
+    t.addEventListener('focusout', start);
+    start();
+  });
+
   // Account dropdown: close on outside click or Escape
   document.querySelectorAll('details.profile').forEach(function (d) {
     document.addEventListener('click', function (e) { if (d.open && !d.contains(e.target)) d.open = false; });
