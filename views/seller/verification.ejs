@@ -19,14 +19,14 @@
             <%- include('../partials/field-error', { name: 'degree' }) %>
           </div>
           <div class="field <%= errors.university ? 'has-error' : '' %>">
-            <label for="v-uni">University</label>
+            <label for="v-uni">Institution</label>
             <select id="v-uni" name="university" required data-other="v-uni-other-wrap" data-other-value="<%= otherLabel %>">
-              <option value="">Choose a university</option>
+              <option value="">Choose an institution</option>
               <% universities.forEach(function (u) { %><option <%= values.university === u ? 'selected' : '' %>><%= u %></option><% }) %>
               <option <%= values.university === otherLabel ? 'selected' : '' %>><%= otherLabel %></option>
             </select>
             <div id="v-uni-other-wrap" class="field" style="margin-top:10px" hidden>
-              <label for="v-uni-other">University name</label>
+              <label for="v-uni-other">Institution name</label>
               <input id="v-uni-other" type="text" name="university_other" value="<%= values.university_other || '' %>" placeholder="Full name and country">
             </div>
             <%- include('../partials/field-error', { name: 'university' }) %>
@@ -57,11 +57,11 @@
       <div>
         <h2 style="font-size:1.2rem">What we check</h2>
         <ul class="checklist checklist-dark">
-          <li>The degree is complete and from a recognised university</li>
+          <li>The degree is complete and from a recognised institution</li>
           <li>The name on your degree matches your ID</li>
           <li>The details you enter match the documents</li>
         </ul>
-        <p class="fineprint">Only the EasyNotes team can see your documents. Students see your degree, university and graduation year. Read our <a href="/privacy">privacy policy</a>.</p>
+        <p class="fineprint">Only the EasyNotes team can see your documents. Students see your degree, institution and graduation year. Read our <a href="/privacy">privacy policy</a>.</p>
       </div>
     </div>
   <% } %>

@@ -36,11 +36,11 @@
         <div>
           <h3><%= values.display_name %></h3>
           <% if (me.verification_status === 'approved') { %><%- include('../partials/verified') %><% } %>
-          <p><%= me.degree || 'Your degree' %>, <%= me.university || 'your university' %></p>
+          <p><%= me.degree || 'Your degree' %>, <%= me.university || 'your institution' %></p>
           <% if (values.headline) { %><p class="muted"><%= values.headline %></p><% } %>
         </div>
       </div>
-      <p class="fineprint">Your degree and university come from verification and can’t be edited here.</p>
+      <p class="fineprint">Your degree and institution come from verification and can’t be edited here.</p>
     </div>
   </div>
 </div>

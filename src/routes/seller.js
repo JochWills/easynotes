@@ -110,7 +110,7 @@ router.post(
     const errors = {};
     if (values.degree.length < 3) errors.degree = 'Enter your degree, e.g. BCom Accounting.';
     if (!values.university || (pickedUni !== OTHER_UNIVERSITY && !DEGREE_UNIVERSITIES.includes(pickedUni)))
-      errors.university = 'Choose the university that awarded your degree.';
+      errors.university = 'Choose the institution that awarded your degree.';
     if (!(values.graduation_year >= 1960 && values.graduation_year <= thisYear))
       errors.graduation_year = `Enter a year between 1960 and ${thisYear}.`;
     profanity.checkFields(values, ['degree', 'university'], errors);
@@ -311,7 +311,9 @@ function checkFiles(req, errors, { pdfRequired }) {
 const formLocals = (extra) => ({ tab: 'notes', institutions: NOTE_INSTITUTIONS, levels: LEVELS, feePercent: config.platformFeePercent, ...extra });
 
 router.get('/notes/new', requireApproved, (req, res) => {
-  res.render('seller/note-form', formLocals({ title: 'Upload notes', note: null, values: { university: '', level: '' }, errors: {} }));
+  // Start on the institution the seller verified with (if it's one students can filter by).
+  const university = NOTE_INSTITUTIONS.includes(req.seller.university) ? req.seller.university : '';
+  res.render('seller/note-form', formLocals({ title: 'Upload notes', note: null, values: { university, level: '' }, errors: {} }));
 });
 
 router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/notes/new'), verifyCsrf, async (req, res) => {
