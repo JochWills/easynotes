@@ -62,7 +62,7 @@
       </div>
       <div class="field <%= errors.account_number ? 'has-error' : '' %>">
         <label for="b-acc">Account number</label>
-        <input id="b-acc" type="text" name="account_number" inputmode="numeric" autocomplete="off" value="" required style="max-width:280px">
+        <input id="b-acc" type="text" name="account_number" maxlength="20" inputmode="numeric" autocomplete="off" value="" required style="max-width:280px">
         <%- include('../partials/field-error', { name: 'account_number' }) %>
       </div>
       <div class="form-actions"><button class="btn" type="submit"><%= me.paystack_subaccount_code ? 'Update payout account' : 'Save payout account' %></button></div>

@@ -9,7 +9,7 @@
   <form class="filters" method="get" action="/notes" data-autosubmit role="search" aria-label="Filter notes">
     <div class="field">
       <label for="f-q">Search</label>
-      <input id="f-q" type="search" name="q" value="<%= filters.q %>" placeholder="Module code or subject">
+      <input id="f-q" type="search" name="q" maxlength="80" value="<%= filters.q %>" placeholder="Module code or subject">
     </div>
     <div class="field">
       <label for="f-uni">Institution</label>

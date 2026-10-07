@@ -25,7 +25,7 @@
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <div class="field">
           <label for="ad-email">Add an admin</label>
-          <input id="ad-email" type="email" name="email" required placeholder="name@example.com">
+          <input id="ad-email" type="email" name="email" maxlength="200" required placeholder="name@example.com">
           <span class="hint">They’ll get an email to choose a password. Admins can approve sellers, remove notes and see every order.</span>
         </div>
         <button class="btn" type="submit">Add admin</button>

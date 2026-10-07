@@ -40,6 +40,7 @@ router.post('/signup', limiter, async (req, res) => {
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see on your storefront.';
   if (!EMAIL_RE.test(values.email)) errors.email = 'Enter a valid email address.';
   if (password.length < 8) errors.password = 'Use at least 8 characters.';
+  else if (Buffer.byteLength(password) > 72) errors.password = 'Use 72 characters or fewer.'; // bcrypt ignores anything longer
   if (req.body.accept !== 'on') errors.accept = 'You need to accept the seller terms to continue.';
   profanity.checkFields(values, ['display_name'], errors);
 
@@ -119,6 +120,7 @@ router.post('/reset', limiter, async (req, res) => {
   const errors = {};
   const min = user.role === 'admin' ? 10 : 8;
   if (password.length < min) errors.password = `Use at least ${min} characters.`;
+  else if (Buffer.byteLength(password) > 72) errors.password = 'Use 72 characters or fewer.';
   else if (password !== String(req.body.confirm || '')) errors.confirm = 'The two passwords don’t match.';
   if (Object.keys(errors).length) return res.status(400).render('reset', { title: 'Choose a new password', token, errors });
 

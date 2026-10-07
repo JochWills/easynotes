@@ -7,7 +7,7 @@
     </div>
     <form method="get" action="/admin/orders" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
       <label for="ao-ref" class="sr-only">Find by reference, email or name</label>
-      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Reference (EN…), buyer email or name">
+      <input id="ao-ref" type="search" name="reference" maxlength="80" value="<%= reference %>" placeholder="Reference (EN…), buyer email or name">
       <button class="btn btn-sm" type="submit">Find</button>
     </form>
   </div>

@@ -8,11 +8,11 @@
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="field">
         <label for="d-email">Email</label>
-        <input id="d-email" type="email" name="email" value="<%= email %>" required autocomplete="email">
+        <input id="d-email" type="email" name="email" maxlength="200" value="<%= email %>" required autocomplete="email">
       </div>
       <div class="field">
         <label for="d-ref">Payment reference</label>
-        <input id="d-ref" type="text" name="reference" value="<%= reference %>" required autocapitalize="characters" spellcheck="false" placeholder="EN…">
+        <input id="d-ref" type="text" name="reference" maxlength="40" value="<%= reference %>" required autocapitalize="characters" spellcheck="false" placeholder="EN…">
       </div>
       <button class="btn btn-hi btn-block" type="submit">Download PDF</button>
     </form>
@@ -30,7 +30,7 @@
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <div class="field">
           <label for="l-email">Email you paid with</label>
-          <input id="l-email" type="email" name="email" required autocomplete="email">
+          <input id="l-email" type="email" name="email" maxlength="200" required autocomplete="email">
         </div>
         <button class="btn btn-block" type="submit">Send me a link</button>
       </form>

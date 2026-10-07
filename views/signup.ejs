@@ -7,18 +7,18 @@
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="field <%= errors.display_name ? 'has-error' : '' %>">
         <label for="s-name">Name on your storefront</label>
-        <input id="s-name" type="text" name="display_name" value="<%= values.display_name || '' %>" required autocomplete="name" aria-describedby="s-name-hint">
+        <input id="s-name" type="text" name="display_name" maxlength="80" value="<%= values.display_name || '' %>" required autocomplete="name" aria-describedby="s-name-hint">
         <span class="hint" id="s-name-hint">Your real name works best. Students trust a person they can see is qualified.</span>
         <%- include('partials/field-error', { name: 'display_name' }) %>
       </div>
       <div class="field <%= errors.email ? 'has-error' : '' %>">
         <label for="s-email">Email</label>
-        <input id="s-email" type="email" name="email" value="<%= values.email || '' %>" required autocomplete="email">
+        <input id="s-email" type="email" name="email" maxlength="200" value="<%= values.email || '' %>" required autocomplete="email">
         <%- include('partials/field-error', { name: 'email' }) %>
       </div>
       <div class="field <%= errors.password ? 'has-error' : '' %>">
         <label for="s-pass">Password</label>
-        <input id="s-pass" type="password" name="password" required minlength="8" autocomplete="new-password">
+        <input id="s-pass" type="password" name="password" maxlength="72" required minlength="8" autocomplete="new-password">
         <span class="hint">At least 8 characters.</span>
         <%- include('partials/field-error', { name: 'password' }) %>
       </div>

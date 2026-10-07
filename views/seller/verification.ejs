@@ -15,7 +15,7 @@
           <legend>Your degree</legend>
           <div class="field <%= errors.degree ? 'has-error' : '' %>">
             <label for="v-degree">Degree</label>
-            <input id="v-degree" type="text" name="degree" value="<%= values.degree || '' %>" placeholder="e.g. BCom Honours in Accounting" required>
+            <input id="v-degree" type="text" name="degree" maxlength="120" value="<%= values.degree || '' %>" placeholder="e.g. BCom Honours in Accounting" required>
             <%- include('../partials/field-error', { name: 'degree' }) %>
           </div>
           <div class="field <%= errors.university ? 'has-error' : '' %>">
@@ -27,7 +27,7 @@
             </select>
             <div id="v-uni-other-wrap" class="field" style="margin-top:10px" hidden>
               <label for="v-uni-other">Institution name</label>
-              <input id="v-uni-other" type="text" name="university_other" value="<%= values.university_other || '' %>" placeholder="Full name and country">
+              <input id="v-uni-other" type="text" name="university_other" maxlength="120" value="<%= values.university_other || '' %>" placeholder="Full name and country">
             </div>
             <%- include('../partials/field-error', { name: 'university' }) %>
           </div>

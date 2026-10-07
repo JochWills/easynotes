@@ -35,6 +35,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
+  /* A very long unbroken word (pasted link, long email, "AAAA…") wraps instead of pushing the page sideways. */
+  overflow-wrap: anywhere;
   font-family: var(--body);
   font-size: 1rem;
   line-height: 1.6;
@@ -292,6 +294,12 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .subject-tabs a[aria-current="page"] { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
 .see-all { margin: 30px 0 0; text-align: center; max-width: none; }
 
+/* Labels, buttons and tables have room to wrap at spaces, so never split their words. Tables can
+   scroll inside .table-wrap if a cell holds something truly long. */
+.btn, .pill, .chip, .linklike, .cart-remove, .prefix > span, .data, .data th, .note-tabs button, .dash-nav a { overflow-wrap: normal; }
+.data td { overflow-wrap: break-word; }
+.cart-remove, .prefix > span, .data th { white-space: nowrap; }
+
 /* ---------- Note cards ---------- */
 .grid-notes { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; }
 .note-card {
@@ -313,6 +321,8 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .note-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
 .price { font-family: var(--display); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; }
 .note-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tab { max-width: 100%; }
+.note-top .tab { min-width: 0; }
 .pages { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; color: var(--muted); white-space: nowrap; }
 .pages svg { flex: none; }
 .note-foot { align-items: center; gap: 10px; }

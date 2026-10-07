@@ -54,7 +54,7 @@
         <div class="card form">
           <div class="field <%= errors.price ? 'has-error' : '' %>">
             <label for="n-price">Price</label>
-            <div class="prefix"><span>R</span><input id="n-price" type="text" inputmode="decimal" name="price" value="<%= values.price || '' %>" required data-price data-fee="<%= feePercent %>"></div>
+            <div class="prefix"><span>R</span><input id="n-price" type="text" inputmode="decimal" name="price" maxlength="10" value="<%= values.price || '' %>" required data-price data-fee="<%= feePercent %>"></div>
             <span class="hint">R10 to R2,000. You receive <strong data-earn>R0.00</strong> per sale after the <%= feePercent %>% EasyNotes fee.</span>
             <%- include('../partials/field-error', { name: 'price' }) %>
           </div>

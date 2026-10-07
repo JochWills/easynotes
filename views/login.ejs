@@ -7,7 +7,7 @@
     <form class="form" method="post" action="/login">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <input type="hidden" name="next" value="<%= next %>">
-      <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" name="email" value="<%= email %>" required autocomplete="email"></div>
+      <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" name="email" maxlength="200" value="<%= email %>" required autocomplete="email"></div>
       <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" name="password" required autocomplete="current-password"></div>
       <button class="btn btn-block" type="submit">Log in</button>
     </form>

@@ -3,7 +3,7 @@
   <%- include('../partials/admin-nav') %>
   <form method="get" action="/admin/notes" class="search" style="margin:0 0 22px;box-shadow:none" role="search">
     <label for="an-q" class="sr-only">Search notes</label>
-    <input id="an-q" type="search" name="q" value="<%= q %>" placeholder="Title or module code">
+    <input id="an-q" type="search" name="q" maxlength="80" value="<%= q %>" placeholder="Title or module code">
     <button class="btn btn-sm" type="submit">Search</button>
   </form>
   <div class="table-wrap">

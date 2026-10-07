@@ -9,7 +9,7 @@
     <form method="get" action="/admin/sellers" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
       <label for="as-q" class="sr-only">Find a seller</label>
-      <input id="as-q" type="search" name="q" value="<%= q %>" placeholder="Name, link or email">
+      <input id="as-q" type="search" name="q" maxlength="80" value="<%= q %>" placeholder="Name, link or email">
       <button class="btn btn-sm" type="submit">Find</button>
     </form>
   </div>

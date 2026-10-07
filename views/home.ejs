@@ -11,7 +11,7 @@
       <form class="search" action="/notes" method="get" role="search">
         <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <label for="q" class="sr-only">Search notes</label>
-        <input id="q" name="q" type="search" placeholder="Search modules, e.g. ACC1006F" autocomplete="off">
+        <input id="q" name="q" maxlength="80" type="search" placeholder="Search modules, e.g. ACC1006F" autocomplete="off">
         <button class="btn" type="submit">Search <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>
       <div class="chips">

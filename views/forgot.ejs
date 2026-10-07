@@ -14,7 +14,7 @@
       <% if (locals.error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
       <form class="form" method="post" action="/forgot">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <div class="field"><label for="f-email">Email</label><input id="f-email" type="email" name="email" value="<%= email %>" required autocomplete="email"></div>
+        <div class="field"><label for="f-email">Email</label><input id="f-email" type="email" name="email" maxlength="200" value="<%= email %>" required autocomplete="email"></div>
         <button class="btn btn-hi btn-block" type="submit">Send reset link</button>
       </form>
     <% } %>
