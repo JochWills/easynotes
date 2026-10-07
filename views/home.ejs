@@ -67,7 +67,7 @@
     <% } %>
   </div>
   <% if (notes.length) { %>
-    <div class="grid-notes">
+    <div class="grid-notes grid-swipe">
       <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
     </div>
     <% if (total > notes.length) { %><p class="see-all"><a class="btn btn-ghost" href="/notes">See all <%= total %> sets of notes</a></p><% } %>
