@@ -78,6 +78,7 @@ app.use((req, res, next) => {
   res.locals.maxDownloads = config.maxDownloads;
   res.locals.baseUrl = config.baseUrl;
   res.locals.emailEnabled = Boolean(config.resendApiKey);
+  res.locals.cartIds = Array.isArray(req.session.cart) ? req.session.cart : [];
   Object.assign(res.locals, helpers);
   next();
 });

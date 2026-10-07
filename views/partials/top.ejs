@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=10">
+  <link rel="stylesheet" href="/css/style.css?v=11">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -21,6 +21,11 @@
     <a class="logo" href="/" aria-label="EasyNotes home">
       <svg width="28" height="32" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 2h16l7 7v21H5z" fill="#fff" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><path d="M21 2v7h7" fill="none" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><rect x="8.5" y="13" width="15" height="6" rx="1" fill="#FFE27A"/><path d="M9 16h14M9 23.5h10" stroke="#0E1A3A" stroke-width="2.4" stroke-linecap="round"/></svg>
       <span>Easy<span class="logo-accent">Notes</span></span>
+    </a>
+    <% var cartCount = (locals.cartIds || []).length; %>
+    <a class="cart-link<%= cp === '/cart' ? ' is-current' : '' %>" href="/cart" aria-label="Cart, <%= cartCount %> <%= cartCount === 1 ? 'item' : 'items' %>">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
+      <% if (cartCount) { %><span class="cart-count" aria-hidden="true"><%= cartCount %></span><% } %>
     </a>
     <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only">
     <label for="menu-toggle" class="menu-btn"><span class="sr-only">Menu</span><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></label>

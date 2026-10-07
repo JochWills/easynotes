@@ -137,3 +137,8 @@ create table if not exists events (
 );
 create index if not exists events_kind_idx on events (kind, created_at desc);
 alter table events enable row level security;
+
+-- Cart checkouts: every order bought in one payment shares the Paystack reference in payment_ref.
+alter table orders add column if not exists payment_ref text;
+update orders set payment_ref = reference where payment_ref is null;
+create index if not exists orders_payment_ref_idx on orders (payment_ref);

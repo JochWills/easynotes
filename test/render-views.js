@@ -19,10 +19,14 @@ const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 const cases = {
   home: [{ ...base, title: null, notes: [note, { ...note, subject: 'Finance' }, { ...note, subject: 'Law', module_code: null }, note], total: 10, popularUnis: C.UNIVERSITIES.filter(u => u.popular) }, { ...base, notes: [], total: 0, popularUnis: [] }],
   browse: [{ ...base, title: 'Browse', notes: [note], count: 30, filters: { q: 'acc', university: '', level: '', sort: 'new' }, page: 1, pages: 2, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }, { ...base, notes: [], count: 0, filters: { q: '', university: 'Rhodes University', level: 'Undergraduate', sort: 'new' }, page: 1, pages: 1, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS }],
-  note: [{ ...base, title: 'x', note, author: seller, live: true, more: [note], sampleUrl: 'https://x' }, { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], sampleUrl: null }],
+  note: [{ ...base, cartIds: [], title: 'x', note, author: seller, live: true, more: [note], sampleUrl: 'https://x' }, { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, more: [], sampleUrl: null }],
   storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
-  'checkout-complete': ['paid', 'pending', 'failed'].map(s => ({ ...base, order: { ...order, status: s }, note })),
-  library: [{ ...base, title: 'Your notes', email: order.email, expires: new Date(Date.now() + 7 * 864e5), orders: [order, { ...order, reference: 'ENXYZ', download_count: 10 }], linkDays: 7 }, { ...base, email: order.email, expires: new Date(), orders: [], linkDays: 7 }, { ...base, title: 'Link expired', orders: null, linkDays: 7 }],
+  'checkout-complete': [
+    ...['paid', 'pending', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENABC123DEF', email: order.email, total: 12000, orders: [{ ...order, note_id: note.id, notes: note }] })),
+    ...['paid', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENMULTI1', email: order.email, total: 24000, orders: [{ ...order, reference: 'ENMULTI1-1', note_id: note.id, notes: note }, { ...order, reference: 'ENMULTI1-2', note_id: note.id, notes: { ...note, title: 'Tax 101' } }] })),
+  ],
+  cart: [{ ...base, title: 'Your cart', notes: [note, { ...note, id: '22222222-2222-2222-2222-222222222222', title: 'Tax 101', module_code: null }], dropped: 1, total: 24000 }, { ...base, title: 'Your cart', notes: [], dropped: 0, total: 0 }],
+  library: [{ ...base, expires: null, title: 'Your notes', email: order.email, orders: [order], linkDays: 7 }, { ...base, title: 'Your notes', email: order.email, expires: new Date(Date.now() + 7 * 864e5), orders: [order, { ...order, reference: 'ENXYZ', download_count: 10 }], linkDays: 7 }, { ...base, email: order.email, expires: new Date(), orders: [], linkDays: 7 }, { ...base, title: 'Link expired', orders: null, linkDays: 7 }],
   download: [{ ...base, email: '', reference: '', error: null }, { ...base, email: 'a', reference: 'b', error: 'Nope' }],
   login: [{ ...base, email: '', error: 'bad', next: '' }],
   forgot: [{ ...base, email: '', sent: false }, { ...base, email: 'a@b.co', sent: false, error: 'Enter the email' }, { ...base, email: 'a@b.co', sent: true }, { ...base, emailEnabled: false, email: '', sent: false }],

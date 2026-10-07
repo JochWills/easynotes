@@ -58,6 +58,17 @@
         </label>
         <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(note.price_cents) %></button>
       </form>
+      <div class="or-cart">
+        <% if ((locals.cartIds || []).indexOf(note.id) > -1) { %>
+          <a class="btn btn-ghost btn-block" href="/cart">✓ In your cart · View cart</a>
+        <% } else { %>
+          <form method="post" action="/cart/add/<%= note.id %>">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn btn-ghost btn-block" type="submit">Add to cart</button>
+          </form>
+          <span class="hint">Buying notes for a few modules? Add them all and pay once.</span>
+        <% } %>
+      </div>
       <p class="fineprint">Secure checkout with card, EFT and more. EasyNotes never sees your card details.</p>
     <% } else { %>
       <p class="fineprint">The buy button appears here once these notes are live.</p>

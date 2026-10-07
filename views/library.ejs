@@ -11,16 +11,16 @@
         <h2 id="lib-title">Your notes</h2>
         <p class="small">Bought with <span class="ref-email"><%= email %></span></p>
         <%- include('partials/library-list') %>
-        <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times. This link works until <%= date(expires) %>.</p>
+        <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times.<% if (expires) { %> This link works until <%= date(expires) %>.<% } %></p>
       </div>
     </dialog>
 
     <h1>Your notes</h1>
-    <p>Everything bought with <span class="ref-email"><%= email %></span>.</p>
+    <p><%= expires ? 'Everything bought with' : 'Bought in this payment with' %> <span class="ref-email"><%= email %></span>.</p>
     <div class="card">
       <%- include('partials/library-list') %>
     </div>
-    <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times. This link works until <%= date(expires) %>. After that, get a new one from <a href="/download#email-link">Re-download</a>.</p>
+    <p class="fineprint">Each purchase can be downloaded up to <%= maxDownloads %> times.<% if (expires) { %> This link works until <%= date(expires) %>. After that, get a new one from <a href="/download#email-link">Re-download</a>.<% } %></p>
   <% } %>
 </div>
 <%- include('partials/bottom') %>
