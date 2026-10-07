@@ -1,0 +1,47 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <% if (!queue.length) { %>
+    <div class="empty"><h3>Nothing to review</h3><p>New submissions show up here, with a count on the Verifications tab.</p></div>
+  <% } else { %>
+    <p class="muted">Oldest first. Document links expire after 10 minutes; refresh the page for new ones.</p>
+    <div class="queue">
+      <% queue.forEach(function (s) { %>
+        <div class="card queue-item">
+          <div>
+            <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
+            <span class="small muted"><%= s.users ? s.users.email : '' %> · submitted <%= date(s.submitted_at) %></span>
+            <dl class="facts">
+              <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
+              <dt>University</dt><dd><%= s.university || '—' %></dd>
+              <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>
+            </dl>
+            <div class="doc-links">
+              <% if (s.degreeUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.degreeUrl %>" target="_blank" rel="noopener noreferrer">Degree document</a><% } else { %><span class="muted">No degree document</span><% } %>
+              <% if (s.idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.idUrl %>" target="_blank" rel="noopener noreferrer">ID document</a><% } %>
+            </div>
+            <% if (s.verification_note) { %><p class="fineprint">Previously rejected: “<%= s.verification_note %>”</p><% } %>
+          </div>
+          <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="hidden" name="back" value="/admin/verifications">
+            <div class="field">
+              <label for="note-<%= s.id %>">Reason, if you reject</label>
+              <textarea id="note-<%= s.id %>" name="note" maxlength="500" style="min-height:96px" placeholder="Shown to the seller, e.g. The ID photo is too blurry to read."></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-hi" type="submit" name="decision" value="approve">Approve</button>
+              <button class="btn btn-danger" type="submit" name="decision" value="reject">Reject</button>
+            </div>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <section class="admin-section">
+    <h2>Recent decisions</h2>
+    <%- include('../partials/activity', { items: decided }) %>
+  </section>
+</div>
+<%- include('../partials/bottom') %>

@@ -1,9 +1,17 @@
 <%- include('../partials/top', { noindex: true }) %>
 <div class="wrap dash">
   <%- include('../partials/admin-nav') %>
-  <div class="chips" style="margin-bottom:18px">
-    <a class="chip" href="/admin/sellers" <%- !status ? 'aria-current="page" style="background:var(--hi)"' : '' %>>All</a>
-    <% statuses.forEach(function (s) { %><a class="chip" href="/admin/sellers?status=<%= s %>" <%- status === s ? 'aria-current="page" style="background:var(--hi)"' : '' %>><%= { pending: 'In review', approved: 'Verified', rejected: 'Not approved', unsubmitted: 'Not started' }[s] %></a><% }) %>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
+  <div class="chips">
+    <a class="chip" href="/admin/sellers<%= q ? qs({ q: q }) : '' %>" <%- !status ? 'aria-current="page"' : '' %>>All</a>
+    <% statuses.forEach(function (s) { %><a class="chip" href="/admin/sellers<%= qs({ status: s, q: q }) %>" <%- status === s ? 'aria-current="page"' : '' %>><%= { pending: 'In review', approved: 'Verified', rejected: 'Not approved', unsubmitted: 'Not started' }[s] %></a><% }) %>
+  </div>
+    <form method="get" action="/admin/sellers" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
+      <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+      <label for="as-q" class="sr-only">Find a seller</label>
+      <input id="as-q" type="search" name="q" value="<%= q %>" placeholder="Name, link or email">
+      <button class="btn btn-sm" type="submit">Find</button>
+    </form>
   </div>
   <div class="table-wrap">
     <table class="data">

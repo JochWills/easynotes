@@ -3,11 +3,11 @@
   <%- include('../partials/admin-nav') %>
   <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
     <div class="chips">
-      <% ['paid','pending','failed'].forEach(function (s) { %><a class="chip" href="/admin/orders?status=<%= s %>" <%- !reference && status === s ? 'style="background:var(--hi)"' : '' %>><%= s[0].toUpperCase() + s.slice(1) %></a><% }) %>
+      <% ['paid','pending','failed','all'].forEach(function (s) { %><a class="chip" href="/admin/orders?status=<%= s %>" <%- !reference && status === s ? 'aria-current="page"' : '' %>><%= s[0].toUpperCase() + s.slice(1) %></a><% }) %>
     </div>
     <form method="get" action="/admin/orders" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
-      <label for="ao-ref" class="sr-only">Find by reference</label>
-      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Find by reference (EN…)">
+      <label for="ao-ref" class="sr-only">Find by reference or email</label>
+      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Reference (EN…) or buyer email">
       <button class="btn btn-sm" type="submit">Find</button>
     </form>
   </div>

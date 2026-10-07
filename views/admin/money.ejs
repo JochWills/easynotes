@@ -1,0 +1,53 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <div class="stats">
+    <div class="stat"><b><%= rand(all.fees) %></b><span>EasyNotes revenue, all time</span></div>
+    <div class="stat"><b><%= rand(all.gross) %></b><span>Gross sales</span></div>
+    <div class="stat"><b><%= rand(all.payouts) %></b><span>Paid to sellers</span></div>
+    <div class="stat"><b><%= all.sales %></b><span>Paid orders</span></div>
+  </div>
+  <p class="fineprint" style="margin-top:-14px;margin-bottom:28px">Paystack splits every payment and pays sellers directly, so there’s nothing to pay out by hand. Paystack’s own fee is <%= feeBearerText %>. <% if (capped) { %>Showing the latest 10,000 orders.<% } %></p>
+
+  <section>
+    <h2 style="font-size:1.3rem">By month</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Gross</th><th class="num">EasyNotes</th><th class="num">Sellers</th></tr></thead>
+        <tbody>
+          <% months.forEach(function (m) { %><tr><td><%= m.label %></td><td class="num"><%= m.sales %></td><td class="num"><%= rand(m.gross) %></td><td class="num"><%= rand(m.fees) %></td><td class="num"><%= rand(m.payouts) %></td></tr><% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="admin-section">
+    <h2>By seller</h2>
+    <% if (sellers.length) { %>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Seller</th><th class="num">Orders</th><th class="num">Gross</th><th class="num">EasyNotes</th><th class="num">Seller earned</th><th>Last sale</th></tr></thead>
+          <tbody>
+            <% sellers.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.name %></a></td><td class="num"><%= s.sales %></td><td class="num"><%= rand(s.gross) %></td><td class="num"><%= rand(s.fees) %></td><td class="num"><%= rand(s.payouts) %></td><td><%= date(s.last) %></td></tr><% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %><p class="muted">No sales yet.</p><% } %>
+  </section>
+
+  <section class="admin-section" id="no-payouts">
+    <h2>Verified, but no payout details (<%= noPayouts.length %>)</h2>
+    <% if (noPayouts.length) { %>
+      <p class="muted">Their notes stay hidden from students until they add bank details. You could email them a nudge.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Seller</th><th>Email</th><th>Verified</th></tr></thead>
+          <tbody>
+            <% noPayouts.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td><td><% if (s.users) { %><a href="mailto:<%= s.users.email %>"><%= s.users.email %></a><% } %></td><td><%= date(s.verified_at) %></td></tr><% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %><p class="muted">Every verified seller can be paid.</p><% } %>
+  </section>
+</div>
+<%- include('../partials/bottom') %>

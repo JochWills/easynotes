@@ -1,6 +1,7 @@
 const express = require('express');
 const paystack = require('../lib/paystack');
 const { markPaid } = require('../lib/orders');
+const events = require('../lib/events');
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.post('/paystack', express.raw({ type: '*/*', limit: '1mb' }), async (req,
     return res.sendStatus(400);
   }
 
+  events.log('webhook.received', { event: event.event, reference: event.data?.reference || null });
   try {
     if (event.event === 'charge.success' && event.data?.reference) {
       await markPaid(event.data.reference, event.data);

@@ -2,41 +2,41 @@
 <div class="wrap dash">
   <%- include('../partials/admin-nav') %>
   <div class="stats">
-    <div class="stat"><b><%= rand(totals.fees) %></b><span>Platform revenue</span></div>
+    <div class="stat"><b><%= rand(totals.fees) %></b><span>EasyNotes revenue</span></div>
     <div class="stat"><b><%= rand(totals.gross) %></b><span>Gross sales</span></div>
     <div class="stat"><b><%= totals.sales %></b><span>Paid orders</span></div>
     <div class="stat"><b><%= sellerCount %></b><span>Verified sellers</span></div>
     <div class="stat"><b><%= noteCount %></b><span>Published notes</span></div>
   </div>
 
-  <h2 style="font-size:1.35rem">Waiting for verification (<%= pending.length %>)</h2>
-  <% if (pending.length) { %>
-    <div class="table-wrap" style="margin-bottom:34px">
-      <table class="data">
-        <thead><tr><th>Seller</th><th>Degree</th><th>Submitted</th><th></th></tr></thead>
-        <tbody>
-          <% pending.forEach(function (s) { %>
-            <tr><td><%= s.display_name %></td><td><%= s.degree %>, <%= s.university %></td><td><%= date(s.submitted_at) %></td><td class="num"><a class="btn btn-sm" href="/admin/sellers/<%= s.id %>">Review</a></td></tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-  <% } else { %>
-    <p class="muted" style="margin-bottom:34px">Nothing to review.</p>
+  <% if (pendingCount || noPayouts) { %>
+    <ul class="setup">
+      <% if (pendingCount) { %><li><span class="num"><%= pendingCount %></span><div><h3><%= pendingCount === 1 ? 'Seller' : 'Sellers' %> waiting for verification</h3><p>Check their degree and ID documents.</p></div><a class="btn btn-hi btn-sm" href="/admin/verifications">Review</a></li><% } %>
+      <% if (noPayouts) { %><li><span class="num"><%= noPayouts %></span><div><h3>Verified <%= noPayouts === 1 ? 'seller hasn’t' : 'sellers haven’t' %> added payout details</h3><p>Their notes stay hidden until they do.</p></div><a class="btn btn-ghost btn-sm" href="/admin/money#no-payouts">See who</a></li><% } %>
+    </ul>
   <% } %>
 
-  <h2 style="font-size:1.35rem">Latest orders</h2>
-  <% if (recent.length) { %>
-    <div class="table-wrap">
-      <table class="data">
-        <thead><tr><th>Reference</th><th>Notes</th><th>Email</th><th>Status</th><th class="num">Amount</th><th class="num">Fee</th></tr></thead>
-        <tbody>
-          <% recent.forEach(function (o) { %>
-            <tr><td><a href="/admin/orders?reference=<%= o.reference %>"><%= o.reference %></a></td><td><%= o.notes ? o.notes.title : '' %></td><td><%= o.email %></td><td><%- include('../partials/status-pill', { status: o.status }) %></td><td class="num"><%= rand(o.amount_cents) %></td><td class="num"><%= rand(o.platform_fee_cents) %></td></tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-  <% } else { %><p class="muted">No orders yet.</p><% } %>
+  <div class="dash-grid">
+    <section>
+      <h2 style="font-size:1.3rem">Latest orders</h2>
+      <% if (recent.length) { %>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Reference</th><th>Notes</th><th>Status</th><th class="num">Amount</th></tr></thead>
+            <tbody>
+              <% recent.forEach(function (o) { %>
+                <tr><td><a href="/admin/orders?reference=<%= o.reference %>"><%= o.reference %></a></td><td><%= o.notes ? o.notes.title : '' %></td><td><%- include('../partials/status-pill', { status: o.status }) %></td><td class="num"><%= rand(o.amount_cents) %></td></tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <p class="fineprint"><a href="/admin/orders?status=all">All orders</a></p>
+      <% } else { %><p class="muted">No orders yet.</p><% } %>
+    </section>
+    <section>
+      <h2 style="font-size:1.3rem">Activity</h2>
+      <%- include('../partials/activity', { items: activity }) %>
+    </section>
+  </div>
 </div>
 <%- include('../partials/bottom') %>

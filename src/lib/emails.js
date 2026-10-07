@@ -60,15 +60,37 @@ const RESET_MINUTES = 60;
 // The token carries a piece of the current password hash, so it stops working once the password changes.
 const hashTag = (passwordHash) => String(passwordHash).slice(-12);
 
+const resetUrl = (user, minutes) =>
+  `${config.baseUrl}/reset?t=${tokens.make('password-reset', { u: user.id, h: hashTag(user.password_hash) }, minutes * 60000)}`;
+
 async function sendPasswordReset(user) {
-  const t = tokens.make('password-reset', { u: user.id, h: hashTag(user.password_hash) }, RESET_MINUTES * 60000);
   const { html, text } = compose({
     heading: 'Reset your password',
     paragraphs: ['Someone (hopefully you) asked to reset the password for your EasyNotes account.'],
-    button: { url: `${config.baseUrl}/reset?t=${t}`, label: 'Choose a new password' },
+    button: { url: resetUrl(user, RESET_MINUTES), label: 'Choose a new password' },
     small: [`This link works once and expires in ${RESET_MINUTES} minutes. If you didn’t ask for this, ignore this email and your password stays the same.`],
   });
   return mail.send({ to: user.email, subject: 'Reset your EasyNotes password', html, text });
+}
+
+const INVITE_HOURS = 24;
+
+async function sendAdminInvite(user, invitedBy) {
+  const { html, text } = compose({
+    heading: 'You’re now an EasyNotes admin',
+    paragraphs: [`${esc(invitedBy)} added you as an admin on EasyNotes. Choose a password to log in to the admin dashboard.`],
+    button: { url: resetUrl(user, INVITE_HOURS * 60), label: 'Choose your password' },
+    small: [`This link works once and expires in ${INVITE_HOURS} hours. After that, use “Forgot your password?” on the login page.`],
+  });
+  return mail.send({ to: user.email, subject: 'You’ve been added as an EasyNotes admin', html, text });
+}
+
+async function sendTestEmail(to) {
+  const { html, text } = compose({
+    heading: 'Test email',
+    paragraphs: ['If you can read this, EasyNotes emails are working.', `Sent from ${esc(config.mailFrom)} at ${new Date().toUTCString()}.`],
+  });
+  return mail.send({ to, subject: 'EasyNotes test email', html, text });
 }
 
 // Returns the user for a valid reset token, otherwise null.
@@ -111,6 +133,6 @@ async function sendVerificationDecision(sellerId) {
 
 module.exports = {
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail,
-  RESET_MINUTES, sendPasswordReset, readResetToken,
+  RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,
 };

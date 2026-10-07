@@ -1,0 +1,28 @@
+<% var label = function (e) {
+  var d = e.detail || {};
+  switch (e.kind) {
+    case 'webhook.received': return 'Paystack webhook: ' + (d.event || 'event') + (d.reference ? ' (' + d.reference + ')' : '');
+    case 'seller.approved': return 'Approved ' + (d.name || 'a seller');
+    case 'seller.rejected': return 'Rejected ' + (d.name || 'a seller') + (d.reason ? ': “' + d.reason + '”' : '');
+    case 'seller.revoked': return 'Revoked ' + (d.name || 'a seller') + (d.reason ? ': “' + d.reason + '”' : '');
+    case 'note.removed': return 'Removed notes “' + (d.title || '') + '”';
+    case 'note.hidden': return 'Hid notes “' + (d.title || '') + '”';
+    case 'note.restored': return 'Restored notes “' + (d.title || '') + '” as hidden';
+    case 'order.downloads_reset': return 'Reset downloads for ' + d.reference;
+    case 'admin.added': return 'Added admin ' + d.email;
+    case 'admin.removed': return 'Removed admin ' + d.email;
+    case 'email.test': return 'Sent a test email to ' + d.to;
+    default: return e.kind;
+  }
+}; %>
+<% if (items === null) { %>
+  <div class="alert alert-info">Activity log isn’t set up yet. Run the <strong>events</strong> snippet at the bottom of <code>supabase/schema.sql</code> in the Supabase SQL Editor.</div>
+<% } else if (!items.length) { %>
+  <p class="muted">Nothing yet.</p>
+<% } else { %>
+  <ul class="activity">
+    <% items.forEach(function (e) { %>
+      <li><span><%= label(e) %><% if (e.actor) { %> <span class="muted small">· <%= e.actor %></span><% } %></span><time datetime="<%= new Date(e.created_at).toISOString() %>"><%= date(e.created_at) %> <%= new Date(e.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Johannesburg' }) %></time></li>
+    <% }) %>
+  </ul>
+<% } %>

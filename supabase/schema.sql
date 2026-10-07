@@ -126,3 +126,14 @@ values
   ('samples', 'samples', true, 10485760, array['application/pdf']),
   ('verification', 'verification', false, 10485760, array['application/pdf','image/jpeg','image/png'])
 on conflict (id) do nothing;
+
+-- Activity log for the admin dashboard (webhooks received, approvals, removals, admin changes).
+create table if not exists events (
+  id bigint generated always as identity primary key,
+  kind text not null,
+  actor text,
+  detail jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists events_kind_idx on events (kind, created_at desc);
+alter table events enable row level security;

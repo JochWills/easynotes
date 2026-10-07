@@ -1,0 +1,36 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <div class="dash-grid">
+    <section class="card">
+      <h2 style="font-size:1.2rem">Site settings</h2>
+      <p class="muted small">Change these in Render → easynotes → Environment, then save and redeploy.</p>
+      <dl class="kv">
+        <% settings.forEach(function (s) { %><dt><%= s[0] %></dt><dd><%= s[1] %><code><%= s[2] %></code></dd><% }) %>
+      </dl>
+    </section>
+    <section class="card">
+      <h2 style="font-size:1.2rem">Admins</h2>
+      <ul class="lib-list" style="margin-top:4px">
+        <% admins.forEach(function (a) { %>
+          <li class="lib-item">
+            <div><strong><%= a.email %></strong><span class="small muted">Added <%= date(a.created_at) %><%= a.id === user.id ? ' · you' : '' %></span></div>
+            <% if (a.id !== user.id && admins.length > 1) { %>
+              <form method="post" action="/admin/admins/<%= a.id %>/remove" data-confirm="Remove <%= a.email %> as an admin? They'll lose access straight away."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+      <form class="form" method="post" action="/admin/admins" style="margin-top:18px">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field">
+          <label for="ad-email">Add an admin</label>
+          <input id="ad-email" type="email" name="email" required placeholder="name@example.com">
+          <span class="hint">They’ll get an email to choose a password. Admins can approve sellers, remove notes and see every order.</span>
+        </div>
+        <button class="btn" type="submit">Add admin</button>
+      </form>
+    </section>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

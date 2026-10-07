@@ -12,6 +12,7 @@
         <dt>University</dt><dd><%= s.university || '—' %></dd>
         <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>
         <dt>Submitted</dt><dd><%= s.submitted_at ? date(s.submitted_at) : '—' %></dd>
+        <dt>Sales</dt><dd><%= totals.sales %> paid, <%= rand(totals.earnings) %> earned</dd>
         <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %></dd>
       </dl>
       <h3>Documents</h3>

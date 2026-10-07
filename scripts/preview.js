@@ -19,7 +19,7 @@ const routes = [
   [/^\/seller\/payouts$/, 'seller_payouts-0'], [/^\/seller\/notes\/new$/, 'seller_note-form-0'], [/^\/seller\/notes\/.+\/edit$/, 'seller_note-form-1'],
   [/^\/seller\/sales$/, 'seller_sales-0'],
   [/^\/admin$/, 'admin_index-0'], [/^\/admin\/sellers$/, 'admin_sellers-0'], [/^\/admin\/sellers\//, 'admin_seller-0'],
-  [/^\/admin\/notes$/, 'admin_notes-0'], [/^\/admin\/orders$/, 'admin_orders-0'],
+  [/^\/admin\/notes$/, 'admin_notes-0'], [/^\/admin\/orders$/, 'admin_orders-0'], [/^\/admin\/verifications$/, 'admin_verifications-0'], [/^\/admin\/money$/, 'admin_money-0'], [/^\/admin\/health$/, 'admin_health-0'], [/^\/admin\/settings$/, 'admin_settings-0'],
   [/^\/[a-z0-9-]+$/, 'storefront-0'], // any other single-segment path is a storefront
 ];
 
