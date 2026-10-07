@@ -359,6 +359,27 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .current-file strong { font-size: .95rem; color: var(--blue); }
 .current-file small { font-size: .84rem; color: var(--muted); }
 .current-file-ext { flex: none; color: var(--muted); }
+.declaration { padding: 18px 20px; background: var(--page); border: 1px solid var(--rule); border-radius: 12px; }
+.declaration.has-error { border-color: var(--bad); }
+.declaration-title { margin: 0 0 4px; font-family: var(--display); font-weight: 700; }
+.declaration .small { margin: 0 0 8px; color: var(--ink-soft); }
+.declaration .checklist { margin: 0 0 14px; }
+.declaration .checklist li { padding: 9px 0 9px 34px; font-size: .93rem; }
+.declaration .checklist li::before { top: 10px; width: 20px; height: 20px; background-size: 13px; }
+.report-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 14px; }
+.report-item { display: grid; gap: 6px; }
+.report-item.is-urgent { border-color: var(--bad); }
+.report-item h3 { margin: 4px 0 0; font-size: 1.1rem; }
+.report-item p { margin: 0; }
+.report-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.flag-list { margin: 4px 0; padding-left: 20px; }
+.report-details { margin: 4px 0; padding: 10px 14px; background: var(--page); border-left: 3px solid var(--rule-strong); border-radius: 0 8px 8px 0; white-space: pre-line; }
+.report-item .actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.report-item .actions form { margin: 0; }
+.radio-list { display: grid; gap: 10px; margin-top: 6px; }
+fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
+.js-hide { display: none; }
 .delete-card { margin-top: 20px; }
 .delete-card h1 { font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
 .delete-card .checklist { margin: 4px 0 18px; }

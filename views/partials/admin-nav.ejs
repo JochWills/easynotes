@@ -1,6 +1,6 @@
 <div class="dash-title"><h1><%= title %></h1></div>
 <nav class="dash-nav" aria-label="Admin">
-  <% [['overview','/admin','Overview'],['verifications','/admin/verifications','Verifications'],['sellers','/admin/sellers','Sellers'],['notes','/admin/notes','Notes'],['orders','/admin/orders','Orders'],['money','/admin/money','Money'],['health','/admin/health','Health'],['settings','/admin/settings','Settings']].forEach(function (t) { %>
-    <a href="<%= t[1] %>" <%- tab === t[0] ? 'aria-current="page"' : '' %>><%= t[2] %><% if (t[0] === 'verifications' && locals.pendingCount) { %> <span class="badge" aria-label="<%= pendingCount %> waiting"><%= pendingCount %></span><% } %></a>
+  <% [['overview','/admin','Overview'],['verifications','/admin/verifications','Verifications'],['sellers','/admin/sellers','Sellers'],['notes','/admin/notes','Notes'],['reports','/admin/reports','Reports'],['orders','/admin/orders','Orders'],['money','/admin/money','Money'],['health','/admin/health','Health'],['settings','/admin/settings','Settings']].forEach(function (t) { %>
+    <a href="<%= t[1] %>" <%- tab === t[0] ? 'aria-current="page"' : '' %>><%= t[2] %><% if (t[0] === 'verifications' && locals.pendingCount) { %> <span class="badge" aria-label="<%= pendingCount %> waiting"><%= pendingCount %></span><% } %><% if (t[0] === 'reports' && locals.reportCount) { %> <span class="badge" aria-label="<%= reportCount %> open"><%= reportCount %></span><% } %></a>
   <% }) %>
 </nav>

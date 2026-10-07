@@ -140,7 +140,46 @@ async function sendVerificationDecision(sellerId) {
   return mail.send({ to: s.users.email, subject: approved ? 'You’re verified on EasyNotes' : 'Your EasyNotes verification needs another look', html, text });
 }
 
+/* ---------- Reports about notes ---------- */
+
+const REPORT_REASONS = {
+  copyright_mine: 'I own the copyright (takedown request)',
+  copyright_other: 'Contains someone else’s material (slides, textbook, past papers)',
+  wrong: 'Doesn’t match its description, or the file is broken',
+  offensive: 'Offensive or inappropriate',
+  other: 'Something else',
+};
+
+// Goes to the support inbox; replying answers the person who reported.
+async function sendReportNotice(report) {
+  const { html, text } = compose({
+    heading: report.reason === 'copyright_mine' ? 'Copyright takedown request' : 'Notes reported',
+    paragraphs: [
+      `<strong>${esc(report.title)}</strong> was reported: ${esc(REPORT_REASONS[report.reason] || report.reason)}.`,
+      `From: ${esc(report.name || 'No name given')} &lt;${esc(report.email)}&gt;`,
+      `<em>${esc(report.details).replace(/\n/g, '<br>')}</em>`,
+      report.reason === 'copyright_mine' ? 'We said we’d act within 2 working days. Remove the notes from Admin → Reports while you look into it.' : 'Review it in Admin → Reports.',
+    ],
+    button: { url: `${config.baseUrl}/admin/reports`, label: 'Open Admin → Reports' },
+  });
+  return mail.send({ to: config.supportEmail, replyTo: report.email, subject: `${report.reason === 'copyright_mine' ? 'Takedown request' : 'Report'}: ${report.title}`, html, text });
+}
+
+async function sendReportReceipt(report) {
+  const { html, text } = compose({
+    heading: 'We’ve received your report',
+    paragraphs: [
+      `Thanks for telling us about <strong>${esc(report.title)}</strong>.`,
+      report.reason === 'copyright_mine'
+        ? 'We’ll review your takedown request and act within 2 working days. If we need more information we’ll reply to this email.'
+        : 'We’ll look into it. If we need more information we’ll reply to this email.',
+    ],
+  });
+  return mail.send({ to: report.email, subject: 'We’ve received your report', html, text });
+}
+
 module.exports = {
+  REPORT_REASONS, sendReportNotice, sendReportReceipt,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,

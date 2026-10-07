@@ -27,13 +27,11 @@ async function loadPdfjs() {
   return pdfjs;
 }
 
-async function renderImages(buffer, pageCount) {
-  const plan = previewPlan(pageCount);
-  if (!plan.images) return [];
+// Opens a PDF with pdf.js (shared by the preview renderer and the upload scanner).
+async function openPdf(buffer) {
   const { getDocument } = await loadPdfjs();
-  const { createCanvas } = require('@napi-rs/canvas');
   const root = path.dirname(require.resolve('pdfjs-dist/package.json'));
-  const doc = await getDocument({
+  return getDocument({
     data: new Uint8Array(buffer),
     standardFontDataUrl: path.join(root, 'standard_fonts') + path.sep,
     cMapUrl: path.join(root, 'cmaps') + path.sep,
@@ -42,6 +40,13 @@ async function renderImages(buffer, pageCount) {
     disableFontFace: true,
     verbosity: 0,
   }).promise;
+}
+
+async function renderImages(buffer, pageCount) {
+  const plan = previewPlan(pageCount);
+  if (!plan.images) return [];
+  const { createCanvas } = require('@napi-rs/canvas');
+  const doc = await openPdf(buffer);
   try {
     const images = [];
     for (let i = 1; i <= plan.images; i++) {
@@ -91,4 +96,4 @@ function previewUrls(note) {
   return previewPaths(note.file_path, note.page_count).map((p) => storage.publicUrl('samples', p));
 }
 
-module.exports = { previewPlan, previewPaths, renderImages, makePreview, removePreview, previewUrls };
+module.exports = { openPdf, previewPlan, previewPaths, renderImages, makePreview, removePreview, previewUrls };

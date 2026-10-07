@@ -191,7 +191,7 @@
         </div>
       </aside>
     <% } %>
-    <p class="fineprint note-report"><a href="mailto:<%= supportEmail %>?subject=<%= encodeURIComponent('Report notes ' + note.id) %>">Report these notes</a></p>
+    <% if (live) { %><p class="fineprint note-report"><a href="/note/<%= note.id %>/report">Report these notes</a></p><% } %>
   </div>
 
   <% if (more.length) { %>

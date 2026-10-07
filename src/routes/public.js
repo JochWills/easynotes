@@ -4,7 +4,11 @@ const config = require('../lib/config');
 const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
 const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
-const { isUuid, noteUrl, storeUrl } = require('../lib/helpers');
+const { isUuid, noteUrl, storeUrl, str } = require('../lib/helpers');
+const rateLimit = require('express-rate-limit');
+const events = require('../lib/events');
+const emails = require('../lib/emails');
+const flash = require('../lib/flash');
 
 const router = express.Router();
 const PAGE_SIZE = 24;
@@ -61,6 +65,58 @@ router.get('/notes', async (req, res) => {
     institutions: NOTE_INSTITUTIONS,
     levels: LEVELS,
   });
+});
+
+/* ---------- Reporting notes (and copyright takedown requests) ---------- */
+
+const reportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: 'draft-7', legacyHeaders: false });
+const REPORT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+async function reportableNote(id) {
+  if (!isUuid(id)) return null;
+  const { data: note } = await db
+    .from('notes')
+    .select('id,title,slug,status,seller_id,sellers(display_name,verification_status,paystack_subaccount_code)')
+    .eq('id', id)
+    .maybeSingle();
+  return note && isPublic(note) ? note : null;
+}
+
+router.get('/note/:id/report', async (req, res, next) => {
+  const note = await reportableNote(req.params.id);
+  if (!note) return next();
+  const reason = Object.keys(emails.REPORT_REASONS).includes(req.query.reason) ? req.query.reason : '';
+  res.render('report', { title: 'Report notes', noindex: true, note, reasons: emails.REPORT_REASONS, values: { reason }, errors: {} });
+});
+
+router.post('/note/:id/report', reportLimiter, async (req, res, next) => {
+  const note = await reportableNote(req.params.id);
+  if (!note) return next();
+  const values = {
+    reason: Object.keys(emails.REPORT_REASONS).includes(req.body.reason) ? req.body.reason : '',
+    details: str(req.body.details, 2000),
+    name: str(req.body.name, 100),
+    email: str(req.body.email, 200).toLowerCase(),
+    good_faith: req.body.good_faith === 'on',
+  };
+  const errors = {};
+  if (!values.reason) errors.reason = 'Choose what’s wrong.';
+  if (values.details.length < 20) errors.details = 'Tell us a bit more (at least 20 characters), for example which pages and what they were copied from.';
+  if (!REPORT_EMAIL_RE.test(values.email)) errors.email = 'Enter your email so we can follow up.';
+  if (values.reason === 'copyright_mine') {
+    if (values.name.length < 2) errors.name = 'Enter your full name.';
+    if (!values.good_faith) errors.good_faith = 'Confirm the statement to send a takedown request.';
+  }
+  if (Object.keys(errors).length) {
+    return res.status(400).render('report', { title: 'Report notes', noindex: true, note, reasons: emails.REPORT_REASONS, values, errors });
+  }
+
+  const report = { note_id: note.id, title: note.title, seller_id: note.seller_id, reason: values.reason, details: values.details, name: values.name || null, email: values.email };
+  await events.log('note.reported', report, values.email);
+  emails.sendReportNotice(report).catch((err) => console.error('[report] notice not sent', err.message));
+  emails.sendReportReceipt(report).catch((err) => console.error('[report] receipt not sent', err.message));
+  flash(req, 'ok', values.reason === 'copyright_mine' ? 'Takedown request sent. We’ll act within 2 working days and email you.' : 'Thanks, your report was sent. We’ll look into it.');
+  res.redirect(303, noteUrl(note));
 });
 
 router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
@@ -124,5 +180,6 @@ router.get('/sell', (req, res) => res.render('sell', { title: 'Sell your notes' 
 router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of sale' }));
 router.get('/seller-terms', (req, res) => res.render('seller-terms', { title: 'Seller terms' }));
 router.get('/privacy', (req, res) => res.render('privacy', { title: 'Privacy policy' }));
+router.get('/copyright', (req, res) => res.render('copyright', { title: 'Copyright and takedown' }));
 
 module.exports = router;

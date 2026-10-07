@@ -18,11 +18,59 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const cleanSearch = (q) => String(q || '').replace(/["%,()*\\:]/g, ' ').trim().slice(0, 80);
 const backTo = (req, fallback) => (typeof req.body.back === 'string' && /^\/admin(\/|$)/.test(req.body.back) ? req.body.back : fallback);
 
-// The Verifications tab shows how many sellers are waiting, on every admin page.
+// Reports and automatic upload flags stay open until an admin marks them resolved.
+async function openReports() {
+  const [items, resolved] = await Promise.all([
+    events.recent({ limit: 300, kinds: ['note.reported', 'note.flagged'] }),
+    events.recent({ limit: 1000, kinds: ['report.resolved'] }),
+  ]);
+  if (items === null) return null;
+  const done = new Set((resolved || []).map((e) => String(e.detail?.report_id)));
+  return items.filter((e) => !done.has(String(e.id)));
+}
+
+// The Verifications and Reports tabs show how many things are waiting, on every admin page.
 router.use(async (req, res, next) => {
-  const { count } = await db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending');
+  const [{ count }, open] = await Promise.all([
+    db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending'),
+    openReports(),
+  ]);
   res.locals.pendingCount = count || 0;
+  res.locals.reportCount = open ? open.length : 0;
   next();
+});
+
+/* ---------- Reports ---------- */
+
+router.get('/reports', async (req, res) => {
+  const open = await openReports();
+  const ids = [...new Set((open || []).map((e) => e.detail?.note_id).filter(isUuid))];
+  const { data: notes } = ids.length
+    ? await db.from('notes').select('id,title,slug,status,sellers(id,display_name)').in('id', ids)
+    : { data: [] };
+  const byId = Object.fromEntries((notes || []).map((n) => [n.id, n]));
+  res.render('admin/reports', { title: 'Reports', tab: 'reports', items: open, notesById: byId, reasons: emails.REPORT_REASONS });
+});
+
+// Admins can open any note's PDF (to check reports), through a short-lived signed link.
+router.get('/notes/:id/file', async (req, res, next) => {
+  if (!isUuid(req.params.id)) return next();
+  const { data: n } = await db.from('notes').select('file_path').eq('id', req.params.id).maybeSingle();
+  if (!n) return next();
+  res.set('Cache-Control', 'no-store');
+  res.redirect(await storage.signedUrl('notes', n.file_path, 120));
+});
+
+router.post('/reports/:id/resolve', async (req, res) => {
+  const id = Number(req.params.id);
+  if (Number.isInteger(id) && id > 0) {
+    const { data: item } = await db.from('events').select('id,kind,detail').eq('id', id).maybeSingle();
+    if (item && ['note.reported', 'note.flagged'].includes(item.kind)) {
+      await events.log('report.resolved', { report_id: item.id, kind: item.kind, title: item.detail?.title }, req.user.email);
+      flash(req, 'ok', 'Marked as resolved.');
+    }
+  }
+  res.redirect('/admin/reports');
 });
 
 /* ---------- Overview ---------- */

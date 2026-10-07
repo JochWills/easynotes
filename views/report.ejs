@@ -1,0 +1,41 @@
+<%- include('partials/top', { noindex: true }) %>
+<div class="wrap narrow doc">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="<%= noteUrl(note) %>">← Back to the notes</a></nav>
+  <h1>Report notes</h1>
+  <p class="muted">You’re reporting <strong><%= note.title %></strong> by <%= note.sellers.display_name %>. Reports go to the EasyNotes team, not the seller.</p>
+  <form class="form card" method="post" action="/note/<%= note.id %>/report" novalidate data-report-form>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <fieldset class="field <%= errors.reason ? 'has-error' : '' %>">
+      <legend>What’s wrong?</legend>
+      <div class="radio-list">
+        <% Object.keys(reasons).forEach(function (k) { %>
+          <label class="check"><input type="radio" name="reason" value="<%= k %>" <%= values.reason === k ? 'checked' : '' %> required> <span><%= reasons[k] %></span></label>
+        <% }) %>
+      </div>
+      <%- include('partials/field-error', { name: 'reason' }) %>
+    </fieldset>
+    <div class="field <%= errors.details ? 'has-error' : '' %>">
+      <label for="r-details">Details</label>
+      <textarea id="r-details" name="details" maxlength="2000" required placeholder="Which pages, and what they were copied from (for example: pages 3 to 10 are the ACC1006F lecture slides from week 4)."><%= values.details || '' %></textarea>
+      <%- include('partials/field-error', { name: 'details' }) %>
+    </div>
+    <div class="field <%= errors.name ? 'has-error' : '' %>">
+      <label for="r-name">Your name <span class="muted" data-optional-label>(optional, required for takedown requests)</span></label>
+      <input id="r-name" type="text" name="name" maxlength="100" autocomplete="name" value="<%= values.name || '' %>">
+      <%- include('partials/field-error', { name: 'name' }) %>
+    </div>
+    <div class="field <%= errors.email ? 'has-error' : '' %>">
+      <label for="r-email">Your email</label>
+      <input id="r-email" type="email" name="email" maxlength="200" autocomplete="email" required value="<%= values.email || '' %>">
+      <span class="hint">We only use it to follow up on this report.</span>
+      <%- include('partials/field-error', { name: 'email' }) %>
+    </div>
+    <div class="field takedown-only <%= errors.good_faith ? 'has-error' : '' %>" data-takedown-only>
+      <label class="check"><input type="checkbox" name="good_faith" <%= values.good_faith ? 'checked' : '' %>> <span>I own the copyright in the material described (or am authorised to act for the owner), I believe in good faith that its use in these notes isn’t allowed, and the information in this report is accurate.</span></label>
+      <%- include('partials/field-error', { name: 'good_faith' }) %>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Send report</button><a href="<%= noteUrl(note) %>">Cancel</a></div>
+  </form>
+  <p class="fineprint">Read how we handle copyright on our <a href="/copyright">copyright and takedown page</a>.</p>
+</div>
+<%- include('partials/bottom') %>

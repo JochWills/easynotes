@@ -45,7 +45,7 @@ const LEVELS = ['Undergraduate', 'Honours / postgraduate', 'Professional exam', 
 const RESERVED_SLUGS = new Set([
   'about', 'account', 'admin', 'api', 'app', 'assets', 'blog', 'browse', 'cart', 'checkout', 'contact', 'css',
   'dashboard', 'download', 'downloads', 'easynotes', 'favicon', 'forgot', 'help', 'healthz', 'how-it-works', 'img', 'js',
-  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'register', 'reset', 'robots', 'search', 'sell',
+  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'copyright', 'report', 'reports', 'register', 'reset', 'robots', 'search', 'sell',
   'seller', 'seller-terms', 'sellers', 'settings', 'signup', 'sitemap', 'static', 'store', 'support', 'terms',
   'webhooks', 'www',
 ]);

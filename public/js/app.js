@@ -638,6 +638,17 @@
     v.addEventListener('contextmenu', function (e) { if (e.target.closest('.viewer-page, .viewer-thumb')) e.preventDefault(); });
   });
 
+  // Report form: the takedown statement only applies to copyright owners
+  document.querySelectorAll('[data-report-form]').forEach(function (f) {
+    var box = f.querySelector('[data-takedown-only]');
+    var update = function () {
+      var picked = f.querySelector('input[name="reason"]:checked');
+      box.classList.toggle('js-hide', !picked || picked.value !== 'copyright_mine');
+    };
+    f.addEventListener('change', update);
+    update();
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
     f.addEventListener('submit', function () {

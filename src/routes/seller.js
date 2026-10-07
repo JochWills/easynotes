@@ -8,6 +8,15 @@ const upload = require('../lib/upload');
 const preview = require('../lib/preview');
 const events = require('../lib/events');
 const profanity = require('../lib/profanity');
+const { scanPdf } = require('../lib/scan');
+
+// After an upload: record the seller's declaration and flag anything that looks like someone else's
+// material for an admin to check (Admin > Reports). Never blocks the upload.
+async function afterPdfSaved(req, noteId, title, buffer) {
+  events.log('note.uploaded', { note_id: noteId, title, seller_id: req.seller.id, declaration: 'own-work-v2' }, req.user.email);
+  const flags = await scanPdf(buffer);
+  if (flags.length) events.log('note.flagged', { note_id: noteId, title, seller_id: req.seller.id, flags }, 'scanner');
+}
 const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
@@ -291,7 +300,7 @@ function validateNote(body) {
   if (!NOTE_INSTITUTIONS.includes(values.university)) errors.university = 'Choose an institution.';
   if (!LEVELS.includes(values.level)) errors.level = 'Choose a level.';
   if (!(values.price_cents >= 1000 && values.price_cents <= 200000)) errors.price = 'Set a price between R10 and R2,000.';
-  if (body.own_work !== 'on') errors.own_work = 'Confirm these notes are your own original work.';
+  if (body.own_work !== 'on') errors.own_work = 'Confirm the notes are your own work and contain none of the listed material.';
   profanity.checkFields(values, ['title', 'description', 'subject', 'module_code'], errors);
   return { values, errors };
 }
@@ -344,6 +353,7 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
     throw error;
   }
   await preview.makePreview(filePath, pdf.buffer, pageCount);
+  await afterPdfSaved(req, id, values.title, pdf.buffer);
 
   const live = req.body.publish === '1';
   const noPayouts = !req.seller.paystack_subaccount_code;
@@ -399,6 +409,7 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
   if (pdf) {
     await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
     await preview.removePreview(n.file_path, n.page_count);
+    await afterPdfSaved(req, n.id, values.title, pdf.buffer);
   }
   await storage.remove('notes', oldFiles);
   flash(req, 'ok', pdf ? 'Changes saved. Past buyers will get the new file when they download again.' : 'Changes saved.');

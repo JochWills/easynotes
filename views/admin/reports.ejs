@@ -1,0 +1,50 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/admin-nav') %>
+  <p class="muted">Reports from students and rights holders, and uploads the automatic check flagged. Copyright takedown requests should be handled within 2 working days (see the <a href="/copyright">copyright page</a>).</p>
+  <% if (items === null) { %>
+    <div class="alert alert-info">The activity log table isn’t set up, so reports can’t be listed. Run the <strong>events</strong> snippet from <code>supabase/schema.sql</code>.</div>
+  <% } else if (!items.length) { %>
+    <div class="empty"><h3>Nothing to check</h3><p>New reports and flagged uploads will appear here.</p></div>
+  <% } else { %>
+    <ul class="report-list">
+      <% items.forEach(function (e) { var d = e.detail || {}; var n = notesById[d.note_id]; var takedown = d.reason === 'copyright_mine'; %>
+        <li class="report-item card<%= takedown ? ' is-urgent' : '' %>">
+          <div class="report-head">
+            <% if (e.kind === 'note.flagged') { %>
+              <span class="pill pill-wait">Automatic check</span>
+            <% } else if (takedown) { %>
+              <span class="pill pill-bad">Takedown request</span>
+            <% } else { %>
+              <span class="pill pill-muted">Report</span>
+            <% } %>
+            <time class="small muted" datetime="<%= new Date(e.created_at).toISOString() %>"><%= date(e.created_at) %></time>
+          </div>
+          <h3>
+            <% if (n) { %><a href="<%= noteUrl(n) %>"><%= n.title %></a><% } else { %><%= d.title || 'Notes' %> <span class="muted small">(no longer exists)</span><% } %>
+          </h3>
+          <p class="small muted">
+            <% if (n && n.sellers) { %>By <a href="/admin/sellers/<%= n.sellers.id %>"><%= n.sellers.display_name %></a> · <% } %>
+            <% if (n) { %>Now: <%- include('../partials/status-pill', { status: n.status }) %><% } %>
+          </p>
+          <% if (e.kind === 'note.flagged') { %>
+            <ul class="flag-list"><% (d.flags || []).forEach(function (f) { %><li><%= f %></li><% }) %></ul>
+            <p class="small muted">Open the PDF to check. Flags are hints, not proof.</p>
+          <% } else { %>
+            <p><strong><%= reasons[d.reason] || d.reason %></strong></p>
+            <blockquote class="report-details"><%= d.details %></blockquote>
+            <p class="small">From <%= d.name || 'someone who didn’t give a name' %> · <a href="mailto:<%= d.email %>?subject=<%= encodeURIComponent('Your report about ' + (d.title || 'notes on EasyNotes')) %>"><%= d.email %></a></p>
+          <% } %>
+          <div class="actions">
+            <% if (n) { %><a class="btn btn-ghost btn-sm" href="/admin/notes/<%= n.id %>/file" target="_blank" rel="noopener">Open PDF</a><% } %>
+            <% if (n && n.status !== 'removed' && n.status !== 'deleted') { %>
+              <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm="Remove these notes? The seller won't be able to republish them. Past buyers can still download."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove notes</button></form>
+            <% } %>
+            <form method="post" action="/admin/reports/<%= e.id %>/resolve"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Mark resolved</button></form>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

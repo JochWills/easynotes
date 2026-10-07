@@ -41,6 +41,13 @@ const cases = {
   how: [base, sellerBase, adminBase], sell: [base, sellerBase, adminBase], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],
   'seller/dashboard': [{ ...sellerBase, title: 'Seller dashboard', tab: 'overview', notes: [note, { ...note, status: 'draft' }, { ...note, status: 'removed' }], sales: 3, earnings: 28800 }, { ...sellerBase, me: { ...seller, verification_status: 'rejected', verification_note: 'Blurry', paystack_subaccount_code: null }, title: 'D', tab: 'overview', notes: [], sales: 0, earnings: 0 }],
+  report: [{ ...base, title: 'Report', note, reasons: require('../src/lib/emails').REPORT_REASONS, values: {}, errors: {} }, { ...base, title: 'Report', note, reasons: require('../src/lib/emails').REPORT_REASONS, values: { reason: 'copyright_mine', details: 'x' }, errors: { details: 'More', name: 'Name', good_faith: 'Tick' } }],
+  copyright: [base],
+  'admin/reports': [{ ...adminBase, title: 'Reports', tab: 'reports', reportCount: 2, notesById: { [note.id]: note }, reasons: require('../src/lib/emails').REPORT_REASONS, items: [
+    { id: 7, kind: 'note.reported', created_at: new Date(), detail: { note_id: note.id, title: note.title, reason: 'copyright_mine', details: 'Pages 3-10 are my week 4 slides.\nPlease remove.', name: 'Dr A Lecturer', email: 'lecturer@uct.ac.za' } },
+    { id: 8, kind: 'note.flagged', created_at: new Date(), detail: { note_id: note.id, title: note.title, flags: ['Lecture slide wording', 'Pages are slide-shaped (landscape)'] } },
+    { id: 9, kind: 'note.reported', created_at: new Date(), detail: { note_id: 'gone', title: 'Old notes', reason: 'wrong', details: 'File is blank after page 2', email: 'a@b.co' } },
+  ] }, { ...adminBase, title: 'Reports', tab: 'reports', notesById: {}, reasons: {}, items: [] }, { ...adminBase, title: 'Reports', tab: 'reports', notesById: {}, reasons: {}, items: null }],
   'seller/note-delete': [{ ...sellerBase, title: 'Delete notes', note: { ...note, status: 'published' }, sold: 3 }, { ...sellerBase, title: 'Delete notes', note: { ...note, status: 'draft' }, sold: 0 }],
   'seller/profile': [{ ...sellerBase, flash: { type: 'ok', msg: 'Saved.' }, title: 'Storefront', tab: 'profile', values: seller, errors: { slug: 'taken' } }],
   'seller/verification': ['unsubmitted', 'rejected', 'pending', 'approved'].map(st => ({ ...sellerBase, me: { ...seller, verification_status: st, verification_note: 'x' }, title: 'V', tab: 'verification', values: {}, errors: { degree: 'x' }, universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY })),

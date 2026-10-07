@@ -72,7 +72,19 @@
             <span class="hint"><%= editing ? 'Leave empty to keep the current file. If you choose a new one, past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %> Students see a preview of the first 2½ pages on your listing (less for short notes).</span>
             <%- include('../partials/field-error', { name: 'pdf' }) %>
           </div>
-          <div class="field <%= errors.own_work ? 'has-error' : '' %>"><label class="check"><input type="checkbox" name="own_work"> <span>These notes are my own work and contain no copied textbooks, slides or past papers.</span></label><%- include('../partials/field-error', { name: 'own_work' }) %></div>
+          <div class="field declaration <%= errors.own_work ? 'has-error' : '' %>">
+            <p class="declaration-title">Before you <%= editing ? 'save' : 'upload' %>: these notes must be your own work</p>
+            <p class="small">They must <strong>not</strong> contain any of the following, in full, in part or as photos or screenshots:</p>
+            <ul class="checklist checklist-dark checklist-no">
+              <li>Lecture slides, lecturer notes or handouts</li>
+              <li>Pages or passages copied from textbooks, study guides or course packs</li>
+              <li>Past exam papers, class tests or their memos</li>
+              <li>Assignment, tutorial or test answers given out by your institution</li>
+              <li>Anything downloaded from your institution’s learning platform (Vula, ClickUP, myUnisa, Moodle and so on)</li>
+            </ul>
+            <label class="check"><input type="checkbox" name="own_work"> <span>I confirm these notes are my own original work, contain none of the above, and that I have the right to sell them. I understand that EasyNotes may remove them, suspend my account and recover refunds from my earnings if they don’t comply with the <a href="/seller-terms" target="_blank" rel="noopener">seller terms</a>.</span></label>
+            <%- include('../partials/field-error', { name: 'own_work' }) %>
+          </div>
         </div>
         <div class="form-actions">
           <% if (editing) { %>

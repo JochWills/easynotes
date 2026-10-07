@@ -12,6 +12,11 @@
     case 'admin.added': return 'Added admin ' + d.email;
     case 'admin.removed': return 'Removed admin ' + d.email;
     case 'email.test': return 'Sent a test email to ' + d.to;
+    case 'note.uploaded': return 'Uploaded notes “' + (d.title || '') + '” (own-work declaration accepted)';
+    case 'note.flagged': return 'Automatic check flagged “' + (d.title || '') + '”: ' + (d.flags || []).join(', ');
+    case 'note.reported': return (d.reason === 'copyright_mine' ? 'Takedown request for “' : 'Report about “') + (d.title || '') + '”';
+    case 'note.deleted': return 'Seller deleted notes “' + (d.title || '') + '”';
+    case 'report.resolved': return 'Marked a report as resolved' + (d.title ? ' (“' + d.title + '”)' : '');
     default: return e.kind;
   }
 }; %>
