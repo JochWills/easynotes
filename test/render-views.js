@@ -26,6 +26,7 @@ const cases = {
     ...['paid', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENMULTI1', email: order.email, total: 24000, orders: [{ ...order, reference: 'ENMULTI1-1', note_id: note.id, notes: note }, { ...order, reference: 'ENMULTI1-2', note_id: note.id, notes: { ...note, title: 'Tax 101' } }] })),
   ],
   cart: [{ ...base, title: 'Your cart', notes: [note, { ...note, id: '22222222-2222-2222-2222-222222222222', title: 'Tax 101', module_code: null }], dropped: 1, total: 24000 }, { ...base, title: 'Your cart', notes: [], dropped: 0, total: 0 }],
+  'partials/cart-panel': [{ ...base, notes: [note, { ...note, id: '22222222-2222-2222-2222-222222222222', title: 'Tax 101: a very long title that should wrap neatly inside the panel', module_code: null }], dropped: 0, total: 24000 }, { ...base, notes: [], dropped: 1, total: 0 }],
   library: [{ ...base, expires: null, title: 'Your notes', email: order.email, orders: [order], linkDays: 7 }, { ...base, title: 'Your notes', email: order.email, expires: new Date(Date.now() + 7 * 864e5), orders: [order, { ...order, reference: 'ENXYZ', download_count: 10 }], linkDays: 7 }, { ...base, email: order.email, expires: new Date(), orders: [], linkDays: 7 }, { ...base, title: 'Link expired', orders: null, linkDays: 7 }],
   download: [{ ...base, email: '', reference: '', error: null }, { ...base, email: 'a', reference: 'b', error: 'Nope' }],
   login: [{ ...base, email: '', error: 'bad', next: '' }],

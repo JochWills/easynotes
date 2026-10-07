@@ -13,7 +13,8 @@
     startBar();
   });
   document.addEventListener('submit', function (e) {
-    if (!e.defaultPrevented && !e.target.hasAttribute('data-download')) startBar();
+    var f = e.target;
+    if (!e.defaultPrevented && !f.hasAttribute('data-download') && !f.hasAttribute('data-cart-add') && !f.hasAttribute('data-cart-remove')) startBar();
   });
   // Coming back with the Back button: don't leave the bar running.
   window.addEventListener('pageshow', function () { bar.classList.remove('is-loading'); });
@@ -28,7 +29,7 @@
   });
 
   // Notification popups: slide away after 5 seconds (paused while hovered or focused), or on ×
-  document.querySelectorAll('[data-toast]').forEach(function (t) {
+  var setupToast = function (t) {
     var timer;
     var hide = function () {
       t.classList.add('is-hiding');
@@ -42,6 +43,169 @@
     t.addEventListener('focusin', pause);
     t.addEventListener('focusout', start);
     start();
+  };
+  document.querySelectorAll('[data-toast]').forEach(setupToast);
+  var showToast = function (msg, type) {
+    document.querySelectorAll('[data-toast]').forEach(function (old) { old.remove(); });
+    var t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    t.setAttribute('data-toast', '');
+    var icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'error' ? '!' : '✓';
+    var p = document.createElement('p');
+    p.textContent = msg;
+    var close = document.createElement('button');
+    close.className = 'toast-close';
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss');
+    close.textContent = '×';
+    t.append(icon, p, close);
+    document.body.appendChild(t);
+    setupToast(t);
+  };
+
+  // Slide-in cart panel. Links to /cart open it instead (the /cart page stays for browsers without JS).
+  var drawer = document.getElementById('cart-drawer');
+  var openDrawer = function () {};
+  if (drawer && typeof drawer.showModal === 'function' && window.fetch) {
+    var body = drawer.querySelector('[data-cart-body]');
+    var loadPanel = function () {
+      if (!body.children.length) body.innerHTML = '<div class="drawer-loading" aria-label="Loading your cart"><span></span><span></span><span></span></div>';
+      return fetch('/cart/panel', { credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (html) { body.innerHTML = html; })
+        .catch(function () { location.href = '/cart'; });
+    };
+    openDrawer = function () {
+      drawer.classList.remove('is-closing');
+      if (!drawer.open) drawer.showModal();
+      loadPanel();
+    };
+    var closeDrawer = function () {
+      if (!drawer.open || drawer.classList.contains('is-closing')) return;
+      drawer.classList.add('is-closing');
+      var finished = false;
+      var finish = function () {
+        if (finished) return;
+        finished = true;
+        drawer.classList.remove('is-closing');
+        drawer.close();
+      };
+      drawer.addEventListener('animationend', function (e) { if (e.target === drawer) finish(); }, { once: true });
+      setTimeout(finish, 400);
+    };
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href]');
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (a.origin !== location.origin || a.pathname !== '/cart' || location.pathname === '/cart') return;
+      e.preventDefault();
+      openDrawer();
+    }, true);
+    drawer.querySelector('[data-drawer-close]').addEventListener('click', closeDrawer);
+    drawer.addEventListener('click', function (e) { if (e.target === drawer) closeDrawer(); }); // the dimmed area
+    drawer.addEventListener('cancel', function (e) { e.preventDefault(); closeDrawer(); }); // Esc
+    window.addEventListener('pageshow', function (e) { if (e.persisted && drawer.open) drawer.close(); });
+
+    // Remove from inside the panel without reloading
+    drawer.addEventListener('submit', function (e) {
+      var f = e.target;
+      var id = f.getAttribute('data-cart-remove');
+      if (!id) return;
+      e.preventDefault();
+      var item = f.closest('.drawer-item');
+      if (item) item.classList.add('is-removing');
+      fetch(f.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new URLSearchParams(new FormData(f)),
+        credentials: 'same-origin',
+      }).then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      }).then(function (data) {
+        setCartCount(data.count);
+        restoreCardButtons(id, f.querySelector('[name=_csrf]').value);
+        return loadPanel();
+      }).catch(function () { f.submit(); });
+    });
+  }
+
+  // A note taken out of the cart gets its "Add to cart" button back on any card showing it
+  var CART_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>';
+  var restoreCardButtons = function (id, csrf) {
+    document.querySelectorAll('.card-cart.is-in[data-note="' + id + '"]').forEach(function (link) {
+      var card = link.closest('.note-card');
+      var title = card && card.querySelector('h3 a') ? card.querySelector('h3 a').textContent : 'these notes';
+      var f = document.createElement('form');
+      f.method = 'post';
+      f.action = '/cart/add/' + id;
+      f.setAttribute('data-cart-add', '');
+      f.setAttribute('data-note', id);
+      var token = document.createElement('input');
+      token.type = 'hidden';
+      token.name = '_csrf';
+      token.value = csrf;
+      var btn = document.createElement('button');
+      btn.className = 'card-cart';
+      btn.type = 'submit';
+      btn.setAttribute('aria-label', 'Add ' + title + ' to cart');
+      btn.innerHTML = CART_ICON;
+      btn.appendChild(document.createTextNode('Add to cart'));
+      f.append(token, btn);
+      link.replaceWith(f);
+    });
+  };
+
+  // Add to cart from a note card without leaving the page (the form still works without JS)
+  var setCartCount = function (count) {
+    var link = document.querySelector('.cart-link');
+    if (!link) return;
+    var badge = link.querySelector('.cart-count');
+    if (!badge && count) {
+      badge = document.createElement('span');
+      badge.className = 'cart-count';
+      badge.setAttribute('aria-hidden', 'true');
+      link.appendChild(badge);
+    }
+    if (badge && !count) badge.remove();
+    else if (badge) badge.textContent = count;
+    link.setAttribute('aria-label', 'Cart, ' + count + (count === 1 ? ' item' : ' items'));
+  };
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.hasAttribute('data-cart-add') || !window.fetch) return;
+    e.preventDefault();
+    var btn = f.querySelector('button');
+    btn.disabled = true;
+    fetch(f.action, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: new URLSearchParams(new FormData(f)),
+      credentials: 'same-origin',
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function (data) {
+      if (data.result === 'full') {
+        btn.disabled = false;
+        showToast('Your cart is full (' + data.max + ' sets of notes). Check out, then start a new cart.', 'error');
+        return;
+      }
+      setCartCount(data.count);
+      var done = document.createElement('a');
+      done.className = 'card-cart is-in';
+      done.href = '/cart';
+      done.textContent = '✓ In cart';
+      done.setAttribute('data-note', f.getAttribute('data-note'));
+      f.replaceWith(done);
+      showToast(data.result === 'already' ? 'That’s already in your cart.' : 'Added to your cart.', 'ok');
+    }).catch(function () {
+      // Fall back to a normal form post (which handles an expired session, etc.)
+      f.submit();
+    });
   });
 
   // Account dropdown: close on outside click or Escape

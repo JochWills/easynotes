@@ -125,11 +125,26 @@ router.get('/cart', async (req, res) => {
   });
 });
 
+// The slide-in cart panel fetches its contents from here whenever it opens.
+router.get('/cart/panel', async (req, res) => {
+  const { notes, dropped } = await cart.load(req);
+  res.set('Cache-Control', 'no-store');
+  res.render('partials/cart-panel', {
+    notes,
+    dropped,
+    total: notes.reduce((s, n) => s + n.price_cents, 0),
+  });
+});
+
 router.post('/cart/add/:noteId', async (req, res, next) => {
   if (!isUuid(req.params.noteId)) return next();
   const { data } = await publicNotes('id,title').eq('id', req.params.noteId).maybeSingle();
   if (!data) return next();
   const result = cart.add(req, data.id);
+  // The add-to-cart buttons on note cards ask for JSON so the page doesn't reload.
+  if (req.get('accept') === 'application/json') {
+    return res.json({ result, count: cart.ids(req).length, max: cart.MAX_ITEMS });
+  }
   if (result === 'full') flash(req, 'error', `Your cart is full (${cart.MAX_ITEMS} sets of notes). Check out, then start a new cart.`);
   else flash(req, 'ok', result === 'already' ? 'That’s already in your cart.' : 'Added to your cart.');
   res.redirect(303, backTo(req, '/cart'));
@@ -138,6 +153,7 @@ router.post('/cart/add/:noteId', async (req, res, next) => {
 router.post('/cart/remove/:noteId', (req, res, next) => {
   if (!isUuid(req.params.noteId)) return next();
   cart.remove(req, req.params.noteId);
+  if (req.get('accept') === 'application/json') return res.json({ count: cart.ids(req).length });
   flash(req, 'ok', 'Removed from your cart.');
   res.redirect(303, '/cart');
 });

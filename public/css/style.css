@@ -119,6 +119,48 @@ small, .small { font-size: .9rem; }
 .cart-remove:hover { color: var(--bad); }
 .cart-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
 .cart-total .price { font-size: 2rem; }
+/* Slide-in cart panel */
+dialog.drawer {
+  position: fixed; inset: 0 0 0 auto; margin: 0; width: min(420px, 100%); max-width: 100%; height: 100%; max-height: 100%;
+  padding: 0; border: 0; background: var(--paper); color: var(--ink); box-shadow: var(--shadow-lg);
+  display: none; flex-direction: column;
+}
+dialog.drawer[open] { display: flex; animation: drawer-in .32s cubic-bezier(.2, .8, .2, 1); }
+dialog.drawer::backdrop { background: rgba(14, 26, 58, .45); backdrop-filter: blur(2px); animation: fade-in .32s ease; }
+dialog.drawer.is-closing { animation: drawer-out .24s ease-in forwards; }
+dialog.drawer.is-closing::backdrop { animation: fade-out .24s ease-in forwards; }
+@keyframes drawer-in { from { transform: translateX(100%); } }
+@keyframes drawer-out { to { transform: translateX(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+html:has(dialog.drawer[open]) { overflow: hidden; }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px; border-bottom: 1px solid var(--rule); }
+.drawer-head h2 { margin: 0; font-size: 1.35rem; }
+.drawer-head .dialog-close { position: static; }
+.drawer-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; overscroll-behavior: contain; }
+.drawer-body > .alert { margin: 16px 22px 0; }
+.drawer-list { list-style: none; margin: 0; padding: 8px 22px; display: grid; }
+.drawer-item { display: flex; justify-content: space-between; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--rule); transition: opacity .2s; }
+.drawer-item:last-child { border-bottom: 0; }
+.drawer-item.is-removing { opacity: .4; }
+.drawer-item-main { display: grid; justify-items: start; gap: 4px; min-width: 0; }
+.drawer-item-title { color: var(--ink); font-weight: 700; text-decoration: none; line-height: 1.35; overflow-wrap: anywhere; }
+.drawer-item-title:hover { color: var(--blue); }
+.drawer-item-end { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.drawer-item-end form { margin: 0; }
+.drawer-price { font-family: var(--display); font-weight: 800; font-size: 1.1rem; white-space: nowrap; }
+.drawer-foot { margin-top: auto; padding: 18px 22px 22px; border-top: 1px solid var(--rule); background: var(--page); }
+.drawer-foot .cart-total .price { font-size: 1.7rem; }
+.drawer-foot .form { margin-top: 14px; }
+.drawer-empty { margin: auto; padding: 40px 28px; text-align: center; display: grid; justify-items: center; gap: 6px; color: var(--muted); }
+.drawer-empty h3 { margin: 6px 0 0; color: var(--ink); }
+.drawer-empty p { margin: 0 0 12px; }
+.drawer-loading { padding: 8px 22px; display: grid; gap: 12px; }
+.drawer-loading span { display: block; height: 64px; border-radius: 12px; background: linear-gradient(90deg, var(--page) 25%, var(--rule) 50%, var(--page) 75%) 0 0 / 200% 100%; animation: shimmer 1.2s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  dialog.drawer[open], dialog.drawer.is-closing, dialog.drawer::backdrop, dialog.drawer.is-closing::backdrop { animation-duration: .01s; }
+}
 .menu-btn { display: none; margin-left: auto; width: 44px; height: 44px; place-items: center; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper); cursor: pointer; color: var(--ink); }
 .menu-toggle:focus-visible + .menu-btn { outline: 3px solid var(--blue); outline-offset: 2px; }
 
@@ -266,7 +308,23 @@ small, .small { font-size: .9rem; }
 .note-by { margin: 0; font-size: .9rem; color: var(--ink-soft); }
 .note-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
 .price { font-family: var(--display); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; }
-.pages { font-size: .88rem; color: var(--muted); }
+.note-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pages { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; color: var(--muted); white-space: nowrap; }
+.pages svg { flex: none; }
+.note-foot { align-items: center; gap: 10px; }
+.note-foot form { margin: 0; }
+/* Sits above the card-wide link so it can be clicked on its own. */
+.card-cart {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+  min-height: 38px; padding: 0 13px; border: 1.5px solid var(--blue); border-radius: 10px;
+  background: var(--paper); color: var(--blue); font: inherit; font-size: .88rem; font-weight: 700;
+  white-space: nowrap; text-decoration: none; cursor: pointer; transition: background .15s, color .15s;
+}
+.card-cart:hover { background: var(--blue); color: #fff; }
+.card-cart:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.card-cart[disabled] { opacity: .6; cursor: progress; }
+.card-cart.is-in { border-color: var(--ok); color: var(--ok); }
+.card-cart.is-in:hover { background: var(--ok); color: #fff; }
 
 .verified { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 600; font-size: .88rem; }
 .verified svg { flex: none; }
