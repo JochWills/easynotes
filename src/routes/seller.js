@@ -6,6 +6,7 @@ const paystack = require('../lib/paystack');
 const storage = require('../lib/storage');
 const upload = require('../lib/upload');
 const preview = require('../lib/preview');
+const events = require('../lib/events');
 const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
@@ -32,7 +33,7 @@ const afterUpload = (back) => (req, res, next) => {
 router.get('/', async (req, res) => {
   const s = req.seller;
   const [{ data: notes }, { data: totals }] = await Promise.all([
-    db.from('notes').select('id,title,slug,status,price_cents,sales_count,page_count,module_code,created_at').eq('seller_id', s.id).order('created_at', { ascending: false }),
+    db.from('notes').select('id,title,slug,status,price_cents,sales_count,page_count,module_code,created_at').eq('seller_id', s.id).neq('status', 'deleted').order('created_at', { ascending: false }),
     db.rpc('seller_totals', { p_seller_id: s.id }),
   ]);
   const t = (totals && totals[0]) || { sales: 0, earnings: 0 };
@@ -237,7 +238,7 @@ function requireApproved(req, res, next) {
 
 async function ownNote(req, res, next) {
   if (!isUuid(req.params.id)) return res.status(404).render('404', { title: 'Page not found' });
-  const { data: note } = await db.from('notes').select('*').eq('id', req.params.id).eq('seller_id', req.seller.id).maybeSingle();
+  const { data: note } = await db.from('notes').select('*').eq('id', req.params.id).eq('seller_id', req.seller.id).neq('status', 'deleted').maybeSingle();
   if (!note) return res.status(404).render('404', { title: 'Page not found' });
   req.note = note;
   next();
@@ -375,6 +376,47 @@ router.post('/notes/:id/status', ownNote, async (req, res) => {
   if (status === 'published' && req.seller.verification_status !== 'approved') return requireApproved(req, res);
   await db.from('notes').update({ status }).eq('id', n.id);
   flash(req, 'ok', status === 'published' ? `“${n.title}” is published.` : `“${n.title}” is hidden from students. Past buyers can still download it.`);
+  res.redirect('/seller');
+});
+
+/* ---------- Delete ---------- */
+
+const PENDING_GRACE_MS = 2 * 60 * 60 * 1000; // a checkout started in the last 2 hours may still be paid
+
+router.get('/notes/:id/delete', ownNote, async (req, res) => {
+  const { count } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', req.note.id).eq('status', 'paid');
+  res.render('seller/note-delete', { title: 'Delete notes', note: req.note, sold: count || 0 });
+});
+
+// Notes nobody bought are erased with their PDF. Sold notes are marked deleted instead: gone for the
+// seller and students, but the PDF stays so past buyers can still download what they paid for.
+router.post('/notes/:id/delete', ownNote, async (req, res) => {
+  const n = req.note;
+  const { data: orders, error } = await db.from('orders').select('id,status,created_at').eq('note_id', n.id);
+  if (error) throw error;
+  const sold = orders.some((o) => o.status === 'paid');
+  const checkingOut = orders.some((o) => o.status === 'pending' && Date.now() - new Date(o.created_at).getTime() < PENDING_GRACE_MS);
+  if (!sold && checkingOut) {
+    flash(req, 'error', `Someone is paying for “${n.title}” right now. Hide it instead, or try deleting again in a couple of hours.`);
+    return res.redirect('/seller');
+  }
+
+  if (sold) {
+    const { error: upErr } = await db.from('notes').update({ status: 'deleted' }).eq('id', n.id);
+    if (upErr) throw upErr;
+  } else {
+    // Unpaid checkouts (failed or abandoned) would otherwise block deleting the row.
+    if (orders.length) {
+      const { error: delOrdersErr } = await db.from('orders').delete().eq('note_id', n.id).neq('status', 'paid');
+      if (delOrdersErr) throw delOrdersErr;
+    }
+    const { error: delErr } = await db.from('notes').delete().eq('id', n.id);
+    if (delErr) throw delErr;
+    await storage.remove('notes', [n.file_path]);
+  }
+  await preview.removePreview(n.file_path, n.page_count);
+  events.log('note.deleted', { note_id: n.id, title: n.title, sold }, req.user.email);
+  flash(req, 'ok', sold ? `“${n.title}” is deleted. People who bought it can still download it.` : `“${n.title}” is deleted.`);
   res.redirect('/seller');
 });
 

@@ -73,6 +73,7 @@
             <button class="btn btn-ghost" type="submit" name="publish" value="0">Save as draft</button>
           <% } %>
           <a href="/seller">Cancel</a>
+          <% if (editing) { %><a class="delete-link" href="/seller/notes/<%= note.id %>/delete">Delete these notes</a><% } %>
         </div>
       </div>
     </div>

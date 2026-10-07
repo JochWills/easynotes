@@ -41,6 +41,7 @@ const cases = {
   how: [base], sell: [base], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],
   'seller/dashboard': [{ ...sellerBase, title: 'Seller dashboard', tab: 'overview', notes: [note, { ...note, status: 'draft' }, { ...note, status: 'removed' }], sales: 3, earnings: 28800 }, { ...sellerBase, me: { ...seller, verification_status: 'rejected', verification_note: 'Blurry', paystack_subaccount_code: null }, title: 'D', tab: 'overview', notes: [], sales: 0, earnings: 0 }],
+  'seller/note-delete': [{ ...sellerBase, title: 'Delete notes', note: { ...note, status: 'published' }, sold: 3 }, { ...sellerBase, title: 'Delete notes', note: { ...note, status: 'draft' }, sold: 0 }],
   'seller/profile': [{ ...sellerBase, flash: { type: 'ok', msg: 'Saved.' }, title: 'Storefront', tab: 'profile', values: seller, errors: { slug: 'taken' } }],
   'seller/verification': ['unsubmitted', 'rejected', 'pending', 'approved'].map(st => ({ ...sellerBase, me: { ...seller, verification_status: st, verification_note: 'x' }, title: 'V', tab: 'verification', values: {}, errors: { degree: 'x' }, universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY })),
   'seller/payouts': [{ ...sellerBase, title: 'P', tab: 'payouts', banks: [{ name: 'Capitec Bank', code: '470010' }], bankError: null, values: { bank_code: '470010' }, errors: { form: 'Paystack said no' } }],

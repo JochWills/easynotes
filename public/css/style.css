@@ -329,6 +329,13 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .card-cart[disabled] { opacity: .6; cursor: progress; }
 .card-cart.is-in { border-color: var(--ok); color: var(--ok); }
 .card-cart.is-in:hover { background: var(--ok); color: #fff; }
+.btn-danger-ghost { color: var(--bad); }
+.btn-danger-ghost:hover { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
+.delete-card { margin-top: 20px; }
+.delete-card h1 { font-size: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere; }
+.delete-card .checklist { margin: 4px 0 18px; }
+.delete-card .form-actions { margin-top: 22px; }
+.delete-link { margin-left: auto; color: var(--bad); font-size: .93rem; }
 .card-cart.is-own { border-color: var(--rule-strong); color: var(--ink-soft); }
 .card-cart.is-own:hover { background: var(--page); color: var(--ink); }
 .own-note { display: grid; gap: 8px; padding: 18px; border-radius: 12px; background: var(--page); border: 1px solid var(--rule); }

@@ -1,0 +1,23 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap narrow dash">
+  <div class="card delete-card">
+    <h1>Delete “<%= note.title %>”?</h1>
+    <% if (sold) { %>
+      <p>These notes have <strong><%= sold %> <%= sold === 1 ? 'sale' : 'sales' %></strong>. Deleting them:</p>
+      <ul class="checklist checklist-dark">
+        <li>Takes them off EasyNotes and out of your dashboard straight away.</li>
+        <li>Keeps the PDF for the people who already bought it, so they can still download it.</li>
+        <li>Keeps these sales in your sales history and payouts.</li>
+      </ul>
+    <% } else { %>
+      <p>Nobody has bought these notes, so the listing and its PDF will be erased.</p>
+    <% } %>
+    <p class="muted">This can’t be undone.<% if (note.status === 'published') { %> To take them down for a while instead, use <strong>Hide</strong> on your dashboard.<% } %></p>
+    <form method="post" action="/seller/notes/<%= note.id %>/delete" class="form-actions">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="btn btn-danger" type="submit">Delete these notes</button>
+      <a class="btn btn-ghost" href="/seller">Keep them</a>
+    </form>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

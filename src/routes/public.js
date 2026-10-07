@@ -70,6 +70,7 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     .eq('id', req.params.id)
     .maybeSingle();
   if (!note) return next();
+  if (note.status === 'deleted' && req.user?.role !== 'admin') return next();
 
   const live = isPublic(note);
   const isOwner = !!(req.seller && req.seller.id === note.seller_id);
