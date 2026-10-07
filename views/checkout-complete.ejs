@@ -41,10 +41,10 @@
     </div>
   <% } else if (order.status === 'failed') { %>
     <h1>Payment didn’t go through</h1>
-    <p>Paystack didn’t complete this payment, so you haven’t been charged for <strong><%= note.title %></strong>.</p>
+    <p>The payment didn’t go through, so you haven’t been charged for <strong><%= note.title %></strong>.</p>
     <a class="btn" href="<%= noteUrl(note) %>#buy">Try again</a>
   <% } else { %>
-    <h1>We’re waiting for Paystack to confirm</h1>
+    <h1>We’re waiting for your payment to be confirmed</h1>
     <p>Your payment for <strong><%= note.title %></strong> hasn’t been confirmed yet. This usually takes a few seconds. EFT payments can take longer.</p>
     <div class="ref-box">
       <div class="ref-row"><span>Payment reference</span><span class="ref"><%= order.reference %></span></div>

@@ -284,6 +284,22 @@
     update();
   }
 
+  // "What you'd earn" slider on How it works
+  document.querySelectorAll('[data-earn-card]').forEach(function (card) {
+    var pct = Number(card.getAttribute('data-fee'));
+    var range = card.querySelector('input[type="range"]');
+    var r = function (n) { return 'R' + n.toFixed(2); };
+    var update = function () {
+      var p = Number(range.value), fee = Math.round(p * pct) / 100;
+      card.querySelector('[data-earn-price]').textContent = 'R' + p;
+      card.querySelector('[data-earn-pays]').textContent = r(p);
+      card.querySelector('[data-earn-fee]').textContent = r(fee);
+      card.querySelector('[data-earn-you]').textContent = r(p - fee);
+    };
+    range.addEventListener('input', update);
+    update();
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
     f.addEventListener('submit', function () {

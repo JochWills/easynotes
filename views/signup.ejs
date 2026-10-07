@@ -2,7 +2,7 @@
 <div class="auth">
   <div class="card">
     <h1>Create a seller account</h1>
-    <p class="muted">Next you’ll verify your degree and add the bank account Paystack pays you into.</p>
+    <p class="muted">Next you’ll verify your degree and add the bank account you’ll be paid into.</p>
     <form class="form" method="post" action="/signup" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="field <%= errors.display_name ? 'has-error' : '' %>">

@@ -1,9 +1,9 @@
-<%- include('partials/top', { description: 'Sell your study notes to South African students. Verified academics keep most of every sale, paid by Paystack.' }) %>
+<%- include('partials/top', { description: 'Sell your study notes to South African students. Verified academics keep most of every sale, paid straight to their bank account.' }) %>
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
       <h1>Sell the notes that got you through.</h1>
-      <p class="lede">Open a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale. Paystack pays your share straight into your South African bank account.</p>
+      <p class="lede">Open a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale. Your share is paid straight into your South African bank account.</p>
       <div class="form-actions" style="margin-top:28px">
         <a class="btn btn-hi" href="/signup">Create a seller account</a>
         <% if (!locals.user) { %><a class="btn btn-ghost" href="/login">I already have one</a><% } %>

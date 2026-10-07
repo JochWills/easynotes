@@ -2,7 +2,7 @@
 <div class="auth">
   <div class="card">
     <h1>Download your notes</h1>
-    <p>Enter the email you paid with and the reference on your Paystack receipt. It starts with <strong>EN</strong>.</p>
+    <p>Enter the email you paid with and the reference on your payment receipt. It starts with <strong>EN</strong>.</p>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
     <form class="form" method="post" action="/download" data-download>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
@@ -19,7 +19,7 @@
     <% if (locals.emailEnabled) { %>
       <p class="fineprint">Lost your reference? Use the box below instead.</p>
     <% } else { %>
-      <p class="fineprint">Lost your reference? Search your inbox for the Paystack receipt, or email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> with the email you paid from.</p>
+      <p class="fineprint">Lost your reference? Search your inbox for your receipt (it comes from Paystack), or email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> with the email you paid from.</p>
     <% } %>
   </div>
   <% if (locals.emailEnabled) { %>

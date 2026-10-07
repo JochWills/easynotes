@@ -115,7 +115,7 @@ async function sendVerificationDecision(sellerId) {
           `Good news, ${esc(s.display_name)}: we’ve checked your documents and your seller account is approved.`,
           s.paystack_subaccount_code
             ? 'Your published notes are now live for students.'
-            : 'One step left: add your bank details so Paystack can pay you. Your notes go live once that’s done.',
+            : 'One step left: add your bank details so we can pay you. Your notes go live once that’s done.',
         ],
         button: { url: `${config.baseUrl}/seller${s.paystack_subaccount_code ? '' : '/payouts'}`, label: s.paystack_subaccount_code ? 'Go to your dashboard' : 'Add payout details' },
       })

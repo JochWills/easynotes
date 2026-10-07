@@ -56,9 +56,9 @@
           <input type="checkbox" name="accept" required>
           <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
         </label>
-        <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(note.price_cents) %> with Paystack</button>
+        <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(note.price_cents) %></button>
       </form>
-      <p class="fineprint">Payments are processed securely by Paystack. EasyNotes never sees your card details.</p>
+      <p class="fineprint">Secure checkout with card, EFT and more. EasyNotes never sees your card details.</p>
     <% } else { %>
       <p class="fineprint">The buy button appears here once these notes are live.</p>
     <% } %>

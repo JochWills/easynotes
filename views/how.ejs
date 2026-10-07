@@ -1,32 +1,128 @@
 <%- include('partials/top') %>
-<section class="page-head"><div class="wrap">
-  <h1>How EasyNotes works</h1>
-  <p>A marketplace for study notes where every seller is a graduate we’ve verified, and every sale is paid through Paystack.</p>
-</div></section>
-<div class="wrap doc">
-  <div class="two-col">
-    <section aria-labelledby="students">
-      <h2 id="students">For students</h2>
-      <ol class="steps steps-vertical">
-        <li><h3>Search for your module</h3><p>Use the module code, subject or university. Each listing shows who wrote the notes, their degree, the page count and often a free sample.</p></li>
-        <li><h3>Pay with Paystack</h3><p>Enter your email and pay. No account, no password. Paystack handles your card or EFT details; we never see them.</p></li>
-        <li><h3>Download your PDF</h3><p>A download window opens as soon as payment clears. Your Paystack receipt shows your payment reference (starting with EN). Use it with your email on the <a href="/download">re-download page</a> to get the file again, up to <%= maxDownloads %> times.</p></li>
-      </ol>
-      <h3 style="margin-top:32px">Before you buy</h3>
-      <p>Notes are digital downloads, so all sales are final and we can’t offer refunds once you’ve paid. Read the description and sample first. If a file is broken or isn’t what the listing describes, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll look into it.</p>
-    </section>
-    <section aria-labelledby="sellers">
-      <h2 id="sellers">For sellers</h2>
-      <ol class="steps steps-vertical">
-        <li><h3>Create your account</h3><p>Pick the name and link for your storefront.</p></li>
-        <li><h3>Verify your degree</h3><p>Upload your degree certificate or academic transcript and your ID. A person on our team checks them, usually within two working days.</p></li>
-        <li><h3>Add your bank account</h3><p>We set you up as a Paystack subaccount so your share of each sale is paid straight to you on Paystack’s settlement schedule.</p></li>
-        <li><h3>Upload and price your notes</h3><p>PDF only, up to 50 MB. Set your own price from R10 to R2,000 and add an optional free sample.</p></li>
-      </ol>
-      <h3 style="margin-top:32px">What it costs</h3>
-      <p>Nothing to list. EasyNotes keeps <%= feePercent %>% of each sale and you receive the rest. On a R100 set of notes, that’s R<%= 100 - feePercent %> to you.</p>
-      <p><a class="btn" href="/sell">Start selling</a></p>
-    </section>
+<% var keep = 100 - feePercent; %>
+<h1 class="sr-only">How EasyNotes works</h1>
+<section class="wrap section" id="students" aria-labelledby="students-h">
+  <div class="section-head"><div><p class="eyebrow">For students</p><h2 id="students-h">Find it, pay, download</h2></div></div>
+  <ol class="timeline">
+    <li class="tl-step">
+      <div class="tl-art" aria-hidden="true">
+        <div class="mini-search"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>ACC1006F</div>
+        <div class="mini-result"><span class="tab">ACC1006F</span><b>Financial Accounting I</b><span class="verified-dot">Verified academic</span></div>
+      </div>
+      <h3>Search for your module</h3>
+      <p>Use the module code, subject or university. Each listing shows who wrote the notes, their degree, the page count and often a free sample.</p>
+    </li>
+    <li class="tl-step">
+      <div class="tl-art" aria-hidden="true">
+        <div class="mini-field">you@example.com</div>
+        <div class="mini-pay">Pay R120</div>
+        <div class="mini-lock"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>Card, EFT and more</div>
+      </div>
+      <h3>Pay securely</h3>
+      <p>Enter your email and pay by card, EFT and more. No account, no password, and we never see your card details.</p>
+    </li>
+    <li class="tl-step">
+      <div class="tl-art" aria-hidden="true">
+        <div class="mini-dialog">
+          <b>Payment received</b>
+          <span class="ref">EN8K2Q4F</span>
+          <div class="mini-pay">Download PDF</div>
+        </div>
+      </div>
+      <h3>Download your PDF</h3>
+      <p>A download window opens as soon as payment clears.<% if (locals.emailEnabled) { %> We also email you a link to all your purchases.<% } %> You can download each purchase up to <%= maxDownloads %> times from <a href="/download">Re-download</a>.</p>
+    </li>
+  </ol>
+
+  <aside class="callout" aria-label="Before you buy">
+    <span class="callout-icon" aria-hidden="true">i</span>
+    <div>
+      <h3>Before you buy</h3>
+      <p>Notes are digital downloads, so all sales are final. Read the description and the free sample first. If a file is broken or isn’t what the listing describes, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll look into it.</p>
+    </div>
+  </aside>
+</section>
+
+<section class="trust" aria-labelledby="verify-h">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow" style="color:#9FB4E8">Why you can trust the notes</p>
+      <h2 id="verify-h">A person checks every seller</h2>
+      <p>Anyone can upload notes to a file-sharing site. On EasyNotes, a seller can’t publish anything until someone on our team has checked their documents.</p>
+    </div>
+    <ul class="checklist">
+      <li>A completed degree from a recognised university, checked against their certificate or transcript</li>
+      <li>Their ID, matched to the name on the degree</li>
+      <li>Original notes only: no copied textbooks, past papers or lecturer slides</li>
+      <li>Each seller’s degree and university shown on every set of notes they sell</li>
+    </ul>
   </div>
-</div>
+</section>
+
+<section class="wrap section" id="sellers" aria-labelledby="sellers-h">
+  <div class="section-head"><div><p class="eyebrow">For sellers</p><h2 id="sellers-h">Turn your notes into income</h2></div></div>
+  <div class="sell-grid">
+    <ol class="steps steps-vertical seller-steps">
+      <li><h3>Create your account</h3><p>Pick the name and link for your storefront.</p></li>
+      <li><h3>Verify your degree</h3><p>Upload your degree certificate or academic transcript and your ID. Someone on our team checks them, usually within two working days.</p></li>
+      <li><h3>Add your bank account</h3><p>Your share of every sale is paid straight into your bank account, usually the next working day.</p></li>
+      <li><h3>Upload and price your notes</h3><p>PDF only, up to 50 MB. Set your own price from R10 to R2,000 and add an optional free sample.</p></li>
+    </ol>
+    <div class="earn-card" data-earn-card data-fee="<%= feePercent %>">
+      <p class="eyebrow">What you’d earn</p>
+      <label for="earn-price" class="earn-label">If you price your notes at <b data-earn-price>R100</b></label>
+      <input id="earn-price" type="range" min="10" max="500" step="10" value="100">
+      <dl class="earn-rows">
+        <div><dt>Student pays</dt><dd data-earn-pays>R100.00</dd></div>
+        <div><dt>EasyNotes keeps (<%= feePercent %>%)</dt><dd data-earn-fee>R<%= feePercent %>.00</dd></div>
+        <div class="earn-total"><dt>You receive, per sale</dt><dd data-earn-you>R<%= keep %>.00</dd></div>
+      </dl>
+      <p class="fineprint">Nothing to list, no monthly fees. You keep <%= keep %>% of every sale.</p>
+      <a class="btn btn-hi btn-block" href="/sell">Start selling</a>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section faq-section" aria-labelledby="faq-h">
+  <div class="section-head"><div><p class="eyebrow">Questions</p><h2 id="faq-h">Good to know</h2></div></div>
+  <div class="faq">
+    <details>
+      <summary>Do I need an account to buy notes?</summary>
+      <p>No. You only need an email address. Your receipt and download details go there.</p>
+    </details>
+    <details>
+      <summary>What if I lose my download?</summary>
+      <p>Go to <a href="/download">Re-download</a>. <% if (locals.emailEnabled) { %>Enter your email and we’ll send you a link to everything you’ve bought. You can also use your email with the payment reference on your receipt (it starts with EN).<% } else { %>Enter your email and the payment reference on your receipt (it starts with EN).<% } %> Each purchase can be downloaded up to <%= maxDownloads %> times.</p>
+    </details>
+    <details>
+      <summary>Can I get a refund?</summary>
+      <p>Notes are digital downloads, so all sales are final. If a file is broken or doesn’t match its listing, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll look into it.</p>
+    </details>
+    <details>
+      <summary>Who can sell on EasyNotes?</summary>
+      <p>Graduates with a completed degree from a recognised university, a South African bank account, and notes they wrote themselves. Read the <a href="/seller-terms">seller terms</a> for the details.</p>
+    </details>
+    <details>
+      <summary>How long does verification take?</summary>
+      <p>Usually within two working days. <% if (locals.emailEnabled) { %>We email you as soon as you’re approved, or tell you what to fix if we can’t approve you yet.<% } else { %>Your seller dashboard shows when you’re approved, or what to fix if we can’t approve you yet.<% } %></p>
+    </details>
+    <details>
+      <summary>When do sellers get paid?</summary>
+      <p>Every payment is split automatically and your share goes straight into your bank account, usually the next working day. You can see every sale in your seller dashboard.</p>
+    </details>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div>
+      <h2>Ready when you are</h2>
+      <p>Find notes for your module, or start selling the ones that got you through.</p>
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-light" href="/notes">Browse notes</a>
+      <a class="btn btn-outline-light" href="/sell">Start selling</a>
+    </div>
+  </div>
+</section>
 <%- include('partials/bottom') %>

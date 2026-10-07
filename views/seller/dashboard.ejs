@@ -15,7 +15,7 @@
       </li>
       <li class="<%= payouts ? 'done' : '' %>">
         <span class="num"><%= payouts ? '✓' : '2' %></span>
-        <div><h3>Add your payout account</h3><p><%= payouts ? 'Paying into ' + me.bank_name + ' ••••' + me.account_number_last4 + '.' : 'Tell us where Paystack should pay your share of each sale.' %></p></div>
+        <div><h3>Add your payout account</h3><p><%= payouts ? 'Paying into ' + me.bank_name + ' ••••' + me.account_number_last4 + '.' : 'Tell us where to pay your share of each sale.' %></p></div>
         <a class="btn btn-sm <%= payouts ? 'btn-ghost' : '' %>" href="/seller/payouts"><%= payouts ? 'Change' : 'Add' %></a>
       </li>
       <li class="<%= hasNotes ? 'done' : '' %>">
