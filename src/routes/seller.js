@@ -220,7 +220,7 @@ router.post('/payouts', async (req, res) => {
     })
     .eq('id', s.id);
   if (error) throw error;
-  flash(req, 'ok', `Payout account saved. Paystack will pay your share into ${bank.name} ••••${values.account_number.slice(-4)}.`);
+  flash(req, 'ok', `Payout account saved. Your share of each sale will be paid into ${bank.name} ••••${values.account_number.slice(-4)}.`);
   res.redirect('/seller');
 });
 
