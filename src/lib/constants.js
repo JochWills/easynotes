@@ -25,6 +25,7 @@ const UNIVERSITIES = [
   { name: 'Sefako Makgatho Health Sciences University', short: 'SMU' },
   { name: 'Sol Plaatje University', short: 'SPU' },
   { name: 'University of Mpumalanga', short: 'UMP' },
+  { name: 'Emeris', short: 'Emeris' },
 ];
 
 const ANY_INSTITUTION = 'Any institution / professional exam';
