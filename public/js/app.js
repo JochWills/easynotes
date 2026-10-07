@@ -187,6 +187,9 @@
       .catch(function () {});
   };
   window.addEventListener('pageshow', function (e) { if (e.persisted) syncCart(); });
+  // Back/Forward can also reload an old copy of the page from the browser's cache.
+  var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  if (nav && nav.type === 'back_forward' && !document.prerendering) syncCart();
   document.addEventListener('prerenderingchange', syncCart);
 
   // Add to cart from a note card without leaving the page (the form still works without JS)
