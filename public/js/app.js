@@ -479,7 +479,7 @@
       f.classList.add('is-open');
       f.querySelector('[data-buy-fields]').classList.add('is-revealed');
       f.querySelector('[data-buy-label]').textContent = btn.getAttribute('data-pay-label');
-      f.querySelector('input[type="email"]').focus();
+      f.querySelector('[data-buy-fields] input').focus();
     });
   });
 

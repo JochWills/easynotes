@@ -35,7 +35,12 @@ const ORDER_NOTE = 'id,title,slug,price_cents,status,seller_id,sellers(verificat
 // One seller: the seller's subaccount gets the payment minus EasyNotes' fee.
 // Several sellers: a multi-split pays each seller their share and EasyNotes keeps the rest.
 async function startCheckout(req, res, notes, back) {
+  const name = str(req.body.name, 100).replace(/\s+/g, ' ');
   const email = str(req.body.email, 200).toLowerCase();
+  if (name.length < 2) {
+    flash(req, 'error', 'Enter your name.');
+    return res.redirect(back);
+  }
   if (!EMAIL_RE.test(email)) {
     flash(req, 'error', 'Enter a valid email address. You’ll need it to download your notes.');
     return res.redirect(back);
@@ -64,6 +69,7 @@ async function startCheckout(req, res, notes, back) {
       note_id: n.id,
       seller_id: n.seller_id,
       email,
+      buyer_name: name,
       amount_cents: n.price_cents,
       platform_fee_cents: fee,
       seller_earnings_cents: n.price_cents - fee,
@@ -102,7 +108,8 @@ async function startCheckout(req, res, notes, back) {
       ...split,
       metadata: {
         note_ids: notes.map((n) => n.id),
-        custom_fields: [{ display_name: 'Notes', variable_name: 'notes', value: notes.map((n) => n.title).join('; ').slice(0, 250) }],
+        buyer_name: name,
+        custom_fields: [{ display_name: 'Name', variable_name: 'name', value: name }, { display_name: 'Notes', variable_name: 'notes', value: notes.map((n) => n.title).join('; ').slice(0, 250) }],
       },
     });
     res.redirect(303, tx.authorization_url);

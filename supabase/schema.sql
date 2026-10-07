@@ -146,3 +146,6 @@ create index if not exists orders_payment_ref_idx on orders (payment_ref);
 -- Sellers can delete notes. Sold notes are kept as 'deleted' so past buyers can still download them.
 alter table notes drop constraint if exists notes_status_check;
 alter table notes add constraint notes_status_check check (status in ('draft','published','unpublished','removed','deleted'));
+
+-- Buyer's name, collected at checkout.
+alter table orders add column if not exists buyer_name text;

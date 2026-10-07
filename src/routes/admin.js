@@ -156,10 +156,10 @@ router.post('/notes/:id/status', async (req, res, next) => {
 router.get('/orders', async (req, res) => {
   const status = ['paid', 'pending', 'failed', 'all'].includes(req.query.status) ? req.query.status : 'paid';
   const search = str(req.query.reference, 200);
-  let q = db.from('orders').select('reference,email,amount_cents,platform_fee_cents,seller_earnings_cents,status,download_count,created_at,paid_at,notes(title),sellers(display_name)').order('created_at', { ascending: false }).limit(200);
+  let q = db.from('orders').select('reference,email,buyer_name,amount_cents,platform_fee_cents,seller_earnings_cents,status,download_count,created_at,paid_at,notes(title),sellers(display_name)').order('created_at', { ascending: false }).limit(200);
   if (search.includes('@')) q = q.eq('email', search.toLowerCase());
   else if (/^EN[A-Z0-9-]+$/i.test(search)) q = q.or(`reference.eq.${search.toUpperCase()},payment_ref.eq.${search.toUpperCase()}`);
-  else if (search) q = q.eq('reference', search.toUpperCase());
+  else if (search) q = q.ilike('buyer_name', `%${search.replace(/[%_\\]/g, '')}%`);
   else if (status !== 'all') q = q.eq('status', status);
   const { data: orders } = await q;
   res.render('admin/orders', { title: 'Orders', tab: 'orders', orders: orders || [], status, reference: search });

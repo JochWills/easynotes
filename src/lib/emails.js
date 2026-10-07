@@ -36,7 +36,8 @@ function readLibraryToken(token) {
 }
 
 // noteTitle: what was just bought (omit for a plain "here's your link"); count > 1 for cart purchases.
-async function sendLibraryLink(email, noteTitle, count = 1) {
+async function sendLibraryLink(email, noteTitle, count = 1, name = '') {
+  const first = String(name || '').trim().split(' ')[0];
   const intro = count > 1
     ? `Thanks for your purchase. Your <strong>${count} sets of notes</strong> are ready to download.`
     : noteTitle
@@ -44,7 +45,7 @@ async function sendLibraryLink(email, noteTitle, count = 1) {
       : 'Here’s your link to download the notes you’ve bought on EasyNotes.';
   const { html, text } = compose({
     heading: noteTitle || count > 1 ? 'Your notes are ready' : 'Your download link',
-    paragraphs: [intro],
+    paragraphs: first ? [`Hi ${esc(first)},`, intro] : [intro],
     button: { url: libraryUrl(email), label: 'Download your notes' },
     small: [`This link shows every purchase made with ${esc(email)} and works for ${LIBRARY_DAYS} days. Need a new one? Enter your email at ${esc(config.baseUrl)}/download.`],
   });
@@ -56,9 +57,10 @@ async function sendLibraryLink(email, noteTitle, count = 1) {
 async function sendPurchaseEmail(orders) {
   orders = [].concat(orders);
   if (!orders.length) return false;
-  if (orders.length > 1) return sendLibraryLink(orders[0].email, null, orders.length);
+  const name = orders[0].buyer_name;
+  if (orders.length > 1) return sendLibraryLink(orders[0].email, null, orders.length, name);
   const { data: note } = await db.from('notes').select('title').eq('id', orders[0].note_id).maybeSingle();
-  return sendLibraryLink(orders[0].email, note?.title || 'Your notes');
+  return sendLibraryLink(orders[0].email, note?.title || 'Your notes', 1, name);
 }
 
 /* ---------- Sellers and admins: password reset ---------- */

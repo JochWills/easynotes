@@ -135,6 +135,10 @@
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="buy-fields" data-buy-fields>
             <div class="field">
+              <label for="buy-name">Your name</label>
+              <input id="buy-name" type="text" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="First and last name">
+            </div>
+            <div class="field">
               <label for="buy-email">Your email</label>
               <input id="buy-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
               <span class="hint">Your receipt and download link go here.</span>

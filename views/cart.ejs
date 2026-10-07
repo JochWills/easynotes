@@ -30,6 +30,10 @@
         <form class="form" method="post" action="/checkout">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="field">
+            <label for="cart-name">Your name</label>
+            <input id="cart-name" type="text" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="First and last name">
+          </div>
+          <div class="field">
             <label for="cart-email">Your email</label>
             <input id="cart-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
             <span class="hint">Your receipt and download links go here.</span>

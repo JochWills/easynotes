@@ -6,14 +6,14 @@
       <% ['paid','pending','failed','all'].forEach(function (s) { %><a class="chip" href="/admin/orders?status=<%= s %>" <%- !reference && status === s ? 'aria-current="page"' : '' %>><%= s[0].toUpperCase() + s.slice(1) %></a><% }) %>
     </div>
     <form method="get" action="/admin/orders" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
-      <label for="ao-ref" class="sr-only">Find by reference or email</label>
-      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Reference (EN…) or buyer email">
+      <label for="ao-ref" class="sr-only">Find by reference, email or name</label>
+      <input id="ao-ref" type="search" name="reference" value="<%= reference %>" placeholder="Reference (EN…), buyer email or name">
       <button class="btn btn-sm" type="submit">Find</button>
     </form>
   </div>
   <div class="table-wrap">
     <table class="data">
-      <thead><tr><th>Reference</th><th>Date</th><th>Notes</th><th>Seller</th><th>Email</th><th>Status</th><th class="num">Amount</th><th class="num">Fee</th><th class="num">Downloads</th><th></th></tr></thead>
+      <thead><tr><th>Reference</th><th>Date</th><th>Notes</th><th>Seller</th><th>Buyer</th><th>Status</th><th class="num">Amount</th><th class="num">Fee</th><th class="num">Downloads</th><th></th></tr></thead>
       <tbody>
         <% orders.forEach(function (o) { %>
           <tr>
@@ -21,7 +21,7 @@
             <td><%= date(o.paid_at || o.created_at) %></td>
             <td><%= o.notes ? o.notes.title : '' %></td>
             <td><%= o.sellers ? o.sellers.display_name : '' %></td>
-            <td><%= o.email %></td>
+            <td><% if (o.buyer_name) { %><%= o.buyer_name %><br><% } %><span class="small muted"><%= o.email %></span></td>
             <td><%- include('../partials/status-pill', { status: o.status }) %></td>
             <td class="num"><%= rand(o.amount_cents) %></td>
             <td class="num"><%= rand(o.platform_fee_cents) %></td>
