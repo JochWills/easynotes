@@ -147,6 +147,12 @@ router.get('/cart', async (req, res) => {
   });
 });
 
+// Pages check this when shown from the Back button or a background preload, so the cart count is current.
+router.get('/cart/state', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ ids: cart.ids(req) });
+});
+
 // The slide-in cart panel fetches its contents from here whenever it opens.
 router.get('/cart/panel', async (req, res) => {
   const { notes, dropped } = await cart.load(req);

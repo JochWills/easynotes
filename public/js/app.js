@@ -159,6 +159,36 @@
     });
   };
 
+  // Pages shown from the Back button or preloaded in the background can be out of date: re-check the
+  // cart whenever a page becomes visible and fix the count and the card buttons.
+  var syncCart = function () {
+    if (!window.fetch) return;
+    fetch('/cart/state', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        setCartCount(data.ids.length);
+        var token = document.querySelector('input[name="_csrf"]');
+        document.querySelectorAll('form[data-cart-add][data-note]').forEach(function (f) {
+          var id = f.getAttribute('data-note');
+          if (data.ids.indexOf(id) === -1) return;
+          var done = document.createElement('a');
+          done.className = 'card-cart is-in';
+          done.href = '/cart';
+          done.textContent = '✓ In cart';
+          done.setAttribute('data-note', id);
+          f.replaceWith(done);
+        });
+        document.querySelectorAll('.card-cart.is-in[data-note]').forEach(function (a) {
+          var id = a.getAttribute('data-note');
+          if (data.ids.indexOf(id) === -1 && token) restoreCardButtons(id, token.value);
+        });
+      })
+      .catch(function () {});
+  };
+  window.addEventListener('pageshow', function (e) { if (e.persisted) syncCart(); });
+  document.addEventListener('prerenderingchange', syncCart);
+
   // Add to cart from a note card without leaving the page (the form still works without JS)
   var setCartCount = function (count) {
     var link = document.querySelector('.cart-link');
