@@ -6,6 +6,12 @@
   </div>
 </section>
 <div class="wrap browse">
+  <% var activeFilters = [filters.q, filters.subject, filters.university, filters.level].filter(Boolean).length; %>
+  <button class="filters-toggle" type="button" aria-expanded="false" aria-controls="filters" data-filters-toggle>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span>Filters</span><% if (activeFilters) { %><span class="filters-count"><%= activeFilters %> on</span><% } %>
+    <svg class="filters-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
   <form class="filters" id="filters" method="get" action="/notes" data-autosubmit role="search" aria-label="Filter notes">
     <div class="field">
       <label for="f-q">Search</label>

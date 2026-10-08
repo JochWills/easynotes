@@ -640,6 +640,26 @@
     s.addEventListener('change', function () { s.form.submit(); });
   });
 
+  // Swipeable seller menu: start with the current page in view
+  var navCurrent = document.querySelector('.dash-nav [aria-current="page"]');
+  if (navCurrent && navCurrent.parentElement.scrollWidth > navCurrent.parentElement.clientWidth) {
+    var nav = navCurrent.parentElement;
+    nav.scrollLeft = navCurrent.offsetLeft - (nav.clientWidth - navCurrent.offsetWidth) / 2;
+  }
+
+  // Phones and tablets: the filter box folds away behind a Filters button
+  var filtersToggle = document.querySelector('[data-filters-toggle]');
+  if (filtersToggle) {
+    var filtersBox = document.getElementById(filtersToggle.getAttribute('aria-controls'));
+    document.documentElement.classList.add('filters-js');
+    filtersToggle.addEventListener('click', function () {
+      var open = filtersToggle.getAttribute('aria-expanded') !== 'true';
+      filtersToggle.setAttribute('aria-expanded', String(open));
+      filtersBox.classList.toggle('is-open', open);
+      if (open) { var first = filtersBox.querySelector('input, button'); if (first) first.focus({ preventScroll: true }); }
+    });
+  }
+
   // "Other" university reveals a text field
   document.querySelectorAll('select[data-other]').forEach(function (s) {
     var target = document.getElementById(s.getAttribute('data-other'));
