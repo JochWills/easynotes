@@ -1,0 +1,16 @@
+<%# One qualification for admins: details, claimed results and private document links. Needs q. %>
+<div class="qual-detail">
+  <h4><%= q.name %></h4>
+  <dl class="facts">
+    <dt>Level</dt><dd><%= q.level %></dd>
+    <dt>Institution</dt><dd><%= q.institution %></dd>
+    <dt>Status</dt><dd><%= edu.when(q) %></dd>
+    <% if (q.honours !== 'none') { %><dt>Distinction</dt><dd><strong><%= edu.honoursLabel(q) %></strong> (check the record)</dd><% } %>
+    <% if (q.average_mark) { %><dt>Average</dt><dd><strong><%= q.average_mark %>%</strong> (check the record)</dd><% } %>
+    <% if (q.distinctions) { %><dt>Distinctions in</dt><dd><%= q.distinctions %></dd><% } %>
+  </dl>
+  <div class="doc-links">
+    <% if (q.docUrl) { %><a class="btn btn-ghost btn-sm" href="<%= q.docUrl %>" target="_blank" rel="noopener noreferrer"><%= q.status === 'completed' ? 'Certificate / record' : 'Registration / record' %></a><% } else { %><span class="muted small">No document</span><% } %>
+    <% if (q.recordUrl) { %><a class="btn btn-ghost btn-sm" href="<%= q.recordUrl %>" target="_blank" rel="noopener noreferrer">Academic record</a><% } %>
+  </div>
+</div>

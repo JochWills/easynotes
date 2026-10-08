@@ -7,6 +7,7 @@ const cookieSession = require('cookie-session');
 const helpers = require('./lib/helpers');
 const { loadUser } = require('./lib/auth');
 const { csrf, verifyCsrf } = require('./lib/csrf');
+const education = require('./lib/education');
 
 const app = express();
 app.set('trust proxy', 1); // Render terminates TLS in front of the app
@@ -25,7 +26,7 @@ app.use(
         'style-src': ["'self'", 'https://fonts.googleapis.com'],
         'style-src-attr': ["'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
-        'img-src': ["'self'", 'data:', supabaseOrigin],
+        'img-src': ["'self'", 'data:', 'blob:', supabaseOrigin], // blob: previews a picture before it's uploaded
         'connect-src': ["'self'"],
         // Form posts redirect to Paystack checkout and to signed Supabase download links
         'form-action': ["'self'", 'https://checkout.paystack.com', supabaseOrigin],
@@ -80,6 +81,7 @@ app.use((req, res, next) => {
   res.locals.emailEnabled = Boolean(config.resendApiKey);
   res.locals.cartIds = Array.isArray(req.session.cart) ? req.session.cart : [];
   Object.assign(res.locals, helpers);
+  res.locals.edu = { when: education.when, results: education.results, isOverdue: education.isOverdue, honoursLabel: education.honoursLabel }; // education wording for views
   next();
 });
 app.use(loadUser);
@@ -110,3 +112,4 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, () => console.log(`EasyNotes running on ${config.baseUrl} (port ${config.port})`));
+require('./lib/jobs').start();

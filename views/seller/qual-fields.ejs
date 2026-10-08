@@ -1,0 +1,124 @@
+<%# Education form fields, shared by first verification and adding / updating education later.
+    Needs: q (values), errors, universities, otherLabel, levels, studyYears, honours, months %>
+<% var allowStudying = !!locals.allowStudying; var st = allowStudying ? (q.status || '') : 'completed'; var thisYear = new Date().getFullYear(); %>
+<div class="qual-fields" data-qual-form>
+  <% if (!allowStudying) { %><input type="hidden" name="status" value="completed"><% } else { %>
+  <fieldset class="field <%= errors.status ? 'has-error' : '' %>">
+    <legend>Have you finished it?</legend>
+    <div class="choice-row">
+      <label class="choice"><input type="radio" name="status" value="completed" <%= st === 'completed' ? 'checked' : '' %>> <span><strong>Yes, I’ve finished</strong><small>Graduated or qualified</small></span></label>
+      <label class="choice"><input type="radio" name="status" value="in_progress" <%= st === 'in_progress' ? 'checked' : '' %>> <span><strong>No, I’m still studying</strong><small>Honours, master’s or PhD</small></span></label>
+    </div>
+    <%- include('../partials/field-error', { name: 'status' }) %>
+  </fieldset>
+  <% } %>
+
+  <div class="row-2">
+    <div class="field <%= errors.level ? 'has-error' : '' %>">
+      <label for="q-level">Level</label>
+      <select id="q-level" name="level" required>
+        <option value="">Choose</option>
+        <% levels.forEach(function (l) { %><option <%= q.level === l ? 'selected' : '' %>><%= l %></option><% }) %>
+      </select>
+      <%- include('../partials/field-error', { name: 'level' }) %>
+    </div>
+    <div class="field <%= errors.name ? 'has-error' : '' %>">
+      <label for="q-name">Qualification</label>
+      <input id="q-name" type="text" name="name" maxlength="120" value="<%= q.name || '' %>" placeholder="e.g. BCom Accounting" required>
+      <%- include('../partials/field-error', { name: 'name' }) %>
+    </div>
+  </div>
+
+  <div class="field <%= errors.institution ? 'has-error' : '' %>">
+    <label for="q-uni">Institution</label>
+    <% var picked = q.institution_picked !== undefined ? q.institution_picked : (q.institution && universities.indexOf(q.institution) === -1 ? otherLabel : q.institution); %>
+    <select id="q-uni" name="institution" required data-other="q-uni-other-wrap" data-other-value="<%= otherLabel %>">
+      <option value="">Choose an institution</option>
+      <% universities.forEach(function (u) { %><option <%= picked === u ? 'selected' : '' %>><%= u %></option><% }) %>
+      <option <%= picked === otherLabel ? 'selected' : '' %>><%= otherLabel %></option>
+    </select>
+    <div id="q-uni-other-wrap" class="field" style="margin-top:10px" hidden>
+      <label for="q-uni-other">Institution name</label>
+      <input id="q-uni-other" type="text" name="institution_other" maxlength="120" value="<%= q.institution_other !== undefined ? (q.institution_other || '') : (picked === otherLabel ? q.institution : '') %>" placeholder="Full name and country">
+    </div>
+    <%- include('../partials/field-error', { name: 'institution' }) %>
+  </div>
+
+  <div class="qual-when" data-when="completed" <%= st === 'completed' ? '' : 'hidden' %>>
+    <div class="field <%= errors.year_completed ? 'has-error' : '' %>">
+      <label for="q-year">Year you finished</label>
+      <input id="q-year" type="number" name="year_completed" value="<%= q.year_completed || '' %>" min="1960" max="<%= thisYear %>" inputmode="numeric" style="max-width:160px">
+      <%- include('../partials/field-error', { name: 'year_completed' }) %>
+    </div>
+  </div>
+
+  <div class="qual-when" data-when="in_progress" <%= st === 'in_progress' ? '' : 'hidden' %>>
+    <% var exp = String(q.expected_completion || '').split('-'); var expY = q.expected_year || exp[0] || ''; var expM = q.expected_month || (exp[1] ? String(Number(exp[1])) : ''); %>
+    <div class="row-2">
+      <div class="field">
+        <label for="q-current">Year of study <span class="muted">(optional)</span></label>
+        <select id="q-current" name="current_year">
+          <option value="">Choose</option>
+          <% studyYears.forEach(function (y) { %><option <%= q.current_year === y ? 'selected' : '' %>><%= y %></option><% }) %>
+        </select>
+      </div>
+      <fieldset class="field <%= errors.expected_completion ? 'has-error' : '' %>">
+        <legend class="label">Expected to finish</legend>
+        <div class="month-year">
+          <select name="expected_month" aria-label="Month">
+            <option value="">Month</option>
+            <% months.forEach(function (m, i) { %><option value="<%= i + 1 %>" <%= String(expM) === String(i + 1) ? 'selected' : '' %>><%= m %></option><% }) %>
+          </select>
+          <select name="expected_year" aria-label="Year">
+            <option value="">Year</option>
+            <% for (var y = thisYear; y <= thisYear + 8; y++) { %><option <%= String(expY) === String(y) ? 'selected' : '' %>><%= y %></option><% } %>
+          </select>
+        </div>
+        <%- include('../partials/field-error', { name: 'expected_completion' }) %>
+      </fieldset>
+    </div>
+  </div>
+
+  <div class="field <%= errors.doc ? 'has-error' : '' %>">
+    <label for="q-doc">
+      <span data-when="completed" <%= st === 'in_progress' ? 'hidden' : '' %>>Degree certificate or academic record</span>
+      <span data-when="in_progress" <%= st === 'in_progress' ? '' : 'hidden' %>>Proof of registration or latest academic record</span>
+    </label>
+    <input id="q-doc" type="file" name="doc" accept="application/pdf,image/jpeg,image/png" required>
+    <span class="hint">PDF, JPG or PNG, up to 10 MB. Your name and the qualification must be readable.</span>
+    <%- include('../partials/field-error', { name: 'doc' }) %>
+  </div>
+
+  <fieldset class="results-box">
+    <legend>Your results <span class="muted">(optional)</span></legend>
+    <p class="small">Did well? Show it. Students are more likely to buy notes from someone with strong marks, and we show these on your storefront once checked.</p>
+    <div class="field <%= errors.honours ? 'has-error' : '' %>">
+      <span class="label" id="q-honours-label">Distinction</span>
+      <div class="choice-row choice-row-wrap" role="radiogroup" aria-labelledby="q-honours-label">
+        <% Object.keys(honours).forEach(function (k) { %>
+          <label class="choice choice-sm" <%- k === 'cum_laude' || k === 'summa_cum_laude' ? 'data-completed-only' : '' %>><input type="radio" name="honours" value="<%= k %>" <%= (q.honours || 'none') === k ? 'checked' : '' %>> <span><strong><%= k === 'none' ? 'None' : honours[k] %></strong></span></label>
+        <% }) %>
+      </div>
+      <span class="hint">Include Dean’s merit list or class medals under “With merit or distinction”.</span>
+      <%- include('../partials/field-error', { name: 'honours' }) %>
+    </div>
+    <div class="row-2">
+      <div class="field <%= errors.average_mark ? 'has-error' : '' %>">
+        <label for="q-avg">Average mark</label>
+        <div class="suffix"><input id="q-avg" type="text" inputmode="numeric" name="average_mark" maxlength="5" value="<%= q.average_mark || '' %>" placeholder="e.g. 78"><span>%</span></div>
+        <%- include('../partials/field-error', { name: 'average_mark' }) %>
+      </div>
+      <div class="field <%= errors.distinctions ? 'has-error' : '' %>">
+        <label for="q-dist">Distinctions in</label>
+        <input id="q-dist" type="text" name="distinctions" maxlength="160" value="<%= q.distinctions || '' %>" placeholder="e.g. Tax and Auditing">
+        <%- include('../partials/field-error', { name: 'distinctions' }) %>
+      </div>
+    </div>
+    <div class="field <%= errors.record ? 'has-error' : '' %>">
+      <label for="q-record">Academic record</label>
+      <input id="q-record" type="file" name="record" accept="application/pdf,image/jpeg,image/png">
+      <span class="hint">Needed to show an average, distinctions or cum laude, unless the document above already shows them.</span>
+      <%- include('../partials/field-error', { name: 'record' }) %>
+    </div>
+  </fieldset>
+</div>

@@ -1,25 +1,20 @@
 <%- include('../partials/top', { noindex: true }) %>
 <div class="wrap dash">
   <%- include('../partials/admin-nav') %>
+  <h2 class="admin-h">New sellers</h2>
   <% if (!queue.length) { %>
-    <div class="empty"><h3>Nothing to review</h3><p>New submissions show up here, with a count on the Verifications tab.</p></div>
+    <div class="empty"><h3>No new sellers to review</h3><p>New submissions show up here, with a count on the Verifications tab.</p></div>
   <% } else { %>
     <p class="muted">Oldest first. Document links expire after 10 minutes; refresh the page for new ones.</p>
     <div class="queue">
       <% queue.forEach(function (s) { %>
         <div class="card queue-item">
           <div>
-            <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
+            <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
             <span class="small muted"><%= s.users ? s.users.email : '' %> · submitted <%= date(s.submitted_at) %></span>
-            <dl class="facts">
-              <dt>Full name</dt><dd><%= s.full_name || '—' %></dd>
-              <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
-              <dt>University</dt><dd><%= s.university || '—' %></dd>
-              <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>
-            </dl>
+            <% s.quals.forEach(function (q) { %><%- include('qual-detail', { q: q }) %><% }) %>
             <div class="doc-links">
-              <% if (s.degreeUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.degreeUrl %>" target="_blank" rel="noopener noreferrer">Degree document</a><% } else { %><span class="muted">No degree document</span><% } %>
-              <% if (s.idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.idUrl %>" target="_blank" rel="noopener noreferrer">ID document</a><% } %>
+              <% if (s.idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.idUrl %>" target="_blank" rel="noopener noreferrer">ID document</a><% } else { %><span class="muted">No ID document</span><% } %>
             </div>
             <% if (s.verification_note) { %><p class="fineprint">Previously rejected: “<%= s.verification_note %>”</p><% } %>
           </div>
@@ -39,6 +34,39 @@
       <% }) %>
     </div>
   <% } %>
+
+  <section class="admin-section">
+    <h2>Education updates</h2>
+    <% if (!changes.length) { %>
+      <p class="muted">Nothing waiting. When a verified seller adds education or finishes a course, it shows up here.</p>
+    <% } else { %>
+      <p class="muted">From sellers who are already verified. Their current details stay live until you decide.</p>
+      <div class="queue">
+        <% changes.forEach(function (q) { var s = q.sellers || {}; %>
+          <div class="card queue-item">
+            <div>
+              <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
+              <span class="small muted"><%= s.users ? s.users.email : '' %> · sent <%= date(q.submitted_at) %> · <%= q.replaced ? (q.status === 'completed' ? 'finished a course' : 'updated their dates') : 'new education' %></span>
+              <% if (q.replaced) { %><p class="small">Replaces: <%= q.replaced.name %>, <%= q.replaced.institution %> (<%= edu.when(q.replaced) %>)</p><% } %>
+              <%- include('qual-detail', { q: q }) %>
+            </div>
+            <form class="form" method="post" action="/admin/qualifications/<%= q.id %>/review">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <input type="hidden" name="back" value="/admin/verifications">
+              <div class="field">
+                <label for="qnote-<%= q.id %>">Reason, if you reject</label>
+                <textarea id="qnote-<%= q.id %>" name="note" maxlength="500" style="min-height:96px" placeholder="Shown to the seller, e.g. The record doesn’t show the cum laude."></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-hi" type="submit" name="decision" value="approve">Approve</button>
+                <button class="btn btn-danger" type="submit" name="decision" value="reject">Reject</button>
+              </div>
+            </form>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
 
   <section class="admin-section">
     <h2>Recent decisions</h2>

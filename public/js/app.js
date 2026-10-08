@@ -625,6 +625,27 @@
     sync();
   });
 
+  // Education form: show the fields for "finished" or "still studying"
+  document.querySelectorAll('[data-qual-form]').forEach(function (f) {
+    var update = function () {
+      var picked = f.querySelector('input[name="status"]:checked, input[type="hidden"][name="status"]');
+      var st = picked ? picked.value : '';
+      f.querySelectorAll('[data-when]').forEach(function (el) {
+        var on = el.getAttribute('data-when') === st || (!st && el.tagName === 'SPAN' && el.getAttribute('data-when') === 'completed');
+        el.hidden = !on;
+      });
+      // Cum laude / summa are only awarded on finishing
+      f.querySelectorAll('[data-completed-only]').forEach(function (el) {
+        var off = st === 'in_progress';
+        el.hidden = off;
+        var r = el.querySelector('input');
+        if (off && r.checked) { r.checked = false; var none = f.querySelector('input[name="honours"][value="none"]'); if (none) none.checked = true; }
+      });
+    };
+    f.addEventListener('change', function (e) { if (e.target.name === 'status') update(); });
+    update();
+  });
+
   // Live "you'll earn" calculator on the upload form
   var price = document.querySelector('[data-price]');
   var earn = document.querySelector('[data-earn]');
@@ -797,6 +818,65 @@
       b.textContent = show ? 'Hide' : 'Show';
       b.setAttribute('aria-pressed', String(show));
       input.focus();
+    });
+  });
+
+  // Profile picture: show the chosen photo straight away (cropped square, like the saved one will be)
+  document.querySelectorAll('[data-avatar-edit]').forEach(function (box) {
+    var input = box.querySelector('input[type="file"]');
+    var remove = box.querySelector('input[name="remove_avatar"]');
+    var form = input.form;
+    var slots = form.parentNode.querySelectorAll('[data-avatar-slot]');
+    var originals = Array.prototype.map.call(slots, function (s) { return s.innerHTML; });
+    var url = null;
+    var show = function (src) {
+      slots.forEach(function (slot, i) {
+        if (!src) { slot.innerHTML = originals[i]; return; }
+        var old = slot.querySelector('.avatar');
+        var img = document.createElement('img');
+        img.className = old ? old.className : 'avatar';
+        img.alt = '';
+        img.src = src;
+        slot.innerHTML = '';
+        slot.appendChild(img);
+      });
+    };
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (url) { URL.revokeObjectURL(url); url = null; }
+      if (!file) return show(null);
+      var field = box.closest('.field');
+      var err = field.querySelector('.error-text');
+      if (err) err.remove();
+      field.classList.remove('has-error');
+      var maxMb = Number(input.getAttribute('data-max-mb'));
+      var problem = !/^image\/(jpeg|png|webp)$/.test(file.type) ? 'Use a JPG, PNG or WebP picture.' : file.size > maxMb * 1048576 ? 'That picture is larger than ' + maxMb + ' MB. Choose a smaller one.' : '';
+      if (problem) {
+        input.value = '';
+        field.classList.add('has-error');
+        err = document.createElement('span');
+        err.className = 'error-text';
+        err.textContent = problem;
+        field.appendChild(err);
+        return show(null);
+      }
+      if (remove) remove.checked = false;
+      url = URL.createObjectURL(file);
+      show(url);
+    });
+    if (remove) remove.addEventListener('change', function () {
+      if (remove.checked) {
+        input.value = '';
+        slots.forEach(function (slot) {
+          var old = slot.querySelector('.avatar');
+          var div = document.createElement('div');
+          div.className = old ? old.className : 'avatar';
+          div.setAttribute('aria-hidden', 'true');
+          div.textContent = box.getAttribute('data-initials') || '';
+          slot.innerHTML = '';
+          slot.appendChild(div);
+        });
+      } else show(null);
     });
   });
 

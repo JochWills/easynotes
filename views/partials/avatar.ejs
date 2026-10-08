@@ -1,0 +1,3 @@
+<%# A seller's picture, or their initials. Pass person (a seller) and optionally cls ('avatar-lg') and name. %>
+<% var _src = avatarUrl(person); var _name = locals.name || (person && person.display_name) || ''; %>
+<% if (_src) { %><img class="avatar <%= locals.cls || '' %>" src="<%= _src %>" alt="" width="92" height="92" loading="lazy" decoding="async"><% } else { %><div class="avatar <%= locals.cls || '' %>" aria-hidden="true"><%= initials(_name) %></div><% } %>

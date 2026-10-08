@@ -17,6 +17,7 @@ create table if not exists sellers (
   user_id uuid not null unique references users(id) on delete cascade,
   display_name text not null,
   full_name text, -- private: the seller's real name (account, emails, payouts)
+  avatar_path text, -- profile picture in the samples bucket (avatars/...)
   slug text not null unique,
   headline text,
   bio text,
@@ -153,3 +154,48 @@ alter table orders add column if not exists buyer_name text;
 
 -- Sellers' real names, separate from the storefront name
 alter table sellers add column if not exists full_name text;
+
+-- Seller profile pictures
+alter table sellers add column if not exists avatar_path text;
+
+-- Education: each seller verifies one or more qualifications (finished or still studying).
+-- sellers.degree / university / graduation_year keep a copy of the highest verified one for display.
+create table if not exists qualifications (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references sellers(id) on delete cascade,
+  level text not null,
+  name text not null,
+  institution text not null,
+  status text not null check (status in ('completed','in_progress')),
+  year_completed int,
+  current_year text,
+  expected_completion text, -- 'YYYY-MM'
+  honours text not null default 'none' check (honours in ('none','merit','cum_laude','summa_cum_laude')),
+  average_mark int check (average_mark between 50 and 100),
+  distinctions text, -- subjects passed with distinction
+  reminded_at timestamptz, -- "finished yet?" email sent after the expected finish date
+  doc_path text,
+  record_path text,
+  review_status text not null default 'pending' check (review_status in ('pending','approved','rejected','superseded')),
+  review_note text,
+  replaces_id uuid references qualifications(id) on delete set null,
+  submitted_at timestamptz not null default now(),
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists qualifications_seller_idx on qualifications(seller_id);
+create index if not exists qualifications_review_idx on qualifications(review_status);
+alter table qualifications enable row level security;
+
+-- Existing sellers' degrees become their first qualification
+insert into qualifications (seller_id, level, name, institution, status, year_completed, doc_path, review_status, submitted_at, reviewed_at)
+select s.id,
+  case when s.degree ilike '%phd%' or s.degree ilike '%doctor%' then 'Doctorate (PhD)'
+       when s.degree ~* '(master|^m(com|sc|a|phil|eng|ba)\M)' then 'Master’s degree'
+       when s.degree ilike '%hons%' or s.degree ilike '%honours%' or s.degree ilike '%pgdip%' or s.degree ilike '%postgrad%' then 'Honours degree or Postgraduate Diploma'
+       else 'Bachelor’s degree' end,
+  s.degree, coalesce(s.university, ''), 'completed', s.graduation_year, s.degree_doc_path,
+  case s.verification_status when 'approved' then 'approved' when 'rejected' then 'rejected' else 'pending' end,
+  coalesce(s.submitted_at, s.created_at), s.verified_at
+from sellers s
+where s.degree is not null and not exists (select 1 from qualifications q where q.seller_id = s.id);

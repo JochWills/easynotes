@@ -1,4 +1,5 @@
 const express = require('express');
+const education = require('../lib/education');
 const db = require('../lib/supabase');
 const { publicNotes } = require('../lib/queries');
 const { RESERVED_SLUGS } = require('../lib/constants');
@@ -17,7 +18,7 @@ router.get('/:slug', async (req, res, next) => {
 
   const { data: author } = await db
     .from('sellers')
-    .select('id,display_name,slug,headline,bio,degree,university,graduation_year,verification_status,created_at')
+    .select('id,display_name,slug,avatar_path,headline,bio,degree,university,graduation_year,verification_status,created_at')
     .eq('slug', slug)
     .maybeSingle();
   if (!author) return next();
@@ -26,13 +27,17 @@ router.get('/:slug', async (req, res, next) => {
   const canPreview = (req.seller && req.seller.id === author.id) || req.user?.role === 'admin';
   if (!live && !canPreview) return next();
 
-  const { data: notes } = await publicNotes().eq('seller_id', author.id).order('sales_count', { ascending: false });
+  const [{ data: notes }, quals] = await Promise.all([
+    publicNotes().eq('seller_id', author.id).order('sales_count', { ascending: false }),
+    education.forSeller(author.id, { verifiedOnly: true }),
+  ]);
   res.render('storefront', {
     title: `${author.display_name}'s notes`,
     noindex: !live,
     live,
     description: author.headline || `Study notes by ${author.display_name}, a verified academic on EasyNotes.`,
     author,
+    quals,
     notes: notes || [],
   });
 });

@@ -10,6 +10,7 @@ const health = require('../lib/health');
 const { requireAdmin } = require('../lib/auth');
 const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
+const education = require('../lib/education');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -29,13 +30,29 @@ async function openReports() {
   return items.filter((e) => !done.has(String(e.id)));
 }
 
+// Education added or finished by sellers who are already verified (first verifications are reviewed with the seller).
+function pendingUpdates({ head = false } = {}) {
+  const q = db
+    .from('qualifications')
+    .select(head ? 'id, sellers!inner(verification_status)' : '*, sellers!inner(id,display_name,full_name,verification_status,users(email))', head ? { count: 'exact', head: true } : undefined)
+    .eq('review_status', 'pending')
+    .eq('sellers.verification_status', 'approved');
+  return head ? q : q.order('submitted_at');
+}
+const docLinks = async (q) => ({
+  ...q,
+  docUrl: q.doc_path ? await storage.signedUrl('verification', q.doc_path, 600).catch(() => null) : null,
+  recordUrl: q.record_path ? await storage.signedUrl('verification', q.record_path, 600).catch(() => null) : null,
+});
+
 // The Verifications and Reports tabs show how many things are waiting, on every admin page.
 router.use(async (req, res, next) => {
-  const [{ count }, open] = await Promise.all([
+  const [{ count }, { count: updates }, open] = await Promise.all([
     db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending'),
+    pendingUpdates({ head: true }),
     openReports(),
   ]);
-  res.locals.pendingCount = count || 0;
+  res.locals.pendingCount = (count || 0) + (updates || 0);
   res.locals.reportCount = open ? open.length : 0;
   next();
 });
@@ -100,18 +117,51 @@ router.get('/', async (req, res) => {
 /* ---------- Verifications ---------- */
 
 router.get('/verifications', async (req, res) => {
-  const [{ data: pending }, decided] = await Promise.all([
-    db.from('sellers').select('id,display_name,full_name,degree,university,graduation_year,degree_doc_path,id_doc_path,submitted_at,verification_note,users(email)').eq('verification_status', 'pending').order('submitted_at'),
-    events.recent({ limit: 15, kinds: ['seller.approved', 'seller.rejected', 'seller.revoked'] }),
+  const [{ data: pending }, { data: updates }, decided] = await Promise.all([
+    db.from('sellers').select('id,display_name,full_name,id_doc_path,submitted_at,verification_note,users(email),qualifications(*)').eq('verification_status', 'pending').order('submitted_at'),
+    pendingUpdates(),
+    events.recent({ limit: 15, kinds: ['seller.approved', 'seller.rejected', 'seller.revoked', 'qualification.approved', 'qualification.rejected'] }),
   ]);
   const queue = await Promise.all(
     (pending || []).map(async (s) => ({
       ...s,
-      degreeUrl: s.degree_doc_path ? await storage.signedUrl('verification', s.degree_doc_path, 600).catch(() => null) : null,
+      quals: await Promise.all(education.sortQuals((s.qualifications || []).filter((q) => q.review_status === 'pending')).map(docLinks)),
       idUrl: s.id_doc_path ? await storage.signedUrl('verification', s.id_doc_path, 600).catch(() => null) : null,
     }))
   );
-  res.render('admin/verifications', { title: 'Verifications', tab: 'verifications', queue, decided });
+  // For "I've finished this": what the update replaces
+  const replacedIds = (updates || []).map((q) => q.replaces_id).filter(Boolean);
+  const { data: replaced } = replacedIds.length ? await db.from('qualifications').select('id,name,institution,status,expected_completion,current_year,year_completed').in('id', replacedIds) : { data: [] };
+  const replacedById = Object.fromEntries((replaced || []).map((q) => [q.id, q]));
+  const changes = await Promise.all((updates || []).map(async (q) => ({ ...(await docLinks(q)), replaced: replacedById[q.replaces_id] || null })));
+  res.render('admin/verifications', { title: 'Verifications', tab: 'verifications', queue, changes, decided });
+});
+
+// Approve or reject one qualification from an already verified seller.
+router.post('/qualifications/:id/review', async (req, res, next) => {
+  if (!isUuid(req.params.id)) return next();
+  const back = backTo(req, '/admin/verifications');
+  const note = str(req.body.note, 500) || null;
+  const { data: q } = await db.from('qualifications').select('id,seller_id,name,replaces_id,review_status,sellers(display_name)').eq('id', req.params.id).maybeSingle();
+  if (!q || q.review_status !== 'pending') return res.redirect(back);
+  const who = q.sellers?.display_name || 'the seller';
+  if (req.body.decision === 'approve') {
+    await db.from('qualifications').update({ review_status: 'approved', review_note: null, reviewed_at: new Date().toISOString() }).eq('id', q.id);
+    if (q.replaces_id) await db.from('qualifications').update({ review_status: 'superseded' }).eq('id', q.replaces_id).eq('seller_id', q.seller_id);
+    await education.refreshHeadline(q.seller_id);
+    events.log('qualification.approved', { seller_id: q.seller_id, qualification_id: q.id, name: q.name, seller: who }, req.user.email);
+    flash(req, 'ok', `${q.name} approved for ${who}. It now shows on their storefront.`);
+  } else if (req.body.decision === 'reject') {
+    if (!note) {
+      flash(req, 'error', 'Add a reason so the seller knows what to fix.');
+      return res.redirect(back);
+    }
+    await db.from('qualifications').update({ review_status: 'rejected', review_note: note, reviewed_at: new Date().toISOString() }).eq('id', q.id);
+    events.log('qualification.rejected', { seller_id: q.seller_id, qualification_id: q.id, name: q.name, seller: who, reason: note }, req.user.email);
+    flash(req, 'ok', `${q.name} not approved. ${who} can see why and send it again.`);
+  } else return res.redirect(back);
+  emails.sendQualificationDecision(q.id).catch((err) => console.error('[admin] education email not sent', err.message));
+  res.redirect(back);
 });
 
 /* ---------- Sellers ---------- */
@@ -137,16 +187,17 @@ router.get('/sellers/:id', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
   const { data: s } = await db.from('sellers').select('*, users(email,created_at)').eq('id', req.params.id).maybeSingle();
   if (!s) return next();
-  const [{ data: notes }, { data: sales }, docs] = await Promise.all([
+  const [{ data: notes }, { data: sales }, docs, quals] = await Promise.all([
     db.from('notes').select('id,title,slug,status,price_cents,sales_count').eq('seller_id', s.id).order('created_at', { ascending: false }),
     db.rpc('seller_totals', { p_seller_id: s.id }),
     Promise.all([
       s.degree_doc_path ? storage.signedUrl('verification', s.degree_doc_path, 600).catch(() => null) : null,
       s.id_doc_path ? storage.signedUrl('verification', s.id_doc_path, 600).catch(() => null) : null,
     ]),
+    education.forSeller(s.id).then((list) => Promise.all(list.map(docLinks))),
   ]);
   const totals = (sales && sales[0]) || { sales: 0, earnings: 0 };
-  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1] });
+  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
 });
 
 router.post('/sellers/:id/verification', async (req, res, next) => {
@@ -158,7 +209,10 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
   if (!s) return next();
 
   if (decision === 'approve') {
-    await db.from('sellers').update({ verification_status: 'approved', verification_note: null, verified_at: new Date().toISOString() }).eq('id', req.params.id);
+    const now = new Date().toISOString();
+    await db.from('sellers').update({ verification_status: 'approved', verification_note: null, verified_at: now }).eq('id', req.params.id);
+    await db.from('qualifications').update({ review_status: 'approved', review_note: null, reviewed_at: now }).eq('seller_id', req.params.id).eq('review_status', 'pending');
+    await education.refreshHeadline(req.params.id);
     flash(req, 'ok', `${s.display_name} approved. Their published notes are visible once payouts are set up.`);
     events.log('seller.approved', { seller_id: req.params.id, name: s.display_name }, req.user.email);
   } else if (decision === 'reject') {
@@ -167,6 +221,7 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
       return res.redirect(back);
     }
     await db.from('sellers').update({ verification_status: 'rejected', verification_note: note, verified_at: null }).eq('id', req.params.id);
+    await db.from('qualifications').update({ review_status: 'rejected', review_note: note, reviewed_at: new Date().toISOString() }).eq('seller_id', req.params.id).eq('review_status', 'pending');
     const revoked = s.verification_status === 'approved';
     flash(req, 'ok', `${s.display_name} ${revoked ? 'revoked' : 'rejected'}. All their notes are hidden from students.`);
     events.log(revoked ? 'seller.revoked' : 'seller.rejected', { seller_id: req.params.id, name: s.display_name, reason: note }, req.user.email);

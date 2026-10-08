@@ -2,8 +2,23 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
   <div class="dash-grid">
-    <form class="form card" method="post" action="/seller/profile" novalidate data-unsaved>
+    <form class="form card" method="post" action="/seller/profile" enctype="multipart/form-data" novalidate data-unsaved>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field <%= errors.avatar ? 'has-error' : '' %>">
+        <span class="label" id="p-avatar-label">Profile picture</span>
+        <div class="avatar-edit" data-avatar-edit data-initials="<%= initials(me.display_name) %>">
+          <span data-avatar-slot><%- include('../partials/avatar', { person: me, cls: 'avatar-md' }) %></span>
+          <div class="avatar-edit-body">
+            <div class="avatar-edit-actions">
+              <label class="btn btn-ghost btn-sm" for="p-avatar"><%= me.avatar_path ? 'Change picture' : 'Upload a picture' %></label>
+              <input id="p-avatar" class="sr-only" type="file" name="avatar" accept="image/jpeg,image/png,image/webp" aria-labelledby="p-avatar-label" data-max-mb="8">
+              <% if (me.avatar_path) { %><label class="check small"><input type="checkbox" name="remove_avatar"> <span>Remove picture</span></label><% } %>
+            </div>
+            <span class="hint">A clear photo of your face builds trust with students. JPG, PNG or WebP, up to 8 MB. We crop it to a square.</span>
+          </div>
+        </div>
+        <%- include('../partials/field-error', { name: 'avatar' }) %>
+      </div>
       <div class="field <%= errors.full_name ? 'has-error' : '' %>">
         <label for="p-full">Your full name <span class="muted">(private)</span></label>
         <input id="p-full" type="text" name="full_name" value="<%= values.full_name || '' %>" required maxlength="80" autocomplete="name">
@@ -38,7 +53,7 @@
     <div>
       <h2 style="font-size:1.2rem">What students see</h2>
       <div class="author" style="margin-top:12px">
-        <div class="avatar" aria-hidden="true"><%= initials(values.display_name) %></div>
+        <span data-avatar-slot><%- include('../partials/avatar', { person: me, name: values.display_name }) %></span>
         <div>
           <h3><%= values.display_name %></h3>
           <% if (me.verification_status === 'approved') { %><%- include('../partials/verified') %><% } %>

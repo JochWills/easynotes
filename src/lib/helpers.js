@@ -20,6 +20,8 @@ const slugify = (s) =>
 const fileName = (title) => `${slugify(title)}.pdf`;
 const noteUrl = (n) => `/note/${n.id}/${n.slug}`;
 const storeUrl = (s) => `/${s.slug}`;
+// A seller's profile picture (public samples bucket), or null to show their initials
+const avatarUrl = (s) => (s && s.avatar_path ? `${config.supabaseUrl}/storage/v1/object/public/samples/${s.avatar_path}` : null);
 
 const maskEmail = (email = '') => {
   const [user, domain] = email.split('@');
@@ -48,4 +50,4 @@ function sellCta(user, me) {
   return { href: '/seller', label: 'Go to your dashboard' };
 }
 
-module.exports = { sellCta, rand, date, initials, slugify, fileName, noteUrl, storeUrl, maskEmail, qs, isUuid, str, feeFor };
+module.exports = { sellCta, rand, date, initials, slugify, fileName, noteUrl, storeUrl, avatarUrl, maskEmail, qs, isUuid, str, feeFor };

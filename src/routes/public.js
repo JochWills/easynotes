@@ -135,7 +135,7 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
   const { data: note } = await db
     .from('notes')
-    .select('*, sellers(id,display_name,slug,headline,degree,university,graduation_year,verification_status,paystack_subaccount_code)')
+    .select('*, sellers(id,display_name,slug,avatar_path,headline,degree,university,graduation_year,verification_status,paystack_subaccount_code)')
     .eq('id', req.params.id)
     .maybeSingle();
   if (!note) return next();

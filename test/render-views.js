@@ -12,7 +12,17 @@ const seller = { id: 's1', display_name: 'Thandi Mokoena', slug: 'thandi-mokoena
 const note = { id: '11111111-1111-1111-1111-111111111111', title: 'Financial Accounting I: complete exam summary', slug: 'financial-accounting-i', subject: 'Accounting', module_code: 'ACC1006F', university: 'University of Cape Town', level: 'Undergraduate', price_cents: 12000, page_count: 46, file_size: 2400000, sales_count: 12, status: 'published', description: 'Covers IFRS 15 revenue, inventories, PPE.\nWorked examples throughout.', created_at: new Date(), updated_at: new Date(), sellers: seller, file_path: 's1/n1-1791332710339.pdf' };
 const order = { reference: 'ENABC123DEF', email: 'student@example.com', buyer_name: 'Sipho Dlamini', status: 'paid', amount_cents: 12000, platform_fee_cents: 2400, seller_earnings_cents: 9600, paid_at: new Date(), created_at: new Date(), download_count: 1, notes: { title: note.title }, sellers: seller };
 
-const base = { ...helpers, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
+const education = require('../src/lib/education');
+const edu = { when: education.when, results: education.results, isOverdue: education.isOverdue, honoursLabel: education.honoursLabel };
+const quals = [
+  { id: 'q1', level: 'Honours degree or Postgraduate Diploma', name: 'BCom Honours in Accounting', institution: 'University of Cape Town', status: 'in_progress', current_year: 'Final year', expected_completion: '2027-11', honours: 'none', review_status: 'approved', replaces_id: null, docUrl: 'https://x', recordUrl: null },
+  { id: 'q2', level: 'Bachelor’s degree', name: 'BCom Accounting', institution: 'University of Cape Town', status: 'completed', year_completed: 2024, honours: 'cum_laude', average_mark: 81, distinctions: 'Tax and Auditing', review_status: 'approved', docUrl: 'https://x', recordUrl: 'https://y' },
+  { id: 'q3', level: 'Master’s degree', name: 'MCom Tax', institution: 'Other (type it in)', status: 'completed', year_completed: 2025, honours: 'summa_cum_laude', review_status: 'rejected', review_note: 'Blurry', docUrl: null },
+  { id: 'q5', level: 'Master’s degree', name: 'MPhil Tax', institution: 'University of Cape Town', status: 'in_progress', current_year: '2nd year', expected_completion: '2025-11', honours: 'merit', review_status: 'approved' },
+  { id: 'q4', level: 'Honours degree or Postgraduate Diploma', name: 'BCom Honours in Accounting', institution: 'University of Cape Town', status: 'completed', year_completed: 2026, honours: 'merit', review_status: 'pending', replaces_id: 'q1' },
+];
+const eduL = { universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY, levels: C.QUAL_LEVELS, studyYears: C.STUDY_YEARS, honours: C.HONOURS, months: education.MONTHS };
+const base = { ...helpers, edu, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
 const sellerBase = { ...base, user: { role: 'seller', email: 'a@b.c' } };
 const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 
@@ -25,7 +35,7 @@ const cases = {
     { ...sellerBase, note: { ...note, status: 'draft' }, author: seller, live: false, isOwner: true, more: [], previewImages: [], previewPlan: { full: 0, half: false, images: 0 } },
     { ...base, cartIds: [note.id], note: { ...note, page_count: 2, file_size: 46560 }, author: seller, live: true, isOwner: false, more: [], previewImages: ['/_preview/missing.webp'], previewPlan: { full: 0, half: true, images: 1 } },
   ],
-  storefront: [{ ...base, author: seller, notes: [note] }, { ...base, author: seller, notes: [] }],
+  storefront: [{ ...base, author: seller, notes: [note], quals: quals.slice(0, 2) }, { ...base, author: seller, notes: [] }],
   'checkout-complete': [
     ...['paid', 'pending', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENABC123DEF', email: order.email, total: 12000, orders: [{ ...order, note_id: note.id, notes: note }] })),
     ...['paid', 'failed'].map(st => ({ ...base, status: st, paymentRef: 'ENMULTI1', email: order.email, total: 24000, orders: [{ ...order, reference: 'ENMULTI1-1', note_id: note.id, notes: note }, { ...order, reference: 'ENMULTI1-2', note_id: note.id, notes: { ...note, title: 'Tax 101' } }] })),
@@ -50,7 +60,14 @@ const cases = {
   ] }, { ...adminBase, title: 'Reports', tab: 'reports', notesById: {}, reasons: {}, items: [] }, { ...adminBase, title: 'Reports', tab: 'reports', notesById: {}, reasons: {}, items: null }],
   'seller/note-delete': [{ ...sellerBase, title: 'Delete notes', note: { ...note, status: 'published' }, sold: 3 }, { ...sellerBase, title: 'Delete notes', note: { ...note, status: 'draft' }, sold: 0 }],
   'seller/profile': [{ ...sellerBase, flash: { type: 'ok', msg: 'Saved.' }, title: 'Storefront', tab: 'profile', values: seller, errors: { slug: 'taken' } }],
-  'seller/verification': ['unsubmitted', 'rejected', 'pending', 'approved'].map(st => ({ ...sellerBase, me: { ...seller, verification_status: st, verification_note: 'x' }, title: 'V', tab: 'verification', values: {}, errors: { degree: 'x' }, universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY })),
+  'seller/verification': ['unsubmitted', 'rejected', 'pending', 'approved'].map(st => ({ ...sellerBase, ...eduL, me: { ...seller, verification_status: st, verification_note: 'x' }, title: 'V', tab: 'verification', quals: st === 'unsubmitted' ? [] : quals, q: st === 'rejected' ? { level: C.QUAL_LEVELS[0], name: 'BCom', institution_picked: C.OTHER_UNIVERSITY, institution_other: 'Oxford' } : {}, errors: st === 'rejected' ? { name: 'x', doc: 'y', id_doc: 'z' } : {} })),
+  'seller/education-form': [
+    { ...sellerBase, ...eduL, title: 'Add', tab: 'verification', q: {}, replaces: null, errors: {} },
+    { ...sellerBase, ...eduL, title: 'Add', tab: 'verification', q: { status: 'in_progress', level: C.QUAL_LEVELS[1], expected_month: '11', expected_year: '2027' }, replaces: null, errors: { level: 'Only further study' } },
+    { ...sellerBase, ...eduL, title: 'Finish', tab: 'verification', q: { name: 'BCom Honours' }, replaces: quals[0], mode: 'finish', errors: {} },
+    { ...sellerBase, ...eduL, title: 'Update', tab: 'verification', q: { name: 'MPhil Tax', status: 'in_progress', honours: 'cum_laude' }, replaces: quals[3], mode: 'update', errors: { honours: 'Cum laude only on finishing', average_mark: 'Between 50 and 100' } },
+    { ...sellerBase, ...eduL, title: 'Retry', tab: 'verification', q: quals[2], replaces: null, retryOf: quals[2], errors: {} },
+  ],
   'seller/payouts': [
     { ...sellerBase, title: 'P', tab: 'payouts', banks: [{ name: 'Capitec Bank', code: '470010' }], bankError: null, values: { bank_code: '470010' }, errors: { form: 'Paystack said no' }, payouts: [{ id: 1, status: 'success', amount: 19200, date: new Date() }, { id: 2, status: 'processing', amount: 9600, date: new Date() }, { id: 3, status: 'pending', amount: 4800, date: null }, { id: 4, status: 'failed', amount: 9600, date: new Date() }], payoutsError: null, earned: 43200, paidOut: 19200, testMode: false },
     { ...sellerBase, title: 'P', tab: 'payouts', banks: [], bankError: null, values: {}, errors: {}, payouts: [], payoutsError: null, earned: 0, paidOut: 0, testMode: true },
@@ -60,12 +77,12 @@ const cases = {
   'seller/note-form': [{ ...sellerBase, title: 'Upload', tab: 'notes', note: null, values: {}, errors: { files: 'x', title: 'y' }, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS, subjects: C.SUBJECTS }, { ...sellerBase, title: 'Edit', tab: 'notes', note, values: { ...note, price: '120.00' }, errors: {}, institutions: C.NOTE_INSTITUTIONS, levels: C.LEVELS, subjects: C.SUBJECTS }],
   'seller/sales': [{ ...sellerBase, title: 'Sales', tab: 'sales', orders: [order], feeBearer: 'subaccount' }, { ...sellerBase, title: 'Sales', tab: 'sales', orders: [], feeBearer: 'account' }],
   'admin/index': [{ ...adminBase, pendingCount: 2, title: 'Admin', tab: 'overview', totals: { sales: 3, gross: 36000, fees: 7200 }, recent: [order], sellerCount: 1, noteCount: 2, noPayouts: 1, activity: [{ kind: 'webhook.received', detail: { event: 'charge.success', reference: 'ENABC' }, created_at: new Date() }, { kind: 'seller.rejected', actor: 'a@b.c', detail: { name: 'Thandi', reason: 'Blurry' }, created_at: new Date() }, { kind: 'admin.added', actor: 'a@b.c', detail: { email: 'x@y.z' }, created_at: new Date() }, { kind: 'mystery', detail: {}, created_at: new Date() }] }, { ...adminBase, pendingCount: 0, title: 'Admin', tab: 'overview', totals: { sales: 0, gross: 0, fees: 0 }, recent: [], sellerCount: 0, noteCount: 0, noPayouts: 0, activity: null }],
-  'admin/verifications': [{ ...adminBase, pendingCount: 1, title: 'Verifications', tab: 'verifications', queue: [{ ...seller, degreeUrl: 'https://x', idUrl: null, verification_note: 'Old reason' }], decided: [{ kind: 'webhook.received', detail: { event: 'charge.success', reference: 'ENABC' }, created_at: new Date() }, { kind: 'seller.rejected', actor: 'a@b.c', detail: { name: 'Thandi', reason: 'Blurry' }, created_at: new Date() }, { kind: 'admin.added', actor: 'a@b.c', detail: { email: 'x@y.z' }, created_at: new Date() }, { kind: 'mystery', detail: {}, created_at: new Date() }] }, { ...adminBase, title: 'Verifications', tab: 'verifications', queue: [], decided: [] }],
+  'admin/verifications': [{ ...adminBase, pendingCount: 1, title: 'Verifications', tab: 'verifications', queue: [{ ...seller, full_name: 'Thandi P Mokoena', quals: [quals[1]], idUrl: null, verification_note: 'Old reason' }], changes: [{ ...quals[3], sellers: { ...seller, users: { email: 'a@b.c' } }, replaced: quals[0] }, { ...quals[2], review_status: 'pending', sellers: seller, replaced: null }], decided: [{ kind: 'webhook.received', detail: { event: 'charge.success', reference: 'ENABC' }, created_at: new Date() }, { kind: 'seller.rejected', actor: 'a@b.c', detail: { name: 'Thandi', reason: 'Blurry' }, created_at: new Date() }, { kind: 'admin.added', actor: 'a@b.c', detail: { email: 'x@y.z' }, created_at: new Date() }, { kind: 'mystery', detail: {}, created_at: new Date() }] }, { ...adminBase, title: 'Verifications', tab: 'verifications', queue: [], changes: [], decided: [] }],
   'admin/money': [{ ...adminBase, title: 'Money', tab: 'money', all: { sales: 3, gross: 36000, fees: 7200, payouts: 28800 }, months: [{ label: 'Oct 2026', sales: 3, gross: 36000, fees: 7200, payouts: 28800 }, { label: 'Sep 2026', sales: 0, gross: 0, fees: 0, payouts: 0 }], sellers: [{ id: 's1', name: 'Thandi', sales: 3, gross: 36000, fees: 7200, payouts: 28800, last: new Date() }], noPayouts: [seller], capped: false, feeBearerText: 'paid by EasyNotes' }, { ...adminBase, title: 'Money', tab: 'money', all: { sales: 0, gross: 0, fees: 0, payouts: 0 }, months: [], sellers: [], noPayouts: [], capped: false, feeBearerText: 'x' }],
   'admin/health': [{ ...adminBase, user: { role: 'admin', email: 'a@b.c' }, title: 'Health', tab: 'health', checks: [{ name: 'Database', status: 'ok', detail: 'Connected.' }, { name: 'Paystack', status: 'warn', detail: 'Test key.', fix: 'Switch to live.' }, { name: 'Email', status: 'fail', detail: 'Bad key.', fix: 'New key.' }], app: { node: 'v22', uptime: '5 min', memory: '80 MB', commit: 'abc1234', env: 'production' } }, { ...adminBase, title: 'Health', tab: 'health', checks: [{ name: 'Database', status: 'ok', detail: 'ok' }], app: { node: 'v22', uptime: '1 h', memory: '1 MB', commit: 'local', env: 'development' } }],
   'admin/settings': [{ ...adminBase, user: { id: 'a1', role: 'admin', email: 'a@b.c' }, title: 'Settings', tab: 'settings', admins: [{ id: 'a1', email: 'a@b.c', created_at: new Date() }, { id: 'a2', email: 'x@y.z', created_at: new Date() }], settings: [['Site address', 'https://easynotes.co.za', 'BASE_URL']] }],
   'admin/sellers': [{ ...adminBase, q: '', title: 'Sellers', tab: 'sellers', sellers: [seller], status: 'pending', statuses: ['pending', 'approved', 'rejected', 'unsubmitted'] }],
-  'admin/seller': [{ ...adminBase, totals: { sales: 3, earnings: 28800 }, title: 'T', tab: 'sellers', s: { ...seller, verification_note: 'old' }, notes: [note], degreeUrl: 'https://x', idUrl: null }],
+  'admin/seller': [{ ...adminBase, totals: { sales: 3, earnings: 28800 }, title: 'T', tab: 'sellers', s: { ...seller, verification_note: 'old' }, notes: [note], degreeUrl: 'https://x', idUrl: null, quals, jobsIdDays: 30 }],
   'admin/notes': [{ ...adminBase, title: 'Notes', tab: 'notes', notes: [note, { ...note, status: 'removed' }], q: '' }],
   'admin/orders': [{ ...adminBase, title: 'Orders', tab: 'orders', orders: [order], status: 'paid', reference: '' }],
 };
@@ -84,7 +101,7 @@ for (const [view, list] of Object.entries(cases)) {
     }
   });
 }
-const all = fs.readdirSync(path.join(__dirname, '..', 'views'), { recursive: true }).filter(f => f.endsWith('.ejs') && !f.startsWith('partials')).map(f => f.replace('.ejs', ''));
+const all = fs.readdirSync(path.join(__dirname, '..', 'views'), { recursive: true }).filter(f => f.endsWith('.ejs') && !f.startsWith('partials') && !/qual-(fields|detail)/.test(f)).map(f => f.replace('.ejs', ''));
 const missing = all.filter(v => !cases[v]);
 if (missing.length) console.log('Untested views:', missing.join(', '));
 console.log(failed ? `${failed} failures` : 'All views rendered');

@@ -20,9 +20,11 @@ async function afterPdfSaved(req, noteId, title, buffer) {
 const flash = require('../lib/flash');
 const { requireSeller } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
+const avatar = require('../lib/avatar');
 const { slugify, str, isUuid } = require('../lib/helpers');
 const { RESERVED_SLUGS } = require('../lib/constants');
-const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, SUBJECTS } = require('../lib/constants');
+const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, SUBJECTS, QUAL_LEVELS, STUDY_YEARS, HONOURS } = require('../lib/constants');
+const education = require('../lib/education');
 
 const router = express.Router();
 router.use(requireSeller);
@@ -62,7 +64,8 @@ router.get('/profile', (req, res) => {
   res.render('seller/profile', { title: 'Your storefront', tab: 'profile', values: req.seller, errors: {} });
 });
 
-router.post('/profile', async (req, res) => {
+router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }]), afterUpload(() => '/seller/profile'), verifyCsrf, async (req, res) => {
+  const picture = req.files?.avatar?.[0];
   const values = {
     full_name: str(req.body.full_name, 80),
     display_name: str(req.body.display_name, 80),
@@ -72,6 +75,8 @@ router.post('/profile', async (req, res) => {
   };
   const errors = {};
   if (values.full_name.length < 2) errors.full_name = 'Enter your full name.';
+  const pictureError = avatar.checkAvatar(picture);
+  if (pictureError) errors.avatar = pictureError;
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
   else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
@@ -83,94 +88,156 @@ router.post('/profile', async (req, res) => {
   if (Object.keys(errors).length) {
     return res.status(400).render('seller/profile', { title: 'Your storefront', tab: 'profile', values: { ...req.seller, ...values }, errors });
   }
-  const { error } = await db.from('sellers').update({ ...values, headline: values.headline || null, bio: values.bio || null }).eq('id', req.seller.id);
-  if (error) throw error;
+  const update = { ...values, headline: values.headline || null, bio: values.bio || null };
+  const oldPicture = req.seller.avatar_path;
+  if (picture) update.avatar_path = await avatar.saveAvatar(req.seller.id, picture.buffer);
+  else if (req.body.remove_avatar === 'on') update.avatar_path = null;
+  const { error } = await db.from('sellers').update(update).eq('id', req.seller.id);
+  if (error) {
+    if (picture) await avatar.removeAvatar(update.avatar_path);
+    throw error;
+  }
+  if ('avatar_path' in update && oldPicture) await avatar.removeAvatar(oldPicture);
   flash(req, 'ok', 'Storefront saved.');
   res.redirect('/seller/profile');
 });
 
-/* ---------- Verification ---------- */
+/* ---------- Verification (education + ID) ---------- */
 
-router.get('/verification', (req, res) => {
-  res.render('seller/verification', {
-    title: 'Verify your degree',
-    tab: 'verification',
-    values: req.seller,
-    errors: {},
-    universities: DEGREE_UNIVERSITIES,
-    otherLabel: OTHER_UNIVERSITY,
-  });
+const eduLocals = (extra) => ({
+  tab: 'verification', errors: {}, universities: DEGREE_UNIVERSITIES, otherLabel: OTHER_UNIVERSITY,
+  levels: QUAL_LEVELS, studyYears: STUDY_YEARS, honours: HONOURS, months: education.MONTHS, ...extra,
+});
+const eduFiles = (extra = []) => upload.fields([{ name: 'doc', maxCount: 1 }, { name: 'record', maxCount: 1 }, ...extra]);
+
+router.get('/verification', async (req, res) => {
+  const quals = await education.forSeller(req.seller.id);
+  res.render('seller/verification', eduLocals({ title: 'Verification', quals, q: {} }));
 });
 
-router.post(
-  '/verification',
-  upload.fields([{ name: 'degree_doc', maxCount: 1 }, { name: 'id_doc', maxCount: 1 }]),
-  afterUpload(() => '/seller/verification'),
-  verifyCsrf,
-  async (req, res) => {
-    const s = req.seller;
-    if (!['unsubmitted', 'rejected'].includes(s.verification_status)) return res.redirect('/seller/verification');
+// First verification: a completed degree plus ID. Starts over if an earlier attempt was rejected.
+router.post('/verification', eduFiles([{ name: 'id_doc', maxCount: 1 }]), afterUpload(() => '/seller/verification'), verifyCsrf, async (req, res) => {
+  const s = req.seller;
+  if (!['unsubmitted', 'rejected'].includes(s.verification_status)) return res.redirect('/seller/verification');
 
-    const thisYear = new Date().getFullYear();
-    const pickedUni = str(req.body.university, 120);
-    const values = {
-      degree: str(req.body.degree, 120),
-      university: pickedUni === OTHER_UNIVERSITY ? str(req.body.university_other, 120) : pickedUni,
-      graduation_year: parseInt(req.body.graduation_year, 10),
-    };
-    const errors = {};
-    if (values.degree.length < 3) errors.degree = 'Enter your degree, e.g. BCom Accounting.';
-    if (!values.university || (pickedUni !== OTHER_UNIVERSITY && !DEGREE_UNIVERSITIES.includes(pickedUni)))
-      errors.university = 'Choose the institution that awarded your degree.';
-    if (!(values.graduation_year >= 1960 && values.graduation_year <= thisYear))
-      errors.graduation_year = `Enter a year between 1960 and ${thisYear}.`;
-    profanity.checkFields(values, ['degree', 'university'], errors);
-
-    const docs = {};
-    for (const [field, label] of [['degree_doc', 'degree certificate or academic transcript'], ['id_doc', 'ID document']]) {
-      const f = req.files?.[field]?.[0];
-      const type = f && storage.detectType(f.buffer);
-      if (!f) errors[field] = `Upload your ${label}.`;
-      else if (!type) errors[field] = 'Upload a PDF, JPG or PNG.';
-      else if (f.size > 10 * MB) errors[field] = 'This file is larger than 10 MB.';
-      else docs[field] = { file: f, type };
-    }
-
-    if (Object.keys(errors).length) {
-      return res.status(400).render('seller/verification', {
-        title: 'Verify your degree',
-        tab: 'verification',
-        values: { ...s, ...values, university: pickedUni, university_other: req.body.university_other },
-        errors,
-        universities: DEGREE_UNIVERSITIES,
-        otherLabel: OTHER_UNIVERSITY,
-      });
-    }
-
-    const stamp = Date.now();
-    const degreePath = `${s.id}/degree-${stamp}.${docs.degree_doc.type.ext}`;
-    const idPath = `${s.id}/id-${stamp}.${docs.id_doc.type.ext}`;
-    await storage.upload('verification', degreePath, docs.degree_doc.file.buffer, docs.degree_doc.type.mime);
-    await storage.upload('verification', idPath, docs.id_doc.file.buffer, docs.id_doc.type.mime);
-
-    const { error } = await db
-      .from('sellers')
-      .update({
-        ...values,
-        degree_doc_path: degreePath,
-        id_doc_path: idPath,
-        verification_status: 'pending',
-        verification_note: null,
-        submitted_at: new Date().toISOString(),
-      })
-      .eq('id', s.id);
-    if (error) throw error;
-    await storage.remove('verification', [s.degree_doc_path, s.id_doc_path]);
-
-    flash(req, 'ok', 'Documents sent. We’ll review them and update your status here.');
-    res.redirect('/seller');
+  const { values, errors, docs } = education.validate(req.body, req.files);
+  const idFile = req.files?.id_doc?.[0];
+  const idType = idFile && storage.detectType(idFile.buffer);
+  if (!idFile) errors.id_doc = 'Upload your ID document.';
+  else if (!idType) errors.id_doc = 'Upload a PDF, JPG or PNG.';
+  else if (idFile.size > 10 * MB) errors.id_doc = 'This file is larger than 10 MB.';
+  if (Object.keys(errors).length) {
+    return res.status(400).render('seller/verification', eduLocals({ title: 'Verification', quals: [], q: values, errors }));
   }
-);
+
+  // Clear out any earlier attempt
+  const { data: old } = await db.from('qualifications').select('id,doc_path,record_path').eq('seller_id', s.id);
+  const paths = await education.saveDocs(s.id, docs);
+  const idPath = `${s.id}/id-${Date.now()}.${idType.ext}`;
+  await storage.upload('verification', idPath, idFile.buffer, idType.mime);
+  if (old && old.length) await db.from('qualifications').delete().eq('seller_id', s.id);
+  const { error: qErr } = await db.from('qualifications').insert({ seller_id: s.id, ...education.rowFrom(values), ...paths });
+  if (qErr) throw qErr;
+  const { error } = await db
+    .from('sellers')
+    .update({
+      ...education.headlineOf([{ ...values, review_status: 'approved' }]), // shown to admins while in review
+      id_doc_path: idPath,
+      degree_doc_path: paths.doc_path,
+      verification_status: 'pending',
+      verification_note: null,
+      submitted_at: new Date().toISOString(),
+    })
+    .eq('id', s.id);
+  if (error) throw error;
+  await storage.remove('verification', [s.id_doc_path, s.degree_doc_path, ...(old || []).flatMap((q) => [q.doc_path, q.record_path])]);
+
+  flash(req, 'ok', 'Documents sent. We’ll review them and update your status here.');
+  res.redirect('/seller');
+});
+
+// Adding education, or "I've finished this" (?finish=id) / "Fix and send again" (?retry=id), once verified.
+// mode: 'finish' (I've finished this) or 'update' (still studying, new dates) for an approved in-progress entry.
+async function eduStart(req) {
+  const retry = req.query.retry || req.body?.retry;
+  const mode = req.query.update || req.body?.mode === 'update' ? 'update' : 'finish';
+  const id = req.query.finish || req.query.update || retry || req.body?.replaces;
+  if (!id || !isUuid(String(id))) return { q: {}, replaces: null };
+  const { data: row } = await db.from('qualifications').select('*').eq('id', id).eq('seller_id', req.seller.id).maybeSingle();
+  if (!row) return { q: {}, replaces: null };
+  if (retry && row.review_status === 'rejected') {
+    const { doc_path, record_path, review_note, ...rest } = row;
+    return { q: rest, replaces: null, retryOf: row };
+  }
+  if (row.review_status === 'approved' && row.status === 'in_progress') {
+    const keep = { level: row.level, name: row.name, institution: row.institution, honours: row.honours, average_mark: row.average_mark, distinctions: row.distinctions };
+    return mode === 'update'
+      ? { q: { ...keep, status: 'in_progress', current_year: row.current_year }, replaces: row, mode }
+      : { q: keep, replaces: row, mode };
+  }
+  return { q: {}, replaces: null };
+}
+
+const eduTitle = (replaces, mode) => (!replaces ? 'Add education' : mode === 'update' ? 'Update your studies' : 'Finished your studies');
+
+router.get('/verification/education/new', async (req, res) => {
+  if (req.seller.verification_status !== 'approved') return res.redirect('/seller/verification');
+  const { q, replaces, retryOf, mode } = await eduStart(req);
+  res.render('seller/education-form', eduLocals({ title: eduTitle(replaces, mode), q, replaces, retryOf, mode }));
+});
+
+router.post('/verification/education', eduFiles(), afterUpload(() => '/seller/verification/education/new'), verifyCsrf, async (req, res) => {
+  const s = req.seller;
+  if (s.verification_status !== 'approved') return res.redirect('/seller/verification');
+  const { replaces, retryOf, mode } = await eduStart(req);
+  if (req.body.replaces && !replaces) return res.redirect('/seller/verification'); // already finished or not theirs
+  const { values, errors, docs } = education.validate(req.body, req.files, { allowStudying: !replaces || mode === 'update' });
+  if (Object.keys(errors).length) {
+    return res.status(400).render('seller/education-form', eduLocals({ title: eduTitle(replaces, mode), q: values, replaces, retryOf, mode, errors }));
+  }
+  const paths = await education.saveDocs(s.id, docs);
+  const { data: row, error } = await db
+    .from('qualifications')
+    .insert({ seller_id: s.id, ...education.rowFrom(values), ...paths, replaces_id: replaces ? replaces.id : null })
+    .select('id')
+    .single();
+  if (error) {
+    await storage.remove('verification', [paths.doc_path, paths.record_path]);
+    throw error;
+  }
+  if (retryOf) {
+    // The new entry takes the place of the one that wasn't approved
+    await db.from('qualifications').delete().eq('id', retryOf.id).eq('seller_id', s.id);
+    await storage.remove('verification', [retryOf.doc_path, retryOf.record_path]);
+  }
+  events.log('qualification.submitted', { seller_id: s.id, qualification_id: row.id, name: values.name, seller: s.display_name, finished: !!replaces && values.status === 'completed', updated: !!replaces && values.status === 'in_progress' }, req.user.email);
+  flash(req, 'ok', 'Sent for review. Your storefront stays as it is until we’ve checked it.');
+  res.redirect('/seller/verification');
+});
+
+// Taking an entry off (dropped out, added by mistake). No review needed: removing can't overstate anything.
+// The last verified finished qualification stays, since a completed degree is what keeps the seller verified.
+router.post('/verification/education/:id/remove', async (req, res, next) => {
+  if (!isUuid(req.params.id)) return next();
+  const s = req.seller;
+  const quals = await education.forSeller(s.id);
+  const q = quals.find((x) => x.id === req.params.id);
+  if (!q) return res.redirect('/seller/verification');
+  const isDegree = (x) => x.review_status === 'approved' && x.status === 'completed';
+  if (isDegree(q) && quals.filter(isDegree).length === 1) {
+    flash(req, 'error', 'This is the completed degree your verification is based on, so it can’t be removed.');
+    return res.redirect('/seller/verification');
+  }
+  // An update waiting on this entry goes with it
+  const linked = quals.filter((x) => x.replaces_id === q.id && x.review_status === 'pending');
+  const gone = [q, ...linked];
+  await db.from('qualifications').delete().in('id', gone.map((x) => x.id)).eq('seller_id', s.id);
+  await storage.remove('verification', gone.flatMap((x) => [x.doc_path, x.record_path]));
+  if (q.review_status === 'approved') await education.refreshHeadline(s.id);
+  events.log('qualification.removed', { seller_id: s.id, name: q.name, seller: s.display_name }, req.user.email);
+  flash(req, 'ok', `${q.name} removed from your education.`);
+  res.redirect('/seller/verification');
+});
 
 /* ---------- Payouts (Paystack subaccount) ---------- */
 

@@ -96,7 +96,7 @@
     <section class="tab-panel" id="panel-author" role="tabpanel" aria-labelledby="tab-author">
       <h2 class="sr-only">About the author</h2>
       <div class="author">
-        <div class="avatar" aria-hidden="true"><%= initials(author.display_name) %></div>
+        <%- include('partials/avatar', { person: author }) %>
         <div>
           <h3><a href="<%= storeUrl(author) %>"><%= author.display_name %></a></h3>
           <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>

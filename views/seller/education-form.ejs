@@ -1,0 +1,32 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <p><a href="/seller/verification">← Your education</a></p>
+  <div class="dash-grid edu-grid">
+    <form class="form card" method="post" action="/seller/verification/education" enctype="multipart/form-data" novalidate data-unsaved>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% var updating = replaces && locals.mode === 'update'; %>
+      <% if (replaces) { %><input type="hidden" name="replaces" value="<%= replaces.id %>"><input type="hidden" name="mode" value="<%= updating ? 'update' : 'finish' %>"><% } %>
+      <% if (locals.retryOf) { %><input type="hidden" name="retry" value="<%= retryOf.id %>"><% } %>
+      <% if (locals.retryOf && retryOf.review_note) { %><div class="alert alert-error"><strong>Why it wasn’t approved</strong><p><%= retryOf.review_note %></p></div><% } %>
+      <header class="form-section-head">
+        <h2><%= updating ? 'Update ' + replaces.name : replaces ? 'You’ve finished ' + replaces.name : 'Add education' %></h2>
+        <p class="muted"><%= updating ? 'Still studying, or finishing later than planned? Give your new expected finish date and upload your latest proof of registration or academic record.' : replaces ? 'Congratulations! Upload your certificate or final academic record. Your current entry stays on your storefront until we’ve checked it.' : 'Add another qualification you’ve completed, or further study you’re doing now, like honours, a master’s or a PhD.' %></p>
+      </header>
+      <%- include('qual-fields', { allowStudying: !replaces || updating }) %>
+      <div class="form-actions">
+        <button class="btn btn-hi" type="submit">Send for review</button>
+        <a href="/seller/verification">Cancel</a>
+      </div>
+    </form>
+    <div>
+      <h2 style="font-size:1.2rem">What happens next</h2>
+      <ul class="checklist checklist-dark">
+        <li>Someone on our team checks your document, usually within two working days</li>
+        <li>Your storefront and notes stay exactly as they are while we check</li>
+        <li>Once approved, it shows on your storefront<%= replaces ? ' in place of the old entry' : '' %></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<%- include('../partials/bottom') %>

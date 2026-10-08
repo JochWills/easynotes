@@ -2,66 +2,97 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
   <% var st = me.verification_status; %>
-  <% if (st === 'approved') { %>
-    <div class="alert alert-ok"><strong>You’re verified.</strong><p><%= me.degree %>, <%= me.university %> (<%= me.graduation_year %>). Verified on <%= date(me.verified_at) %>.</p></div>
-  <% } else if (st === 'pending') { %>
-    <div class="alert alert-info"><strong>Your documents are in review.</strong><p>Submitted on <%= date(me.submitted_at) %>. We’ll update this page once a person on our team has checked them, usually within two working days.</p></div>
+  <% var pill = function (q) { return q.review_status === 'approved' ? '<span class="pill pill-ok">Verified</span>' : q.review_status === 'pending' ? '<span class="pill pill-wait">In review</span>' : '<span class="pill pill-bad">Not approved</span>'; }; %>
+
+  <% if (st === 'approved' || st === 'pending') { %>
+    <% if (st === 'pending') { %>
+      <div class="alert alert-info"><strong>Your documents are in review.</strong><p>Submitted on <%= date(me.submitted_at) %>. We’ll update this page once a person on our team has checked them, usually within two working days.</p></div>
+    <% } %>
+    <div class="dash-grid edu-grid">
+      <section>
+        <div class="section-row">
+          <h2 class="edu-title">Your education</h2>
+          <% if (st === 'approved') { %><a class="btn btn-hi btn-sm" href="/seller/verification/education/new">+ Add education</a><% } %>
+        </div>
+        <ul class="edu-list">
+          <% quals.forEach(function (q) { %>
+            <li class="card edu-item">
+              <div class="edu-head">
+                <div>
+                  <h3><%= q.name %></h3>
+                  <p class="muted"><%= q.institution %> · <%= q.level %></p>
+                </div>
+                <%- pill(q) %>
+              </div>
+              <p class="edu-when"><%= edu.when(q) %></p>
+              <% if (q.honours !== 'none' || edu.results(q)) { %>
+                <p class="edu-results"><% if (q.honours !== 'none') { %><span class="honours"><%= edu.honoursLabel(q) %></span><% } %><%= edu.results(q) %></p>
+              <% } %>
+              <% var waiting = quals.some(function (o) { return o.replaces_id === q.id && o.review_status === 'pending'; }); %>
+              <% if (q.review_status === 'approved' && edu.isOverdue(q) && !waiting) { %><p class="edu-due">Your expected finish date has passed. Finished? Tell us below. Still studying? Update your dates so your storefront stays current.</p><% } %>
+              <% if (q.review_status === 'rejected' && q.review_note) { %><p class="edu-note">Why: <%= q.review_note %></p><% } %>
+              <% if (q.replaces_id && q.review_status === 'pending') { %><p class="small muted">Update to an earlier entry. The earlier one stays on your storefront until this is checked.</p><% } %>
+              <% if (st === 'approved') { %>
+                <div class="edu-actions">
+                  <% if (q.review_status === 'approved' && q.status === 'in_progress' && !waiting) { %>
+                    <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?finish=<%= q.id %>">I’ve finished this</a>
+                    <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?update=<%= q.id %>">Update dates</a>
+                  <% } %>
+                  <% if (q.review_status === 'rejected') { %><a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?retry=<%= q.id %>">Fix and send again</a><% } %>
+                  <% var degrees = quals.filter(function (o) { return o.review_status === 'approved' && o.status === 'completed'; }); %>
+                  <% if (!(q.review_status === 'approved' && q.status === 'completed' && degrees.length === 1)) { %>
+                    <form method="post" action="/seller/verification/education/<%= q.id %>/remove" data-confirm="Remove <%= q.name %> from your education?<%= q.review_status === 'approved' ? ' It comes off your storefront straight away.' : '' %>">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="linklike" type="submit">Remove</button>
+                    </form>
+                  <% } %>
+                </div>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      </section>
+      <aside>
+        <h2 style="font-size:1.2rem">Keeping it up to date</h2>
+        <ul class="checklist checklist-dark">
+          <li>Finished a qualification you were studying? Click <strong>I’ve finished this</strong> and upload your certificate or final record.</li>
+          <li>Started or completed further study, like honours or a master’s? Use <strong>Add education</strong>.</li>
+          <li>Finishing later than planned? Use <strong>Update dates</strong>.</li>
+          <li>We check every change. Your verified education stays on your storefront and your notes stay on sale while we do.</li>
+          <li>Dropped something? <strong>Remove</strong> it any time. Your completed degree stays, since your verification is based on it.</li>
+        </ul>
+      </aside>
+    </div>
+
   <% } else { %>
     <% if (st === 'rejected') { %><div class="alert alert-error"><strong>Your last submission wasn’t approved.</strong><p><%= me.verification_note %></p></div><% } %>
-    <div class="dash-grid">
+    <div class="dash-grid edu-grid">
       <form class="form card" method="post" action="/seller/verification" enctype="multipart/form-data" novalidate data-unsaved>
         <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <header class="form-section-head">
+          <h2>Your education</h2>
+          <p class="muted">Tell us your highest completed degree. Once you’re verified you can add more, including honours, a master’s or a PhD you’re still studying.</p>
+        </header>
+        <%- include('qual-fields') %>
         <fieldset class="form">
-          <legend>Your degree</legend>
-          <div class="field <%= errors.degree ? 'has-error' : '' %>">
-            <label for="v-degree">Degree</label>
-            <input id="v-degree" type="text" name="degree" maxlength="120" value="<%= values.degree || '' %>" placeholder="e.g. BCom Honours in Accounting" required>
-            <%- include('../partials/field-error', { name: 'degree' }) %>
-          </div>
-          <div class="field <%= errors.university ? 'has-error' : '' %>">
-            <label for="v-uni">Institution</label>
-            <select id="v-uni" name="university" required data-other="v-uni-other-wrap" data-other-value="<%= otherLabel %>">
-              <option value="">Choose an institution</option>
-              <% universities.forEach(function (u) { %><option <%= values.university === u ? 'selected' : '' %>><%= u %></option><% }) %>
-              <option <%= values.university === otherLabel ? 'selected' : '' %>><%= otherLabel %></option>
-            </select>
-            <div id="v-uni-other-wrap" class="field" style="margin-top:10px" hidden>
-              <label for="v-uni-other">Institution name</label>
-              <input id="v-uni-other" type="text" name="university_other" maxlength="120" value="<%= values.university_other || '' %>" placeholder="Full name and country">
-            </div>
-            <%- include('../partials/field-error', { name: 'university' }) %>
-          </div>
-          <div class="field <%= errors.graduation_year ? 'has-error' : '' %>">
-            <label for="v-year">Year you graduated</label>
-            <input id="v-year" type="number" name="graduation_year" value="<%= values.graduation_year || '' %>" min="1960" max="<%= new Date().getFullYear() %>" required style="max-width:160px">
-            <%- include('../partials/field-error', { name: 'graduation_year' }) %>
-          </div>
-        </fieldset>
-        <fieldset class="form">
-          <legend>Documents</legend>
-          <div class="field <%= errors.degree_doc ? 'has-error' : '' %>">
-            <label for="v-degree-doc">Degree certificate or academic transcript</label>
-            <input id="v-degree-doc" type="file" name="degree_doc" accept="application/pdf,image/jpeg,image/png" required>
-            <span class="hint">PDF, JPG or PNG, up to 10 MB. Your name and the degree must be readable.</span>
-            <%- include('../partials/field-error', { name: 'degree_doc' }) %>
-          </div>
+          <legend>Your ID</legend>
           <div class="field <%= errors.id_doc ? 'has-error' : '' %>">
             <label for="v-id-doc">ID document, smart ID card or passport</label>
             <input id="v-id-doc" type="file" name="id_doc" accept="application/pdf,image/jpeg,image/png" required>
-            <span class="hint">Used only to confirm the degree is yours. Stored privately.</span>
+            <span class="hint">Used only to confirm the documents are yours. Stored privately.</span>
             <%- include('../partials/field-error', { name: 'id_doc' }) %>
           </div>
         </fieldset>
-        <div class="form-actions"><button class="btn" type="submit">Send for review</button></div>
+        <div class="form-actions"><button class="btn btn-hi" type="submit">Send for review</button></div>
       </form>
       <div>
         <h2 style="font-size:1.2rem">What we check</h2>
         <ul class="checklist checklist-dark">
-          <li>The degree is complete and from a recognised institution</li>
-          <li>The name on your degree matches your ID</li>
-          <li>The details you enter match the documents</li>
+          <li>You’ve completed a degree at a recognised institution</li>
+          <li>The name on your documents matches your ID</li>
+          <li>The details you enter, including any marks or distinction, match your documents</li>
         </ul>
-        <p class="fineprint">Only the EasyNotes team can see your documents. Students see your degree, institution and graduation year. Read our <a href="/privacy">privacy policy</a>.</p>
+        <p class="fineprint">Only the EasyNotes team can see your documents. Students see your qualification, institution, when you finished or expect to finish, and any results you choose to show. Read our <a href="/privacy">privacy policy</a>.</p>
       </div>
     </div>
   <% } %>

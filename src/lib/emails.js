@@ -179,7 +179,51 @@ async function sendReportReceipt(report) {
   return mail.send({ to: report.email, subject: 'We’ve received your report', html, text });
 }
 
+// Sent once the expected finish month of something a seller is still studying has passed.
+async function sendStudyReminder(qualId) {
+  const { data: q } = await db.from('qualifications').select('id,name,sellers(display_name,full_name,users(email))').eq('id', qualId).maybeSingle();
+  const s = q && q.sellers;
+  if (!s || !s.users) return false;
+  const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Have you finished?',
+    paragraphs: [
+      `Hi ${esc(first)}, you told us you expected to finish <strong>${esc(q.name)}</strong> by now. Congratulations if you have!`,
+      'Upload your certificate or final academic record and we’ll update your storefront, including any distinction you earned. Still studying? Update your expected finish date so your storefront stays current.',
+    ],
+    button: { url: `${config.baseUrl}/seller/verification`, label: 'Update your education' },
+  });
+  return mail.send({ to: s.users.email, subject: `Finished ${q.name}? Update your EasyNotes storefront`, html, text });
+}
+
+// A verified seller's added or finished education was approved or not.
+async function sendQualificationDecision(qualId) {
+  const { data: q } = await db.from('qualifications').select('name,review_status,review_note,sellers(display_name,full_name,users(email))').eq('id', qualId).maybeSingle();
+  const s = q && q.sellers;
+  if (!s || !s.users) return false;
+  const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
+  const approved = q.review_status === 'approved';
+  const { html, text } = approved
+    ? compose({
+        heading: 'Your education is verified',
+        paragraphs: [`Hi ${esc(first)}, we’ve checked your documents and <strong>${esc(q.name)}</strong> now shows on your storefront.`],
+        button: { url: `${config.baseUrl}/seller/verification`, label: 'See your education' },
+      })
+    : compose({
+        heading: 'We couldn’t verify this yet',
+        paragraphs: [
+          `Hi ${esc(first)}, we reviewed <strong>${esc(q.name)}</strong> but couldn’t approve it. Here’s why:`,
+          `<em>${esc(q.review_note || 'No reason given.')}</em>`,
+          'Your storefront hasn’t changed. Fix this and send it again whenever you’re ready.',
+        ],
+        button: { url: `${config.baseUrl}/seller/verification`, label: 'Update your education' },
+      });
+  return mail.send({ to: s.users.email, subject: approved ? `${q.name} is verified on EasyNotes` : 'Your EasyNotes education update needs another look', html, text });
+}
+
 module.exports = {
+  sendStudyReminder,
+  sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,

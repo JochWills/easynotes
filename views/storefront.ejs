@@ -5,7 +5,7 @@
 <section class="page-head">
   <div class="wrap">
     <div class="store-head">
-      <div class="avatar avatar-lg" aria-hidden="true"><%= initials(author.display_name) %></div>
+      <%- include('partials/avatar', { person: author, cls: 'avatar-lg' }) %>
       <div>
         <h1><%= author.display_name %></h1>
         <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
@@ -16,6 +16,23 @@
       <div class="store-bio">
         <% if (author.headline) { %><p><strong><%= author.headline %></strong></p><% } %>
         <% if (author.bio) { %><p class="prose"><%= author.bio %></p><% } %>
+      </div>
+    <% } %>
+    <% if (locals.quals && quals.length) { %>
+      <div class="store-edu">
+        <h2>Verified education</h2>
+        <ul class="edu-public">
+          <% quals.forEach(function (q) { %>
+            <li>
+              <span class="edu-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z" fill="currentColor"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+              <div>
+                <p class="edu-name"><strong><%= q.name %></strong><% if (q.honours !== 'none') { %> <span class="honours"><%= edu.honoursLabel(q) %></span><% } %></p>
+                <p class="muted"><%= q.institution %> · <%= edu.when(q) %></p>
+                <% if (edu.results(q)) { %><p class="edu-marks"><%= edu.results(q) %></p><% } %>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
       </div>
     <% } %>
   </div>

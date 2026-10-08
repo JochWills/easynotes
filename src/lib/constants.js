@@ -39,6 +39,22 @@ const NOTE_INSTITUTIONS = [...UNIVERSITIES.map((u) => u.name), PRIVATE_INSTITUTI
 const DEGREE_UNIVERSITIES = UNIVERSITIES.map((u) => u.name);
 const OTHER_UNIVERSITY = 'Other (type it in)';
 
+// Education a seller can verify, lowest to highest (the highest verified one is shown on their notes).
+// Sellers need a completed degree; only further study above a bachelor's can be added while still in progress.
+const QUAL_LEVELS = [
+  'Bachelor’s degree',
+  'Honours degree or Postgraduate Diploma',
+  'Master’s degree',
+  'Doctorate (PhD)',
+  'Professional qualification',
+];
+// Professional qualifications (CA(SA), admitted attorney...) rank with honours degrees
+const QUAL_RANK = { 'Bachelor’s degree': 3, 'Honours degree or Postgraduate Diploma': 4, 'Professional qualification': 4, 'Master’s degree': 5, 'Doctorate (PhD)': 6 };
+const HONOURS = { none: '', merit: 'With merit or distinction', cum_laude: 'Cum laude', summa_cum_laude: 'Summa cum laude' };
+const STUDY_YEARS = ['1st year', '2nd year', '3rd year or later', 'Final year'];
+const STUDYING_MIN_RANK = 4; // honours / PGDip and up
+
+
 // Suggested subjects on the upload form. Sellers can add their own; those then show for everyone.
 const SUBJECTS = [
   'Accounting', 'Actuarial Science', 'Afrikaans', 'Anatomy', 'Auditing', 'Biochemistry', 'Biology', 'Botany',
@@ -63,4 +79,4 @@ const RESERVED_SLUGS = new Set([
   'webhooks', 'www',
 ]);
 
-module.exports = { SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
+module.exports = { STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
