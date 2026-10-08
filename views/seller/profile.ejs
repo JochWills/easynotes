@@ -12,6 +12,7 @@
             <div class="avatar-edit-actions">
               <label class="btn btn-ghost btn-sm" for="p-avatar"><%= me.avatar_path ? 'Change picture' : 'Upload a picture' %></label>
               <input id="p-avatar" class="sr-only" type="file" name="avatar" accept="image/jpeg,image/png,image/webp" aria-labelledby="p-avatar-label" data-max-mb="8">
+              <% if (me.avatar_path) { %><a class="small" href="<%= avatarUrl(me) %>" target="_blank" rel="noopener">View current<span class="sr-only"> picture (opens in a new tab)</span></a><% } %>
               <% if (me.avatar_path) { %><label class="check small"><input type="checkbox" name="remove_avatar"> <span>Remove picture</span></label><% } %>
             </div>
             <span class="hint">A clear photo of your face builds trust with students. JPG, PNG or WebP, up to 8 MB. We crop it to a square.</span>

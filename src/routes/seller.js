@@ -249,6 +249,23 @@ router.post('/verification/education', eduFiles(), afterUpload(() => '/seller/ve
   res.redirect('/seller/verification');
 });
 
+// Lets sellers open documents they uploaded for verification, through short-lived links (the bucket is private).
+const openPrivate = async (res, path) => {
+  res.set('Cache-Control', 'no-store');
+  res.redirect(await storage.signedUrl('verification', path, 120));
+};
+router.get('/verification/education/:id/file/:which', async (req, res, next) => {
+  if (!isUuid(req.params.id) || !['doc', 'record'].includes(req.params.which)) return next();
+  const { data: q } = await db.from('qualifications').select('doc_path,record_path').eq('id', req.params.id).eq('seller_id', req.seller.id).maybeSingle();
+  const path = q && q[req.params.which + '_path'];
+  if (!path) return next();
+  await openPrivate(res, path);
+});
+router.get('/verification/id-file', async (req, res, next) => {
+  if (!req.seller.id_doc_path) return next();
+  await openPrivate(res, req.seller.id_doc_path);
+});
+
 // Taking an entry off (dropped out, added by mistake). No review needed: removing can't overstate anything.
 // The last verified finished qualification stays, since a completed degree is what keeps the seller verified.
 router.post('/verification/education/:id/remove', async (req, res, next) => {

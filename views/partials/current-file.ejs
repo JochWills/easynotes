@@ -1,0 +1,7 @@
+<%# A link to a file the user already uploaded, opening in a new tab. Pass href, label and optionally meta. %>
+<a class="current-file" href="<%= href %>" target="_blank" rel="noopener">
+  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 13h6M9 16.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+  <span><strong><%= label %></strong><% if (locals.meta) { %><small><%= meta %></small><% } %></span>
+  <svg class="current-file-ext" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span class="sr-only">(opens in a new tab)</span>
+</a>

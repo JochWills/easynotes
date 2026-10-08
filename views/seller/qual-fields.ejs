@@ -84,6 +84,8 @@
       <span data-when="completed" <%= st === 'in_progress' ? 'hidden' : '' %>>Degree certificate or academic record</span>
       <span data-when="in_progress" <%= st === 'in_progress' ? '' : 'hidden' %>>Proof of registration or latest academic record</span>
     </label>
+    <% var ex = locals.existing; var fileDate = function (path) { var m = /-(\d{13})\.\w+$/.exec(path || ''); return m ? 'Uploaded ' + date(new Date(Number(m[1]))) : null; }; %>
+    <% if (ex && ex.doc_path) { %><%- include('../partials/current-file', { href: '/seller/verification/education/' + ex.id + '/file/doc', label: 'View current document', meta: fileDate(ex.doc_path) }) %><% } %>
     <input id="q-doc" type="file" name="doc" accept="application/pdf,image/jpeg,image/png" <%= locals.keepDocs ? '' : 'required' %>>
     <span class="hint"><%= locals.keepDocs ? 'Optional. Leave empty to keep the document we already have, or upload one that shows the change. ' : '' %>PDF, JPG or PNG, up to 10 MB. Your name and the qualification must be readable.</span>
     <%- include('../partials/field-error', { name: 'doc' }) %>
@@ -116,6 +118,7 @@
     </div>
     <div class="field <%= errors.record ? 'has-error' : '' %>">
       <label for="q-record">Academic record</label>
+      <% if (ex && ex.record_path) { %><%- include('../partials/current-file', { href: '/seller/verification/education/' + ex.id + '/file/record', label: 'View current academic record', meta: fileDate(ex.record_path) }) %><% } %>
       <input id="q-record" type="file" name="record" accept="application/pdf,image/jpeg,image/png">
       <span class="hint">Needed to show an average, distinctions or cum laude, unless the document above already shows them.</span>
       <%- include('../partials/field-error', { name: 'record' }) %>

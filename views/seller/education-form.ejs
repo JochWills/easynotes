@@ -22,7 +22,7 @@
         <h2><%= heads[m][0] %></h2>
         <p class="muted"><%= heads[m][1] %></p>
       </header>
-      <%- include('qual-fields', { allowStudying: locals.allowStudying !== false && m !== 'finish', keepDocs: m === 'edit' || m === 'pending' }) %>
+      <%- include('qual-fields', { allowStudying: locals.allowStudying !== false && m !== 'finish', keepDocs: m === 'edit' || m === 'pending', existing: m === 'add' || m === 'finish' ? null : target }) %>
       <% if (locals.onlyDegree) { %><p class="small muted">This is the completed degree your verification is based on, so it stays marked as finished.</p><% } %>
       <div class="form-actions">
         <button class="btn btn-hi" type="submit"><%= m === 'pending' ? 'Save changes' : 'Send for review' %></button>

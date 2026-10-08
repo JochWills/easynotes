@@ -80,6 +80,7 @@
           <legend>Your ID</legend>
           <div class="field <%= errors.id_doc ? 'has-error' : '' %>">
             <label for="v-id-doc">ID document, smart ID card or passport</label>
+            <% if (me.id_doc_path) { %><%- include('../partials/current-file', { href: '/seller/verification/id-file', label: 'View the ID you sent before', meta: 'You’ll need to upload it again with your new submission' }) %><% } %>
             <input id="v-id-doc" type="file" name="id_doc" accept="application/pdf,image/jpeg,image/png" required>
             <span class="hint">Used only to confirm the documents are yours. Stored privately.</span>
             <%- include('../partials/field-error', { name: 'id_doc' }) %>
