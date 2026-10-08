@@ -112,7 +112,7 @@ const eduFiles = (extra = []) => upload.fields([{ name: 'doc', maxCount: 1 }, { 
 
 router.get('/verification', async (req, res) => {
   const quals = await education.forSeller(req.seller.id);
-  res.render('seller/verification', eduLocals({ title: 'Verification', quals, q: {} }));
+  res.render('seller/verification', eduLocals({ title: req.seller.verification_status === 'approved' ? 'Education' : 'Verification', quals, q: {} }));
 });
 
 // First verification: a completed degree plus ID. Starts over if an earlier attempt was rejected.
