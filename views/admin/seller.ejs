@@ -26,19 +26,27 @@
       </div>
     </div>
     <div class="card">
-      <h2 style="font-size:1.35rem">Decision</h2>
-      <% if (s.verification_note) { %><div class="alert alert-error"><strong>Last rejection reason</strong><p><%= s.verification_note %></p></div><% } %>
-      <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification">
-        <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <div class="field">
-          <label for="a-note">Reason (shown to the seller if you reject)</label>
-          <textarea id="a-note" name="note" maxlength="500" placeholder="e.g. The transcript doesn't show a completed degree. Upload your degree certificate instead."></textarea>
-        </div>
-        <div class="form-actions">
-          <% if (s.verification_status !== 'approved') { %><button class="btn" type="submit" name="decision" value="approve">Approve seller</button><% } %>
-          <button class="btn btn-danger" type="submit" name="decision" value="reject"><%= s.verification_status === 'approved' ? 'Revoke verification' : 'Reject' %></button>
-        </div>
-      </form>
+      <% var vs = s.verification_status; %>
+      <h2 style="font-size:1.35rem"><%= vs === 'approved' ? 'Verification' : 'Decision' %></h2>
+      <% if (vs === 'rejected') { %>
+        <div class="alert alert-error"><strong>Rejected</strong><p><%= s.verification_note || 'No reason recorded.' %></p></div>
+        <p class="muted small">Waiting for the seller to fix this and send their documents again. They’ll show up under Verifications when they do.</p>
+      <% } else if (vs === 'unsubmitted') { %>
+        <p class="muted">This seller hasn’t sent their documents for verification yet.</p>
+      <% } else { %>
+        <% if (vs === 'approved') { %><p class="muted small">Verified. Revoking hides all their notes from students until they’re approved again.</p><% } %>
+        <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification" <%- vs === 'approved' ? 'data-confirm="Revoke this seller’s verification? All their notes will be hidden from students."' : '' %>>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <div class="field">
+            <label for="a-note">Reason <%= vs === 'approved' ? '(shown to the seller)' : '(shown to the seller if you reject)' %></label>
+            <textarea id="a-note" name="note" maxlength="500" placeholder="e.g. The transcript doesn't show a completed degree. Upload your degree certificate instead."></textarea>
+          </div>
+          <div class="form-actions">
+            <% if (vs === 'pending') { %><button class="btn" type="submit" name="decision" value="approve">Approve seller</button><% } %>
+            <button class="btn btn-danger" type="submit" name="decision" value="reject"><%= vs === 'approved' ? 'Revoke verification' : 'Reject' %></button>
+          </div>
+        </form>
+      <% } %>
     </div>
   </div>
 

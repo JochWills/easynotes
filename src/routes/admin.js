@@ -214,6 +214,13 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
   const { data: s } = await db.from('sellers').select('display_name,verification_status').eq('id', req.params.id).maybeSingle();
   if (!s) return next();
 
+  // Only a waiting submission can be decided; an approved seller can only be revoked
+  const allowed = s.verification_status === 'pending' ? ['approve', 'reject'] : s.verification_status === 'approved' ? ['reject'] : [];
+  if (!allowed.includes(decision)) {
+    flash(req, 'error', 'This seller has already been decided.');
+    return res.redirect(back);
+  }
+
   if (decision === 'approve') {
     const now = new Date().toISOString();
     await db.from('sellers').update({ verification_status: 'approved', verification_note: null, verified_at: now }).eq('id', req.params.id);
