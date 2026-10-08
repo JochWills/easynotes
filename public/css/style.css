@@ -577,6 +577,9 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .dd-opt[aria-selected="true"]::before { content: ""; position: absolute; left: .85em; top: 50%; width: 10px; height: 5px; margin-top: -4px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
 .dd-opt.dd-placeholder { color: var(--muted); }
 .dd-opt[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.dd-add { color: var(--blue); border-top: 1px solid var(--rule); border-radius: 0 0 8px 8px; margin-top: 4px; }
+.dd-add::before { content: "+"; position: absolute; left: .8em; top: 50%; transform: translateY(-52%); font-weight: 700; font-size: 1.1rem; }
+.dd-add strong { font-weight: 600; }
 .dd-empty { margin: 0; padding: .6em .9em; color: var(--muted); font-size: .92rem; }
 .prefix { display: flex; align-items: stretch; }
 .prefix > span { display: grid; place-items: center; padding: 0 .9em; font-weight: 600; background: var(--page); border: 1px solid var(--rule-strong); border-right: 0; border-radius: 10px 0 0 10px; }

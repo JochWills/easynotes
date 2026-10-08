@@ -39,6 +39,19 @@ const NOTE_INSTITUTIONS = [...UNIVERSITIES.map((u) => u.name), PRIVATE_INSTITUTI
 const DEGREE_UNIVERSITIES = UNIVERSITIES.map((u) => u.name);
 const OTHER_UNIVERSITY = 'Other (type it in)';
 
+// Suggested subjects on the upload form. Sellers can add their own; those then show for everyone.
+const SUBJECTS = [
+  'Accounting', 'Actuarial Science', 'Afrikaans', 'Anatomy', 'Auditing', 'Biochemistry', 'Biology', 'Botany',
+  'Business Management', 'Chemistry', 'Civil Engineering', 'Commercial Law', 'Computer Science', 'Constitutional Law',
+  'Contract Law', 'Corporate Finance', 'Criminal Law', 'Criminology', 'Economics', 'Education', 'Electrical Engineering',
+  'English', 'Environmental Science', 'Financial Accounting', 'Financial Management', 'Geography', 'Geology', 'History',
+  'Human Resource Management', 'Industrial Psychology', 'Information Systems', 'isiXhosa', 'isiZulu', 'Law of Delict',
+  'Life Sciences', 'Management Accounting', 'Marketing', 'Mathematical Literacy', 'Mathematics', 'Mechanical Engineering',
+  'Medicine', 'Microbiology', 'Nursing', 'Pharmacology', 'Philosophy', 'Physical Sciences', 'Physics', 'Physiology',
+  'Political Science', 'Private Law', 'Psychology', 'Public Administration', 'Sociology', 'Statistics', 'Supply Chain Management',
+  'Taxation', 'Zoology',
+];
+
 const LEVELS = ['Undergraduate', 'Honours / postgraduate', 'Professional exam', 'Matric (NSC / IEB)'];
 
 // Storefronts live at /<slug>, so a seller can't take a name the site already uses (or may use later).
@@ -50,4 +63,4 @@ const RESERVED_SLUGS = new Set([
   'webhooks', 'www',
 ]);
 
-module.exports = { RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
+module.exports = { SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
