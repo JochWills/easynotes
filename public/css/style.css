@@ -555,10 +555,6 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 }
 .auth-login { max-width: 420px; margin: 48px auto 64px; }
 .auth-card { padding: 36px 32px 32px; border-radius: 18px; box-shadow: var(--shadow); text-align: left; }
-.auth-mark {
-  display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 20px;
-  background: var(--hi-soft); border: 1px solid #F6E3A1; border-radius: 14px;
-}
 .auth-login h1 { font-size: 1.85rem; margin-bottom: 6px; }
 .auth-lead { margin-bottom: 26px; }
 .auth-login .form { gap: 18px; }
