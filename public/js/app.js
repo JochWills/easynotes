@@ -649,6 +649,20 @@
     update();
   });
 
+  // Show / hide password (the button stays hidden without JavaScript)
+  document.querySelectorAll('[data-pass-toggle]').forEach(function (b) {
+    var input = document.getElementById(b.getAttribute('aria-controls'));
+    if (!input) return;
+    b.hidden = false;
+    b.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      b.textContent = show ? 'Hide' : 'Show';
+      b.setAttribute('aria-pressed', String(show));
+      input.focus();
+    });
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
     f.addEventListener('submit', function () {

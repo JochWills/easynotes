@@ -546,6 +546,43 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .card { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-sm); }
 .auth { max-width: 480px; margin: 56px auto 80px; }
 .auth h1 { font-size: 2rem; }
+/* Log in: one quiet card on a soft wash, nothing else competing for attention */
+.auth-page {
+  background:
+    radial-gradient(640px 360px at 50% 0%, rgba(30, 91, 216, .08), transparent 70%),
+    radial-gradient(520px 320px at 50% 100%, rgba(255, 226, 122, .16), transparent 70%);
+  padding: 1px 16px;
+}
+.auth-login { max-width: 420px; margin: 48px auto 64px; }
+.auth-card { padding: 36px 32px 32px; border-radius: 18px; box-shadow: var(--shadow); text-align: left; }
+.auth-mark {
+  display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 20px;
+  background: var(--hi-soft); border: 1px solid #F6E3A1; border-radius: 14px;
+}
+.auth-login h1 { font-size: 1.85rem; margin-bottom: 6px; }
+.auth-lead { margin-bottom: 26px; }
+.auth-login .form { gap: 18px; }
+.auth-login .btn-hi { margin-top: 4px; }
+.label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.label-row label { font-weight: 600; }
+.label-row a { font-size: .88rem; font-weight: 500; text-decoration: none; white-space: nowrap; }
+.label-row a:hover { text-decoration: underline; }
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 4.6em !important; }
+.pass-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  font: inherit; font-size: .85rem; font-weight: 600; color: var(--muted);
+  background: none; border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+.pass-toggle:hover { color: var(--ink); background: var(--page); }
+.auth-split { display: flex; align-items: center; gap: 14px; margin: 26px 0 16px; color: var(--muted); font-size: .88rem; }
+.auth-split::before, .auth-split::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.auth-foot { text-align: center; font-size: .9rem; color: var(--muted); margin: 22px auto 0; }
+.auth-foot a { white-space: nowrap; }
+@media (max-width: 520px) {
+  .auth-login { margin: 32px auto 48px; }
+  .auth-card { padding: 28px 22px 24px; }
+}
 
 .alert { border-radius: 12px; padding: 14px 18px; font-weight: 600; margin-bottom: 20px; border: 1px solid; }
 .alert p { margin: 0; font-weight: 400; }

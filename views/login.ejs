@@ -1,18 +1,33 @@
 <%- include('partials/top', { noindex: true }) %>
-<div class="auth">
-  <div class="card">
-    <h1>Log in</h1>
-    <p class="muted">For sellers and the EasyNotes team. Students don’t need an account: <a href="/download">re-download a purchase here</a>.</p>
-    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form class="form" method="post" action="/login">
-      <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <input type="hidden" name="next" value="<%= next %>">
-      <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" name="email" maxlength="200" value="<%= email %>" required autocomplete="email"></div>
-      <div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" name="password" required autocomplete="current-password"></div>
-      <button class="btn btn-block" type="submit">Log in</button>
-    </form>
-    <p class="fineprint">New here? <a href="/signup">Create a seller account</a>.
-      <% if (locals.emailEnabled) { %><a href="/forgot">Forgot your password?</a><% } else { %>Forgot your password? Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.<% } %></p>
+<div class="auth-page">
+  <div class="auth auth-login">
+    <div class="card auth-card">
+      <span class="auth-mark" aria-hidden="true">
+        <svg width="26" height="30" viewBox="0 0 32 32"><path d="M5 2h16l7 7v21H5z" fill="#fff" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><path d="M21 2v7h7" fill="none" stroke="#0E1A3A" stroke-width="2.4" stroke-linejoin="round"/><rect x="8.5" y="13" width="15" height="6" rx="1" fill="#FFE27A"/><path d="M9 16h14M9 23.5h10" stroke="#0E1A3A" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </span>
+      <h1>Welcome back</h1>
+      <p class="muted auth-lead">Log in to manage your notes, sales and payouts.</p>
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <form class="form" method="post" action="/login">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" name="email" maxlength="200" value="<%= email %>" required autocomplete="email" <%- email ? '' : 'autofocus' %>></div>
+        <div class="field">
+          <div class="label-row">
+            <label for="l-pass">Password</label>
+            <% if (locals.emailEnabled) { %><a href="/forgot">Forgot password?</a><% } else { %><a href="mailto:<%= supportEmail %>?subject=Password%20help">Forgot password?</a><% } %>
+          </div>
+          <div class="pass-wrap">
+            <input id="l-pass" type="password" name="password" required autocomplete="current-password" <%- email ? 'autofocus' : '' %>>
+            <button class="pass-toggle" type="button" data-pass-toggle aria-controls="l-pass" aria-pressed="false" hidden>Show</button>
+          </div>
+        </div>
+        <button class="btn btn-hi btn-block" type="submit">Log in</button>
+      </form>
+      <div class="auth-split"><span>New to EasyNotes?</span></div>
+      <a class="btn btn-ghost btn-block" href="/signup">Create a seller account</a>
+    </div>
+    <p class="auth-foot">Bought notes? You don’t need an account. <a href="/download">Re-download a purchase</a></p>
   </div>
 </div>
 <%- include('partials/bottom') %>
