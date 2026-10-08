@@ -2,7 +2,7 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
   <div class="dash-grid">
-    <form class="form card" method="post" action="/seller/profile" novalidate>
+    <form class="form card" method="post" action="/seller/profile" novalidate data-unsaved>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="field <%= errors.full_name ? 'has-error' : '' %>">
         <label for="p-full">Your full name <span class="muted">(private)</span></label>

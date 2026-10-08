@@ -3,7 +3,7 @@
   <%- include('../partials/seller-nav') %>
   <% var editing = !!note; %>
   <% if (errors.files) { %><div class="alert alert-error" role="alert"><%= errors.files %></div><% } %>
-  <form class="note-form" method="post" action="<%= editing ? '/seller/notes/' + note.id : '/seller/notes' %>" enctype="multipart/form-data" novalidate data-note-form>
+  <form class="note-form" method="post" action="<%= editing ? '/seller/notes/' + note.id : '/seller/notes' %>" enctype="multipart/form-data" novalidate data-note-form data-unsaved>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
     <div class="note-form-grid">
       <section class="card form-section note-form-main" aria-labelledby="sec-details">
@@ -118,7 +118,7 @@
             <button class="btn btn-hi" type="submit">Save changes</button>
           <% } else { %>
             <button class="btn btn-hi" type="submit" name="publish" value="1">Upload and publish</button>
-            <button class="btn btn-ghost" type="submit" name="publish" value="0">Save as draft</button>
+            <button class="btn btn-ghost" type="submit" name="publish" value="0" data-unsaved-save>Save as draft</button>
           <% } %>
           <div class="note-form-links">
             <a href="/seller">Cancel</a>

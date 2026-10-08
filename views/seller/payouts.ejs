@@ -39,7 +39,7 @@
 
   <h2 class="payout-account-title">Payout account</h2>
   <div class="dash-grid">
-    <form class="form card" method="post" action="/seller/payouts" novalidate>
+    <form class="form card" method="post" action="/seller/payouts" novalidate data-unsaved>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <% if (me.paystack_subaccount_code) { %>
         <div class="alert alert-ok"><strong>Payouts are set up.</strong><p>Paying into <%= me.bank_name %> ••••<%= me.account_number_last4 %> (<%= me.business_name %>). Fill in the form to change account.</p></div>

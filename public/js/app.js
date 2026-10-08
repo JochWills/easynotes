@@ -10,11 +10,12 @@
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (a.target === '_blank' || a.hasAttribute('download') || a.origin !== location.origin) return;
     if (a.pathname === location.pathname && a.search === location.search && a.hash) return;
-    startBar();
+    setTimeout(function () { if (!e.defaultPrevented) startBar(); }, 0); // later handlers may cancel the click
   });
   document.addEventListener('submit', function (e) {
     var f = e.target;
-    if (!e.defaultPrevented && !f.hasAttribute('data-download') && !f.hasAttribute('data-cart-add') && !f.hasAttribute('data-cart-remove')) startBar();
+    if (f.hasAttribute('data-download') || f.hasAttribute('data-cart-add') || f.hasAttribute('data-cart-remove')) return;
+    setTimeout(function () { if (!e.defaultPrevented) startBar(); }, 0);
   });
   // Coming back with the Back button: don't leave the bar running.
   window.addEventListener('pageshow', function () { bar.classList.remove('is-loading'); });
@@ -519,6 +520,88 @@
     sel.addEventListener('invalid', function () { wrap.classList.add('is-invalid'); });
     render();
   });
+
+  // Unsaved changes: leaving a form someone has edited (a link, another button such as Log out, or
+  // closing the tab) asks first, with Save / Don't save. Forms opt in with data-unsaved.
+  var unsavedForm = document.querySelector('form[data-unsaved]');
+  if (unsavedForm) {
+    var snapshot = function () {
+      return Array.prototype.map.call(unsavedForm.elements, function (el) {
+        if (!el.name || el.name === '_csrf' || el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return '';
+        if (el.type === 'checkbox' || el.type === 'radio') return el.checked ? '1' : '0';
+        if (el.type === 'file') return el.files && el.files.length ? el.files[0].name + el.files[0].size : '';
+        return el.value;
+      }).join('\u0001');
+    };
+    // A form sent back with errors holds what the seller typed, none of it saved yet
+    var saved = unsavedForm.querySelector('.has-error, .error-text') ? null : snapshot();
+    var leaving = false;
+    var isDirty = function () { return !leaving && (saved === null || snapshot() !== saved); };
+    unsavedForm.addEventListener('submit', function (e) {
+      // Only stop warning once the form is really on its way (not blocked by the checks above)
+      setTimeout(function () { if (!e.defaultPrevented) leaving = true; }, 0);
+    });
+
+    var saveBtn = unsavedForm.querySelector('[data-unsaved-save]') || unsavedForm.querySelector('button[type="submit"]:not([formaction])');
+    var dlg = null, proceed = null;
+    var ask = function (onLeave) {
+      if (typeof HTMLDialogElement !== 'function') return window.confirm('You have unsaved changes. Leave without saving?') && onLeave();
+      if (!dlg) {
+        dlg = document.createElement('dialog');
+        dlg.className = 'unsaved';
+        dlg.setAttribute('aria-labelledby', 'unsaved-title');
+        dlg.innerHTML = '<h2 id="unsaved-title">Save your changes?</h2>' +
+          '<p>You’ve changed something on this page that hasn’t been saved yet.</p>' +
+          '<div class="unsaved-actions">' +
+          '<button type="button" class="btn btn-hi" data-act="save"></button>' +
+          '<button type="button" class="btn btn-ghost" data-act="discard">Don’t save</button>' +
+          '<button type="button" class="linklike" data-act="stay">Keep editing</button></div>';
+        dlg.querySelector('[data-act="save"]').textContent = saveBtn ? saveBtn.textContent.trim() : 'Save';
+        dlg.addEventListener('click', function (e) {
+          var act = e.target.closest('[data-act]');
+          if (e.target === dlg) act = { getAttribute: function () { return 'stay'; } }; // click on the backdrop
+          if (!act) return;
+          var a = act.getAttribute('data-act');
+          dlg.close();
+          if (a === 'save') {
+            if (unsavedForm.requestSubmit) unsavedForm.requestSubmit(saveBtn || undefined); else unsavedForm.submit();
+          } else if (a === 'discard') {
+            leaving = true;
+            if (proceed) proceed();
+          }
+        });
+        document.body.appendChild(dlg);
+      }
+      proceed = onLeave;
+      dlg.showModal();
+      dlg.querySelector('[data-act="save"]').focus();
+    };
+
+    // Links to another page
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href]');
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (a.target === '_blank' || a.hasAttribute('download') || /^(mailto|tel):/i.test(a.getAttribute('href'))) return;
+      var url = new URL(a.href, location.href);
+      if (url.pathname === location.pathname && url.search === location.search && url.hash) return; // same-page jump
+      if (!isDirty()) return;
+      e.preventDefault();
+      ask(function () { location.href = a.href; });
+    });
+    // Other forms on the page (Log out, the cart, the header search...)
+    document.addEventListener('submit', function (e) {
+      var f = e.target;
+      if (f === unsavedForm || e.defaultPrevented || !isDirty()) return;
+      e.preventDefault();
+      ask(function () { HTMLFormElement.prototype.submit.call(f); });
+    }, true);
+    // Closing the tab, reloading or Back: browsers only allow their own generic warning here
+    window.addEventListener('beforeunload', function (e) {
+      if (!isDirty()) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+  }
 
   // Confirm destructive actions
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {

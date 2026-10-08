@@ -9,7 +9,7 @@
   <% } else { %>
     <% if (st === 'rejected') { %><div class="alert alert-error"><strong>Your last submission wasn’t approved.</strong><p><%= me.verification_note %></p></div><% } %>
     <div class="dash-grid">
-      <form class="form card" method="post" action="/seller/verification" enctype="multipart/form-data" novalidate>
+      <form class="form card" method="post" action="/seller/verification" enctype="multipart/form-data" novalidate data-unsaved>
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <fieldset class="form">
           <legend>Your degree</legend>
