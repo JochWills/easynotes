@@ -46,7 +46,7 @@ function validate(body, files, { allowStudying = false, docOptional = false } = 
   }
   // Cum laude and summa cum laude are only awarded once a qualification is finished
   if (status === 'in_progress' && (values.honours === 'cum_laude' || values.honours === 'summa_cum_laude')) {
-    errors.honours = 'Cum laude and summa cum laude are awarded when you finish. Choose “With merit or distinction” for Dean’s merit list and similar.';
+    errors.honours = 'Cum laude and summa cum laude are awarded when you finish. Choose “Distinction” for Dean’s merit list and similar.';
   }
   if (status === 'in_progress' && values.level && (QUAL_RANK[values.level] || 0) < STUDYING_MIN_RANK) {
     errors.level = 'Only further study, like honours, a master’s or a PhD, can be added while you’re still studying.';

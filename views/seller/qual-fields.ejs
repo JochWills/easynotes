@@ -101,7 +101,7 @@
           <label class="choice choice-sm" <%- k === 'cum_laude' || k === 'summa_cum_laude' ? 'data-completed-only' : '' %>><input type="radio" name="honours" value="<%= k %>" <%= (q.honours || 'none') === k ? 'checked' : '' %>> <span><strong><%= k === 'none' ? 'None' : honours[k] %></strong></span></label>
         <% }) %>
       </div>
-      <span class="hint">Include Dean’s merit list or class medals under “With merit or distinction”.</span>
+      <span class="hint">“Distinction” covers a qualification awarded with distinction, Dean’s merit list and class medals.</span>
       <%- include('../partials/field-error', { name: 'honours' }) %>
     </div>
     <div class="row-2">

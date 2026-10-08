@@ -50,7 +50,7 @@ const QUAL_LEVELS = [
 ];
 // Professional qualifications (CA(SA), admitted attorney...) rank with honours degrees
 const QUAL_RANK = { 'Bachelor’s degree': 3, 'Honours degree or Postgraduate Diploma': 4, 'Professional qualification': 4, 'Master’s degree': 5, 'Doctorate (PhD)': 6 };
-const HONOURS = { none: '', merit: 'With merit or distinction', cum_laude: 'Cum laude', summa_cum_laude: 'Summa cum laude' };
+const HONOURS = { none: '', merit: 'Distinction', cum_laude: 'Cum laude', summa_cum_laude: 'Summa cum laude' };
 const STUDY_YEARS = ['1st year', '2nd year', '3rd year or later', 'Final year'];
 const STUDYING_MIN_RANK = 4; // honours / PGDip and up
 
