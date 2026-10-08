@@ -89,8 +89,8 @@
     <%- include('../partials/field-error', { name: 'doc' }) %>
   </div>
 
-  <fieldset class="results-box">
-    <legend>Your results <span class="muted">(optional)</span></legend>
+  <div class="results-box" role="group" aria-labelledby="q-results-title">
+    <h3 id="q-results-title">Your results <span class="muted">(optional)</span></h3>
     <p class="small">Did well? Show it. Students are more likely to buy notes from someone with strong marks, and we show these on your storefront once checked.</p>
     <div class="field <%= errors.honours ? 'has-error' : '' %>">
       <span class="label" id="q-honours-label">Distinction</span>
@@ -120,5 +120,5 @@
       <span class="hint">Needed to show an average, distinctions or cum laude, unless the document above already shows them.</span>
       <%- include('../partials/field-error', { name: 'record' }) %>
     </div>
-  </fieldset>
+  </div>
 </div>
