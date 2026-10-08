@@ -599,7 +599,7 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .dd-add strong { font-weight: 600; }
 .dd-empty { margin: 0; padding: .6em .9em; color: var(--muted); font-size: .92rem; }
 .prefix { display: flex; align-items: stretch; }
-.prefix > span { display: grid; place-items: center; padding: 0 .9em; font-weight: 600; background: var(--page); border: 1px solid var(--rule-strong); border-right: 0; border-radius: 10px 0 0 10px; }
+.prefix > span { display: flex; align-items: center; justify-content: center; white-space: nowrap; padding: 0 .9em; font-weight: 600; background: var(--page); border: 1px solid var(--rule-strong); border-right: 0; border-radius: 10px 0 0 10px; }
 .prefix input { border-radius: 0 10px 10px 0 !important; }
 .check, .field > label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-bottom: 0; }
 .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--blue); flex: none; }
