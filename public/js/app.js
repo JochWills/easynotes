@@ -640,6 +640,18 @@
     s.addEventListener('change', function () { s.form.submit(); });
   });
 
+  // Main menu on phones and tablets: Esc, choosing a link or growing to desktop width closes it
+  var menuToggle = document.getElementById('menu-toggle');
+  if (menuToggle) {
+    var closeMenu = function () { if (menuToggle.checked) { menuToggle.checked = false; } };
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menuToggle.checked) { closeMenu(); menuToggle.focus(); }
+    });
+    document.querySelectorAll('#site-menu a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+    window.matchMedia('(min-width: 921px)').addEventListener('change', function (m) { if (m.matches) closeMenu(); });
+    window.addEventListener('pageshow', closeMenu); // coming back with the back button
+  }
+
   // Swipeable seller menu: start with the current page in view
   var navCurrent = document.querySelector('.dash-nav [aria-current="page"]');
   if (navCurrent && navCurrent.parentElement.scrollWidth > navCurrent.parentElement.clientWidth) {

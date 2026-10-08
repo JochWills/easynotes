@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=55">
+  <link rel="stylesheet" href="/css/style.css?v=56">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
 <body>
@@ -32,20 +32,25 @@
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
       <% if (cartCount) { %><span class="cart-count" aria-hidden="true"><%= cartCount %></span><% } %>
     </a>
-    <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only">
-    <label for="menu-toggle" class="menu-btn"><span class="sr-only">Menu</span><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></label>
-    <nav class="nav" aria-label="Main">
+    <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only" aria-controls="site-menu" aria-label="Menu">
+    <label for="menu-toggle" class="menu-btn" aria-hidden="true"><span class="menu-bars"><i></i><i></i><i></i></span></label>
+    <% var chev = '<svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; %>
+    <nav class="nav" id="site-menu" aria-label="Main">
       <div class="nav-links">
-        <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>>Browse notes</a>
-        <a href="/how-it-works" <%- cp === '/how-it-works' ? 'aria-current="page"' : '' %>>How it works</a>
+        <a href="/notes" <%- cp.startsWith('/notes') || cp.startsWith('/note/') ? 'aria-current="page"' : '' %>><span class="nav-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Browse notes<%- chev %></a>
+        <a href="/how-it-works" <%- cp === '/how-it-works' ? 'aria-current="page"' : '' %>><span class="nav-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/></svg></span>How it works<%- chev %></a>
       </div>
       <div class="nav-actions">
         <% if (locals.user) { %>
           <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? (me.full_name || me.display_name) : (isAdmin ? 'Admin' : user.email); %>
+          <% var accountLinks = isAdmin
+               ? [['/admin', 'Admin dashboard', cp === '/admin'], ['/admin/sellers', 'Sellers', cp.startsWith('/admin/sellers')], ['/admin/orders', 'Orders', cp === '/admin/orders']]
+               : [['/seller', 'Seller dashboard', cp === '/seller']].concat(me ? [[storeUrl(me), 'View my storefront', false]] : []).concat([['/seller/sales', 'Sales', cp === '/seller/sales'], ['/seller/payouts', 'Payouts', cp === '/seller/payouts']]); %>
+          <% var avatarEl = me && me.avatar_path ? '<img class="profile-avatar" src="' + avatarUrl(me) + '" alt="" width="36" height="36">' : '<span class="profile-avatar" aria-hidden="true">' + initials(me ? (me.full_name || me.display_name) : user.email) + '</span>'; %>
+          <%# Desktop: avatar drop-down %>
           <details class="profile">
             <summary aria-label="Account menu">
-              <% if (me && me.avatar_path) { %><img class="profile-avatar" src="<%= avatarUrl(me) %>" alt="" width="36" height="36"><% } else { %><span class="profile-avatar" aria-hidden="true"><%= initials(me ? (me.full_name || me.display_name) : user.email) %></span><% } %>
-              <span class="profile-name"><%= who %></span>
+              <%- avatarEl %>
               <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
             <div class="profile-menu">
@@ -53,27 +58,28 @@
                 <strong><%= who %></strong>
                 <span><%= user.email %></span>
               </div>
-              <% if (isAdmin) { %>
-                <a href="/admin" <%- cp === '/admin' ? 'aria-current="page"' : '' %>>Admin dashboard</a>
-                <a href="/admin/sellers" <%- cp.startsWith('/admin/sellers') ? 'aria-current="page"' : '' %>>Sellers</a>
-                <a href="/admin/orders" <%- cp === '/admin/orders' ? 'aria-current="page"' : '' %>>Orders</a>
-              <% } else { %>
-                <a href="/seller" <%- cp === '/seller' ? 'aria-current="page"' : '' %>>Seller dashboard</a>
-                <% if (me) { %><a href="<%= storeUrl(me) %>">View my storefront</a><% } %>
-                <a href="/seller/sales" <%- cp === '/seller/sales' ? 'aria-current="page"' : '' %>>Sales</a>
-                <a href="/seller/payouts" <%- cp === '/seller/payouts' ? 'aria-current="page"' : '' %>>Payouts</a>
-              <% } %>
+              <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %></a><% }) %>
               <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button type="submit">Log out</button></form>
             </div>
           </details>
+          <%# Phones and tablets: the same links, listed in the menu panel %>
+          <div class="nav-account">
+            <div class="nav-account-head">
+              <%- avatarEl %>
+              <div><strong><%= who %></strong><span><%= user.email %></span></div>
+            </div>
+            <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %><%- chev %></a><% }) %>
+            <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="nav-logout" type="submit">Log out</button></form>
+          </div>
         <% } else { %>
-          <a href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
+          <a class="nav-login" href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
           <a class="btn btn-hi btn-sm" href="/sell">Start selling</a>
         <% } %>
       </div>
     </nav>
   </div>
 </header>
+<label for="menu-toggle" class="menu-backdrop" aria-hidden="true"></label>
 <% if (locals.flash) { %>
   <div class="toast toast-<%= flash.type %>" role="<%= flash.type === 'error' ? 'alert' : 'status' %>" data-toast>
     <span class="toast-icon" aria-hidden="true"><%= flash.type === 'error' ? '!' : flash.type === 'info' ? 'i' : '✓' %></span>
