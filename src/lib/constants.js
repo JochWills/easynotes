@@ -29,7 +29,7 @@ const UNIVERSITIES = [
   { name: 'Milpark Education', short: 'Milpark' },
 ];
 
-const ANY_INSTITUTION = 'Any institution / professional exam';
+const ANY_INSTITUTION = 'Professional Exam';
 const PRIVATE_INSTITUTION = 'Private institution';
 
 // Institutions a set of notes can be "for"
