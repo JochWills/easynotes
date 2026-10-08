@@ -428,10 +428,10 @@ function checkFiles(req, errors, { pdfRequired }) {
   return { pdf };
 }
 
-// The suggested subjects plus every subject a seller has already used (so names stay consistent),
+// The suggested subjects plus any this seller has added themselves (other sellers' own subjects stay theirs),
 // one entry per subject regardless of capitals, and always including the one currently on the form.
-async function subjectOptions(current) {
-  const { data } = await db.from('notes').select('subject').neq('status', 'deleted').limit(5000);
+async function subjectOptions(sellerId, current) {
+  const { data } = await db.from('notes').select('subject').eq('seller_id', sellerId).neq('status', 'deleted').limit(1000);
   const byKey = new Map();
   for (const s of [...SUBJECTS, ...(data || []).map((n) => n.subject), current]) {
     const name = String(s || '').trim();
@@ -440,22 +440,22 @@ async function subjectOptions(current) {
   return [...byKey.values()].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
 }
 
-const formLocals = async (extra) => ({
+const formLocals = async (req, extra) => ({
   tab: 'notes', institutions: NOTE_INSTITUTIONS, levels: LEVELS, feePercent: config.platformFeePercent,
-  subjects: await subjectOptions(extra.values && extra.values.subject), ...extra,
+  subjects: await subjectOptions(req.seller.id, extra.values && extra.values.subject), ...extra,
 });
 
 router.get('/notes/new', requireApproved, async (req, res) => {
   // Start on the institution the seller verified with (if it's one students can filter by).
   const university = NOTE_INSTITUTIONS.includes(req.seller.university) ? req.seller.university : '';
-  res.render('seller/note-form', await formLocals({ title: 'Upload notes', note: null, values: { university, level: '' }, errors: {} }));
+  res.render('seller/note-form', await formLocals(req, { title: 'Upload notes', note: null, values: { university, level: '' }, errors: {} }));
 });
 
 router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/notes/new'), verifyCsrf, async (req, res) => {
   const { values, errors } = validateNote(req.body);
   const { pdf } = checkFiles(req, errors, { pdfRequired: true });
   if (Object.keys(errors).length) {
-    return res.status(400).render('seller/note-form', await formLocals({ title: 'Upload notes', note: null, values: { ...values, price: req.body.price }, errors }));
+    return res.status(400).render('seller/note-form', await formLocals(req, { title: 'Upload notes', note: null, values: { ...values, price: req.body.price }, errors }));
   }
 
   const id = crypto.randomUUID();
@@ -504,7 +504,7 @@ router.get('/notes/:id/file', ownNote, async (req, res) => {
 
 router.get('/notes/:id/edit', ownNote, async (req, res) => {
   const n = req.note;
-  res.render('seller/note-form', await formLocals({ title: 'Edit notes', note: n, values: { ...n, price: (n.price_cents / 100).toFixed(2) }, errors: {} }));
+  res.render('seller/note-form', await formLocals(req, { title: 'Edit notes', note: n, values: { ...n, price: (n.price_cents / 100).toFixed(2) }, errors: {} }));
 });
 
 router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/notes/${req.params.id}/edit`), verifyCsrf, async (req, res) => {
@@ -516,7 +516,7 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
   const { values, errors } = validateNote(req.body);
   const { pdf } = checkFiles(req, errors, { pdfRequired: false });
   if (Object.keys(errors).length) {
-    return res.status(400).render('seller/note-form', await formLocals({ title: 'Edit notes', note: n, values: { ...n, ...values, price: req.body.price }, errors }));
+    return res.status(400).render('seller/note-form', await formLocals(req, { title: 'Edit notes', note: n, values: { ...n, ...values, price: req.body.price }, errors }));
   }
 
   const update = { ...values, slug: slugify(values.title) };
