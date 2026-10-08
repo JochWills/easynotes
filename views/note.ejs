@@ -18,8 +18,7 @@
   <header class="note-head">
     <nav class="crumbs" aria-label="Breadcrumb">
       <a href="/notes">Notes</a> <span aria-hidden="true">/</span>
-      <a href="/notes<%= qs({ university: note.university }) %>"><%= note.university %></a> <span aria-hidden="true">/</span>
-      <span aria-current="page"><%= note.title %></span>
+      <a href="<%= storeUrl(author) %>"><%= author.display_name %></a>
     </nav>
     <% if (note.module_code) { %><span class="tab"><%= note.module_code %></span><% } %>
     <h1><%= note.title %></h1>
