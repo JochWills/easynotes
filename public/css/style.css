@@ -331,9 +331,9 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 .note-by { margin: 0; font-size: .9rem; color: var(--ink-soft); }
 .note-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
 .price { font-family: var(--display); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; }
-.note-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.note-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .tab { max-width: 100%; }
-.note-top .tab { min-width: 0; }
+.note-top .tab { min-width: 0; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pages { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; color: var(--muted); white-space: nowrap; }
 .pages svg { flex: none; }
 .note-foot { align-items: center; gap: 10px; }
