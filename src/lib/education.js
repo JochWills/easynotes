@@ -159,7 +159,7 @@ const FIELDS = [
   ['name', 'Qualification', (q) => q.name],
   ['institution', 'Institution', (q) => q.institution],
   ['status', 'Status', (q) => when(q)],
-  ['honours', 'Distinction', (q) => honoursLabel(q) || 'None'],
+  ['honours', 'Award', (q) => honoursLabel(q) || 'None'],
   ['average_mark', 'Average', (q) => (q.average_mark ? q.average_mark + '%' : 'None')],
   ['distinctions', 'Distinctions in', (q) => q.distinctions || 'None'],
 ];

@@ -5,7 +5,7 @@
     <dt>Level</dt><dd><%= q.level %></dd>
     <dt>Institution</dt><dd><%= q.institution %></dd>
     <dt>Status</dt><dd><%= edu.when(q) %></dd>
-    <% if (q.honours !== 'none') { %><dt>Distinction</dt><dd><strong><%= edu.honoursLabel(q) %></strong> (check the record)</dd><% } %>
+    <% if (q.honours !== 'none') { %><dt>Award</dt><dd><strong><%= edu.honoursLabel(q) %></strong> (check the record)</dd><% } %>
     <% if (q.average_mark) { %><dt>Average</dt><dd><strong><%= q.average_mark %>%</strong> (check the record)</dd><% } %>
     <% if (q.distinctions) { %><dt>Distinctions in</dt><dd><%= q.distinctions %></dd><% } %>
   </dl>

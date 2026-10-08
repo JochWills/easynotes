@@ -95,7 +95,7 @@
     <h3 id="q-results-title">Your results <span class="muted">(optional)</span></h3>
     <p class="small">Did well? Show it. Students are more likely to buy notes from someone with strong marks, and we show these on your storefront once checked.</p>
     <div class="field <%= errors.honours ? 'has-error' : '' %>">
-      <span class="label" id="q-honours-label">Distinction</span>
+      <span class="label" id="q-honours-label">Academic award</span>
       <div class="choice-row choice-row-wrap" role="radiogroup" aria-labelledby="q-honours-label">
         <% Object.keys(honours).forEach(function (k) { %>
           <label class="choice choice-sm" <%- k === 'cum_laude' || k === 'summa_cum_laude' ? 'data-completed-only' : '' %>><input type="radio" name="honours" value="<%= k %>" <%= (q.honours || 'none') === k ? 'checked' : '' %>> <span><strong><%= k === 'none' ? 'None' : honours[k] %></strong></span></label>
