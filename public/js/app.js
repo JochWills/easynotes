@@ -419,6 +419,7 @@
     function render() {
       var o = sel.options[sel.selectedIndex];
       btn.querySelector('.dd-value').textContent = o ? o.textContent : '';
+      btn.title = o && o.value !== '' ? o.textContent : ''; // full name on hover when it's cut short
       btn.classList.toggle('is-placeholder', !o || o.value === '');
       items.forEach(function (li, i) { li.setAttribute('aria-selected', i === sel.selectedIndex ? 'true' : 'false'); });
     }

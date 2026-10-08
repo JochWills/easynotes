@@ -603,7 +603,8 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .prefix input { border-radius: 0 10px 10px 0 !important; }
 .check, .field > label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-bottom: 0; }
 .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--blue); flex: none; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.row-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; } /* minmax: a long choice (e.g. an institution name) is cut short with … instead of widening its column */
+.row-2 > * { min-width: 0; }
 .form-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 fieldset { border: 0; padding: 0; margin: 0; }
 legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin-bottom: 10px; padding: 0; }
