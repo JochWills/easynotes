@@ -1,8 +1,10 @@
 <%- include('partials/top', { noindex: locals.noindex }) %>
+<% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
+<% var stars = function (n, cls) { var out = '<span class="stars ' + (cls || '') + '" aria-hidden="true">'; for (var i = 1; i <= 5; i++) out += '<span class="' + (n >= i - 0.25 ? 'on' : n >= i - 0.75 ? 'half' : '') + '">★</span>'; return out + '</span>'; }; %>
 <% if (locals.live === false) { %>
   <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until the degree is verified.</div></div>
 <% } %>
-<section class="page-head">
+<section class="page-head store-page-head">
   <div class="wrap">
     <div class="store-head">
       <%- include('partials/avatar', { person: author, cls: 'avatar-lg' }) %>
@@ -10,41 +12,127 @@
         <h1><%= author.display_name %></h1>
         <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
         <% if (author.degree) { %><p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p><% } %>
+        <% if (rv.count) { %>
+          <a class="store-rating" href="#reviews" data-tab-link="reviews"><%- stars(rv.avg) %><strong><%= rv.avg.toFixed(1) %></strong><span class="store-rating-count"><%= rv.count %> <%= rv.count === 1 ? 'review' : 'reviews' %></span></a>
+        <% } %>
       </div>
     </div>
-    <% if (author.headline || author.bio) { %>
-      <div class="store-bio">
-        <% if (author.headline) { %><p><strong><%= author.headline %></strong></p><% } %>
-        <% if (author.bio) { %><p class="prose"><%= author.bio %></p><% } %>
-      </div>
-    <% } %>
-    <% if (locals.quals && quals.length) { %>
-      <div class="store-edu">
-        <h2>Verified education</h2>
-        <ul class="edu-public">
-          <% quals.forEach(function (q) { %>
-            <li>
-              <span class="edu-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z" fill="currentColor"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
-              <div>
-                <p class="edu-name"><strong><%= q.name %></strong><% if (q.honours !== 'none') { %> <span class="honours"><%= edu.honoursLabel(q) %></span><% } %></p>
-                <p class="muted"><%= q.institution %> · <%= edu.when(q) %></p>
-                <% if (edu.results(q)) { %><p class="edu-marks"><%= edu.results(q) %></p><% } %>
-              </div>
-            </li>
-          <% }) %>
-        </ul>
-      </div>
-    <% } %>
   </div>
 </section>
-<section class="wrap section">
-  <div class="section-head"><h2><%= notes.length %> <%= notes.length === 1 ? 'set' : 'sets' %> of notes</h2></div>
-  <% if (notes.length) { %>
-    <div class="grid-notes">
-      <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+
+<section class="wrap store-body">
+  <div class="note-tabs store-tabs" role="tablist" aria-label="<%= author.display_name %>’s storefront" data-tabs data-initial="<%= locals.tab || '' %>">
+    <button type="button" role="tab" id="tab-notes" aria-controls="notes" aria-selected="true" data-hash="notes">Notes <span class="tab-count"><%= notes.length %></span></button>
+    <button type="button" role="tab" id="tab-reviews" aria-controls="reviews" aria-selected="false" tabindex="-1" data-hash="reviews">Reviews <span class="tab-count"><%= rv.count %></span></button>
+    <button type="button" role="tab" id="tab-about" aria-controls="about" aria-selected="false" tabindex="-1" data-hash="about">About</button>
+  </div>
+
+  <div class="store-panel" id="notes" role="tabpanel" aria-labelledby="tab-notes">
+    <% if (notes.length) { %>
+      <div class="grid-notes">
+        <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty"><h3>No notes on sale yet</h3><p><%= author.display_name %> hasn’t published any notes. Check back soon.</p><a class="btn btn-ghost" href="/notes">Browse other notes</a></div>
+    <% } %>
+  </div>
+
+  <div class="store-panel" id="reviews" role="tabpanel" aria-labelledby="tab-reviews">
+    <div class="reviews-layout">
+      <aside class="reviews-side">
+        <div class="card review-summary">
+          <% if (rv.count) { %>
+            <p class="review-avg"><strong><%= rv.avg.toFixed(1) %></strong><span>out of 5</span></p>
+            <%- stars(rv.avg, 'stars-lg') %>
+            <p class="muted small">From <%= rv.count %> verified <%= rv.count === 1 ? 'buyer' : 'buyers' %></p>
+          <% } else { %>
+            <p class="review-avg-empty">No reviews yet</p>
+            <p class="muted small">Bought notes from <%= author.display_name %>? Be the first to say how they helped.</p>
+          <% } %>
+          <% if (!locals.isOwner && locals.live !== false) { %>
+            <details class="review-write" <%= form.open ? 'open' : '' %>>
+              <summary class="btn btn-hi btn-block">Write a review</summary>
+              <form class="form" method="post" action="/<%= author.slug %>/reviews" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <fieldset class="field <%= errors.rating ? 'has-error' : '' %>">
+                  <legend class="label">Your rating</legend>
+                  <div class="star-input">
+                    <% for (var i = 5; i >= 1; i--) { %>
+                      <input type="radio" id="r-star-<%= i %>" name="rating" value="<%= i %>" <%= String(form.values.rating) === String(i) ? 'checked' : '' %>><label for="r-star-<%= i %>" title="<%= i %> <%= i === 1 ? 'star' : 'stars' %>"><span class="sr-only"><%= i %> <%= i === 1 ? 'star' : 'stars' %></span>★</label>
+                    <% } %>
+                  </div>
+                  <%- include('partials/field-error', { name: 'rating', errors: errors }) %>
+                </fieldset>
+                <div class="field <%= errors.body ? 'has-error' : '' %>">
+                  <label for="r-body">Your review <span class="muted">(optional)</span></label>
+                  <textarea id="r-body" name="body" maxlength="1000" placeholder="How did the notes help? Were they clear and complete?" style="min-height:110px"><%= form.values.body || '' %></textarea>
+                  <%- include('partials/field-error', { name: 'body', errors: errors }) %>
+                </div>
+                <div class="review-proof">
+                  <p class="small"><strong>Confirm your purchase.</strong> Use the reference and email from your receipt. Your email isn’t shown.</p>
+                  <div class="field <%= errors.reference ? 'has-error' : '' %>">
+                    <label for="r-ref">Order reference</label>
+                    <input id="r-ref" type="text" name="reference" maxlength="40" value="<%= form.values.reference || '' %>" placeholder="e.g. EN8K2Q4F1A2B3C" autocapitalize="characters" spellcheck="false">
+                    <%- include('partials/field-error', { name: 'reference', errors: errors }) %>
+                  </div>
+                  <div class="field <%= errors.email ? 'has-error' : '' %>">
+                    <label for="r-email">Email you paid with</label>
+                    <input id="r-email" type="email" name="email" maxlength="200" value="<%= form.values.email || '' %>" autocomplete="email">
+                    <%- include('partials/field-error', { name: 'email', errors: errors }) %>
+                  </div>
+                </div>
+                <button class="btn btn-hi btn-block" type="submit">Post review</button>
+              </form>
+            </details>
+          <% } %>
+        </div>
+      </aside>
+      <div class="reviews-list">
+        <% if (!rv.count) { %>
+          <div class="empty empty-sm"><h3>No reviews yet</h3><p>Reviews come only from students who bought <%= author.display_name %>’s notes, confirmed with their order reference.</p></div>
+        <% } %>
+        <% rv.list.forEach(function (r) { %>
+          <article class="review">
+            <div class="review-head">
+              <%- stars(r.rating) %><span class="sr-only"><%= r.rating %> out of 5 stars</span>
+              <span class="review-date"><%= date(r.created_at) %></span>
+            </div>
+            <% if (r.body) { %><p class="review-body"><%= r.body %></p><% } %>
+            <p class="review-by"><strong><%= r.reviewer_name || 'Verified buyer' %></strong> <span class="verified-buy">Verified purchase</span><% if (r.notes_bought) { %><span class="muted"> · Bought <%= r.notes_bought %></span><% } %></p>
+          </article>
+        <% }) %>
+      </div>
     </div>
-  <% } else { %>
-    <div class="empty"><h3>No notes on sale yet</h3><p><%= author.display_name %> hasn’t published any notes. Check back soon.</p><a class="btn btn-ghost" href="/notes">Browse other notes</a></div>
-  <% } %>
+  </div>
+
+  <div class="store-panel" id="about" role="tabpanel" aria-labelledby="tab-about">
+    <div class="about-grid">
+      <div class="card about-card">
+        <h2>About <%= author.display_name %></h2>
+        <% if (author.headline) { %><p class="about-headline"><strong><%= author.headline %></strong></p><% } %>
+        <% if (author.bio) { %><p class="prose"><%= author.bio %></p><% } %>
+        <% if (!author.headline && !author.bio) { %><p class="muted"><%= author.display_name %> hasn’t written an introduction yet.</p><% } %>
+        <% if (author.created_at) { %><p class="muted small about-since">Selling on EasyNotes since <%= new Date(author.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) %></p><% } %>
+      </div>
+      <% if (locals.quals && quals.length) { %>
+        <div class="card about-card">
+          <h2>Verified education</h2>
+          <ul class="edu-public">
+            <% quals.forEach(function (q) { %>
+              <li>
+                <span class="edu-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z" fill="currentColor"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+                <div>
+                  <p class="edu-name"><strong><%= q.name %></strong><% if (q.honours !== 'none') { %> <span class="honours"><%= edu.honoursLabel(q) %></span><% } %></p>
+                  <p class="muted"><%= q.institution %> · <%= edu.when(q) %></p>
+                  <% if (edu.results(q)) { %><p class="edu-marks"><%= edu.results(q) %></p><% } %>
+                </div>
+              </li>
+            <% }) %>
+          </ul>
+          <p class="fineprint">Checked by the EasyNotes team against certificates and academic records.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
 </section>
 <%- include('partials/bottom') %>

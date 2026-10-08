@@ -5,6 +5,9 @@
     case 'seller.approved': return 'Approved ' + (d.name || 'a seller');
     case 'seller.rejected': return 'Rejected ' + (d.name || 'a seller') + (d.reason ? ': “' + d.reason + '”' : '');
     case 'qualification.submitted': return (d.seller || 'A seller') + (d.finished ? ' finished ' : d.updated ? ' updated ' : ' added ') + '“' + (d.name || 'education') + '” for review';
+    case 'review.posted': return 'New ' + d.rating + '-star review for ' + (d.seller || 'a seller');
+    case 'review.hidden': return 'Hid a ' + d.rating + '-star review' + (d.by ? ' by ' + d.by : '');
+    case 'review.shown': return 'Showed a ' + d.rating + '-star review again' + (d.by ? ' by ' + d.by : '');
     case 'qualification.removed': return (d.seller || 'A seller') + ' removed “' + (d.name || 'education') + '”';
     case 'id.deleted': return 'Deleted ' + (d.count || 0) + ' ID ' + (d.count === 1 ? 'document' : 'documents') + ' after verification';
     case 'qualification.approved': return 'Approved “' + (d.name || 'education') + '” for ' + (d.seller || 'a seller');

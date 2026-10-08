@@ -196,8 +196,9 @@ router.get('/sellers/:id', async (req, res, next) => {
     ]),
     education.forSeller(s.id).then((list) => Promise.all(list.map(docLinks))),
   ]);
+  const { data: sellerReviews } = await db.from('reviews').select('*').eq('seller_id', s.id).order('created_at', { ascending: false }).limit(100);
   const totals = (sales && sales[0]) || { sales: 0, earnings: 0 };
-  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
+  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, reviews: sellerReviews || [], jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
 });
 
 router.post('/sellers/:id/verification', async (req, res, next) => {
@@ -230,6 +231,17 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
   }
   emails.sendVerificationDecision(req.params.id).catch((err) => console.error('[admin] decision email not sent', err.message));
   res.redirect(back);
+});
+
+// Hide a review that breaks the rules (or show it again).
+router.post('/reviews/:id/status', async (req, res, next) => {
+  if (!isUuid(req.params.id)) return next();
+  const status = req.body.status === 'hidden' ? 'hidden' : 'published';
+  const { data: r } = await db.from('reviews').update({ status }).eq('id', req.params.id).select('seller_id,rating,reviewer_name').maybeSingle();
+  if (!r) return next();
+  events.log(status === 'hidden' ? 'review.hidden' : 'review.shown', { seller_id: r.seller_id, rating: r.rating, by: r.reviewer_name }, req.user.email);
+  flash(req, 'ok', status === 'hidden' ? 'Review hidden from the storefront.' : 'Review shown again.');
+  res.redirect(backTo(req, `/admin/sellers/${r.seller_id}`));
 });
 
 /* ---------- Notes ---------- */

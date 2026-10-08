@@ -179,6 +179,24 @@ async function sendReportReceipt(report) {
   return mail.send({ to: report.email, subject: 'We’ve received your report', html, text });
 }
 
+// Tells a seller someone reviewed their storefront.
+async function sendNewReview(sellerId, review) {
+  const { data: s } = await db.from('sellers').select('display_name,full_name,slug,users(email)').eq('id', sellerId).maybeSingle();
+  if (!s || !s.users) return false;
+  const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
+  const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+  const { html, text } = compose({
+    heading: 'You have a new review',
+    paragraphs: [
+      `Hi ${esc(first)}, ${esc(review.reviewer_name || 'a buyer')} reviewed your storefront: <strong>${stars}</strong>`,
+      review.body ? `<em>“${esc(review.body)}”</em>` : '',
+      'If a review breaks our rules, reply to this email and we’ll take a look.',
+    ].filter(Boolean),
+    button: { url: `${config.baseUrl}/${s.slug}#reviews`, label: 'See your reviews' },
+  });
+  return mail.send({ to: s.users.email, subject: `New ${review.rating}-star review on EasyNotes`, html, text });
+}
+
 // Sent once the expected finish month of something a seller is still studying has passed.
 async function sendStudyReminder(qualId) {
   const { data: q } = await db.from('qualifications').select('id,name,sellers(display_name,full_name,users(email))').eq('id', qualId).maybeSingle();
@@ -222,6 +240,7 @@ async function sendQualificationDecision(qualId) {
 }
 
 module.exports = {
+  sendNewReview,
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,

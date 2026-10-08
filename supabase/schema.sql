@@ -199,3 +199,19 @@ select s.id,
   coalesce(s.submitted_at, s.created_at), s.verified_at
 from sellers s
 where s.degree is not null and not exists (select 1 from qualifications q where q.seller_id = s.id);
+
+-- Storefront reviews: one per seller per purchase, checked against the order (reference + email)
+create table if not exists reviews (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references sellers(id) on delete cascade,
+  payment_ref text not null,
+  notes_bought text, -- titles of this seller's notes in that purchase, shown as "Bought: ..."
+  rating int not null check (rating between 1 and 5),
+  body text,
+  reviewer_name text, -- "Thabo M." from the name given at checkout
+  status text not null default 'published' check (status in ('published','hidden')),
+  created_at timestamptz not null default now(),
+  unique (seller_id, payment_ref)
+);
+create index if not exists reviews_seller_idx on reviews(seller_id, status);
+alter table reviews enable row level security;

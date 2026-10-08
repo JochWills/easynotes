@@ -707,9 +707,25 @@
       if (focus) tab.focus();
     };
     document.documentElement.classList.add('tabs-on');
-    select(tabs[0]);
+    // Storefront tabs have their own address (#reviews, #about) so they can be linked to and survive a reload
+    var byHash = function (h) { h = String(h || '').replace('#', ''); return h && tabs.filter(function (t) { return t.getAttribute('data-hash') === h; })[0]; };
+    select(byHash(location.hash) || byHash(list.getAttribute('data-initial')) || tabs[0]);
+    window.addEventListener('hashchange', function () { var t = byHash(location.hash); if (t) { select(t); list.scrollIntoView({ block: 'start' }); } });
+    document.querySelectorAll('[data-tab-link]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var t = byHash(a.getAttribute('data-tab-link'));
+        if (!t) return;
+        e.preventDefault();
+        select(t);
+        history.replaceState(null, '', '#' + t.getAttribute('data-hash'));
+        list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
     tabs.forEach(function (t, i) {
-      t.addEventListener('click', function () { select(t); });
+      t.addEventListener('click', function () {
+        select(t);
+        if (t.hasAttribute('data-hash')) history.replaceState(null, '', i === 0 ? location.pathname + location.search : '#' + t.getAttribute('data-hash'));
+      });
       t.addEventListener('keydown', function (e) {
         var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length], true); }

@@ -53,5 +53,25 @@
       </table>
     </div>
   <% } else { %><p class="muted">No notes uploaded.</p><% } %>
+
+  <h2 style="font-size:1.35rem;margin-top:34px">Reviews (<%= locals.reviews ? reviews.length : 0 %>)</h2>
+  <% if (locals.reviews && reviews.length) { %>
+    <div class="reviews-list">
+      <% reviews.forEach(function (r) { %>
+        <article class="review <%= r.status === 'hidden' ? 'is-hidden' : '' %>">
+          <div class="review-head">
+            <span><strong><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></strong> · <%= r.reviewer_name || 'Verified buyer' %> · <span class="muted small"><%= r.payment_ref %></span><% if (r.status === 'hidden') { %> <span class="pill pill-muted">Hidden</span><% } %></span>
+            <form method="post" action="/admin/reviews/<%= r.id %>/status">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <input type="hidden" name="back" value="/admin/sellers/<%= s.id %>">
+              <button class="btn btn-ghost btn-sm" name="status" value="<%= r.status === 'hidden' ? 'published' : 'hidden' %>"><%= r.status === 'hidden' ? 'Show again' : 'Hide' %></button>
+            </form>
+          </div>
+          <% if (r.body) { %><p class="review-body"><%= r.body %></p><% } %>
+          <p class="review-by muted"><%= date(r.created_at) %><%= r.notes_bought ? ' · Bought ' + r.notes_bought : '' %></p>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %><p class="muted">No reviews yet.</p><% } %>
 </div>
 <%- include('../partials/bottom') %>
