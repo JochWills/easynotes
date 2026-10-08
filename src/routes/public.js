@@ -28,7 +28,6 @@ router.get('/', async (req, res) => {
 
 router.get('/notes', async (req, res) => {
   const q = cleanSearch(req.query.q);
-  const university = NOTE_INSTITUTIONS.includes(req.query.university) ? req.query.university : '';
   const level = LEVELS.includes(req.query.level) ? req.query.level : '';
   const sorts = {
     new: ['created_at', false],
@@ -39,21 +38,29 @@ router.get('/notes', async (req, res) => {
   const sort = sorts[req.query.sort] ? req.query.sort : 'new';
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
-  // Subjects that have notes on sale right now (so picking one never shows an empty page), one per spelling
-  const { data: subjectRows } = await publicNotes('subject,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
-  const subjectsByKey = new Map();
-  for (const r of subjectRows || []) {
-    const name = String(r.subject || '').trim();
-    if (name && !subjectsByKey.has(name.toLowerCase())) subjectsByKey.set(name.toLowerCase(), name);
-  }
+  // Subjects and added institutions that have notes on sale right now (so picking one never shows an empty page), one per spelling
+  const { data: optionRows } = await publicNotes('subject,university,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
+  const distinct = (base, column) => {
+    const byKey = new Map();
+    for (const name of [...base, ...(optionRows || []).map((r) => String(r[column] || '').trim())]) {
+      if (name && !byKey.has(name.toLowerCase())) byKey.set(name.toLowerCase(), name);
+    }
+    return byKey;
+  };
+  const subjectsByKey = distinct([], 'subject');
   const subjects = [...subjectsByKey.values()].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
   const subject = subjectsByKey.get(String(req.query.subject || '').trim().toLowerCase()) || '';
+  // The standard universities, then institutions sellers added
+  const institutionsByKey = distinct(NOTE_INSTITUTIONS, 'university');
+  const institutions = [...institutionsByKey.values()];
+  const university = institutionsByKey.get(String(req.query.university || '').trim().toLowerCase()) || '';
+  const anyCase = (v) => v.replace(/[\\%_]/g, (c) => '\\' + c);
 
   let query = publicNotes();
   if (q) query = query.or(['title', 'subject', 'module_code', 'description'].map((c) => `${c}.ilike."%${q}%"`).join(','));
-  if (university) query = query.eq('university', university);
+  if (university) query = query.ilike('university', anyCase(university));
   if (level) query = query.eq('level', level);
-  if (subject) query = query.ilike('subject', subject.replace(/[\\%_]/g, (c) => '\\' + c)); // any capitals
+  if (subject) query = query.ilike('subject', anyCase(subject)); // any capitals
   const [col, asc] = sorts[sort];
   query = query
     .order(col, { ascending: asc })
@@ -74,7 +81,7 @@ router.get('/notes', async (req, res) => {
     subjects,
     page,
     pages: Math.max(1, Math.ceil((count || 0) / PAGE_SIZE)),
-    institutions: NOTE_INSTITUTIONS,
+    institutions,
     levels: LEVELS,
   });
 });

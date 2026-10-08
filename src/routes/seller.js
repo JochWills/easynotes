@@ -408,11 +408,12 @@ function validateNote(body) {
   if (values.title.length < 5) errors.title = 'Give your notes a clear title (at least 5 characters).';
   if (values.description.length < 40) errors.description = 'Describe what’s covered in at least 40 characters. Students buy on this.';
   if (values.subject.length < 2) errors.subject = 'Enter the subject, e.g. Financial Accounting.';
-  if (!NOTE_INSTITUTIONS.includes(values.university)) errors.university = 'Choose an institution.';
+  values.university = NOTE_INSTITUTIONS.find((u) => u.toLowerCase() === values.university.toLowerCase()) || values.university;
+  if (values.university.length < 2) errors.university = 'Choose an institution, or type a new one to add it.';
   if (!LEVELS.includes(values.level)) errors.level = 'Choose a level.';
   if (!(values.price_cents >= 1000 && values.price_cents <= 200000)) errors.price = 'Set a price between R10 and R2,000.';
   if (body.own_work !== 'on') errors.own_work = 'Confirm the notes are your own work and contain none of the listed material.';
-  profanity.checkFields(values, ['title', 'description', 'subject', 'module_code'], errors);
+  profanity.checkFields(values, ['title', 'description', 'subject', 'university', 'module_code'], errors);
   return { values, errors };
 }
 
@@ -428,21 +429,25 @@ function checkFiles(req, errors, { pdfRequired }) {
   return { pdf };
 }
 
-// The suggested subjects plus any this seller has added themselves (other sellers' own subjects stay theirs),
-// one entry per subject regardless of capitals, and always including the one currently on the form.
-async function subjectOptions(sellerId, current) {
-  const { data } = await db.from('notes').select('subject').eq('seller_id', sellerId).neq('status', 'deleted').limit(1000);
+// Suggestions for a field (subject, institution): the standard list plus any this seller has added themselves
+// (other sellers' own ones stay theirs), one entry regardless of capitals, always including the one on the form.
+async function ownOptions(sellerId, column, base, current) {
+  const { data } = await db.from('notes').select(column).eq('seller_id', sellerId).neq('status', 'deleted').limit(1000);
   const byKey = new Map();
-  for (const s of [...SUBJECTS, ...(data || []).map((n) => n.subject), current]) {
+  for (const s of [...base, ...(data || []).map((n) => n[column]), current]) {
     const name = String(s || '').trim();
     if (name && !byKey.has(name.toLowerCase())) byKey.set(name.toLowerCase(), name);
   }
-  return [...byKey.values()].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+  return [...byKey.values()];
 }
+const byName = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' });
 
 const formLocals = async (req, extra) => ({
-  tab: 'notes', institutions: NOTE_INSTITUTIONS, levels: LEVELS, feePercent: config.platformFeePercent,
-  subjects: await subjectOptions(req.seller.id, extra.values && extra.values.subject), ...extra,
+  tab: 'notes', levels: LEVELS, feePercent: config.platformFeePercent,
+  subjects: (await ownOptions(req.seller.id, 'subject', SUBJECTS, extra.values && extra.values.subject)).sort(byName),
+  // Universities first in their usual order, then the seller's own additions
+  institutions: await ownOptions(req.seller.id, 'university', NOTE_INSTITUTIONS, extra.values && extra.values.university),
+  ...extra,
 });
 
 router.get('/notes/new', requireApproved, async (req, res) => {

@@ -29,11 +29,10 @@ const UNIVERSITIES = [
   { name: 'Milpark Education', short: 'Milpark' },
 ];
 
-const ANY_INSTITUTION = 'Professional Exam';
 const PRIVATE_INSTITUTION = 'Private institution';
 
-// Institutions a set of notes can be "for"
-const NOTE_INSTITUTIONS = [...UNIVERSITIES.map((u) => u.name), PRIVATE_INSTITUTION, ANY_INSTITUTION];
+// Suggested institutions a set of notes can be "for" (sellers can add their own, e.g. a professional body)
+const NOTE_INSTITUTIONS = [...UNIVERSITIES.map((u) => u.name), PRIVATE_INSTITUTION];
 
 // Where a seller's degree can be from (an "Other" option lets admins judge foreign universities)
 const DEGREE_UNIVERSITIES = UNIVERSITIES.map((u) => u.name);
@@ -79,4 +78,4 @@ const RESERVED_SLUGS = new Set([
   'webhooks', 'www',
 ]);
 
-module.exports = { STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, ANY_INSTITUTION, PRIVATE_INSTITUTION };
+module.exports = { STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, PRIVATE_INSTITUTION };
