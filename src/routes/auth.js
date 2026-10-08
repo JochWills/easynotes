@@ -8,6 +8,8 @@ const { RESERVED_SLUGS } = require('../lib/constants');
 const emails = require('../lib/emails');
 
 const profanity = require('../lib/profanity');
+const config = require('../lib/config');
+const { verifyCsrf } = require('../lib/csrf');
 const router = express.Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -131,9 +133,21 @@ router.post('/reset', limiter, async (req, res) => {
   res.redirect(user.role === 'admin' ? '/admin' : '/seller');
 });
 
-router.post('/logout', (req, res) => {
-  req.session = null;
-  res.redirect('/');
+// Logging out shouldn't fail because the page was old (another tab already logged out, or Back after
+// logging in again changed the form token). So a stale token is fine as long as the browser says the
+// click came from this site; a form on another site still can't log people out.
+router.post('/logout', (req, res, next) => {
+  const site = req.get('sec-fetch-site');
+  const origin = req.get('origin');
+  const sameSite = site ? site === 'same-origin' : origin ? origin === new URL(config.baseUrl).origin : false;
+  if (!req.user || sameSite) {
+    req.session = null;
+    return res.redirect(303, '/');
+  }
+  return verifyCsrf(req, res, () => {
+    req.session = null;
+    res.redirect(303, '/');
+  });
 });
 
 module.exports = router;

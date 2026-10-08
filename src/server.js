@@ -87,6 +87,7 @@ app.use(loadUser);
 // Every urlencoded POST must carry the CSRF token. Multipart routes verify after multer parses the body.
 app.use((req, res, next) => {
   if (req.method !== 'POST' || req.is('multipart/form-data')) return next();
+  if (req.path === '/logout') return next(); // checks its own way (routes/auth.js)
   return verifyCsrf(req, res, next);
 });
 

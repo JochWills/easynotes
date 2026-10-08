@@ -168,6 +168,8 @@
       .then(function (data) {
         if (!data) return;
         setCartCount(data.ids.length);
+        // An old copy of the page can carry an out-of-date form token (logged out and in since): refresh them all
+        if (data.csrf) document.querySelectorAll('input[name="_csrf"]').forEach(function (i) { i.value = data.csrf; });
         var token = document.querySelector('input[name="_csrf"]');
         document.querySelectorAll('form[data-cart-add][data-note]').forEach(function (f) {
           var id = f.getAttribute('data-note');
