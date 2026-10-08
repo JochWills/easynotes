@@ -6,11 +6,21 @@
       <p class="muted auth-lead">Create your seller account. Next you’ll verify your degree and add the bank account you’ll be paid into.</p>
       <form class="form" method="post" action="/signup" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <div class="field <%= errors.display_name ? 'has-error' : '' %>">
-          <label for="s-name">Name on your storefront</label>
-          <input id="s-name" type="text" name="display_name" maxlength="80" value="<%= values.display_name || '' %>" required autocomplete="name" aria-describedby="s-name-hint">
-          <span class="hint" id="s-name-hint">Your real name works best. Students trust a person they can see is qualified.</span>
-          <%- include('partials/field-error', { name: 'display_name' }) %>
+        <% var sameName = values.same_name !== false; %>
+        <div class="field <%= errors.full_name ? 'has-error' : '' %>">
+          <label for="s-full">Your full name</label>
+          <input id="s-full" type="text" name="full_name" maxlength="80" value="<%= values.full_name || '' %>" required autocomplete="name" aria-describedby="s-full-hint">
+          <span class="hint" id="s-full-hint">As it appears on your ID. We use it for your account and to check your documents.</span>
+          <%- include('partials/field-error', { name: 'full_name' }) %>
+        </div>
+        <div class="field store-name <%= errors.display_name ? 'has-error' : '' %>" data-same-name>
+          <label class="check"><input type="checkbox" name="same_name" <%= sameName ? 'checked' : '' %>> <span>Use my name as my storefront name</span></label>
+          <div class="store-name-input" data-store-name>
+            <label for="s-name">Storefront name</label>
+            <input id="s-name" type="text" name="display_name" maxlength="80" value="<%= values.display_name || '' %>" autocomplete="off" aria-describedby="s-name-hint">
+            <span class="hint" id="s-name-hint">What students see on your notes and storefront. A real name builds the most trust.</span>
+            <%- include('partials/field-error', { name: 'display_name' }) %>
+          </div>
         </div>
         <div class="field <%= errors.email ? 'has-error' : '' %>">
           <label for="s-email">Email</label>

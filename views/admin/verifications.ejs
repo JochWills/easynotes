@@ -12,6 +12,7 @@
             <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
             <span class="small muted"><%= s.users ? s.users.email : '' %> · submitted <%= date(s.submitted_at) %></span>
             <dl class="facts">
+              <dt>Full name</dt><dd><%= s.full_name || '—' %></dd>
               <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
               <dt>University</dt><dd><%= s.university || '—' %></dd>
               <dt>Graduated</dt><dd><%= s.graduation_year || '—' %></dd>

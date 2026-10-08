@@ -16,6 +16,7 @@ create table if not exists sellers (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references users(id) on delete cascade,
   display_name text not null,
+  full_name text, -- private: the seller's real name (account, emails, payouts)
   slug text not null unique,
   headline text,
   bio text,
@@ -149,3 +150,6 @@ alter table notes add constraint notes_status_check check (status in ('draft','p
 
 -- Buyer's name, collected at checkout.
 alter table orders add column if not exists buyer_name text;
+
+-- Sellers' real names, separate from the storefront name
+alter table sellers add column if not exists full_name text;

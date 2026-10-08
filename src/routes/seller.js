@@ -64,16 +64,18 @@ router.get('/profile', (req, res) => {
 
 router.post('/profile', async (req, res) => {
   const values = {
+    full_name: str(req.body.full_name, 80),
     display_name: str(req.body.display_name, 80),
     headline: str(req.body.headline, 120),
     bio: str(req.body.bio, 1500),
     slug: slugify(req.body.slug || req.body.display_name).slice(0, 40),
   };
   const errors = {};
+  if (values.full_name.length < 2) errors.full_name = 'Enter your full name.';
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
   else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
-  profanity.checkFields(values, ['display_name', 'headline', 'bio', 'slug'], errors);
+  profanity.checkFields(values, ['full_name', 'display_name', 'headline', 'bio', 'slug'], errors);
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
     if (taken) errors.slug = 'That link is taken. Try another.';
@@ -237,7 +239,7 @@ router.post('/payouts', async (req, res) => {
     percentage_charge: config.platformFeePercent,
     description: `EasyNotes seller: ${s.slug}`,
     primary_contact_email: req.user.email,
-    primary_contact_name: s.display_name,
+    primary_contact_name: s.full_name || s.display_name,
   };
 
   let code = s.paystack_subaccount_code;

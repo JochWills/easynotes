@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
 
 router.get('/verifications', async (req, res) => {
   const [{ data: pending }, decided] = await Promise.all([
-    db.from('sellers').select('id,display_name,degree,university,graduation_year,degree_doc_path,id_doc_path,submitted_at,verification_note,users(email)').eq('verification_status', 'pending').order('submitted_at'),
+    db.from('sellers').select('id,display_name,full_name,degree,university,graduation_year,degree_doc_path,id_doc_path,submitted_at,verification_note,users(email)').eq('verification_status', 'pending').order('submitted_at'),
     events.recent({ limit: 15, kinds: ['seller.approved', 'seller.rejected', 'seller.revoked'] }),
   ]);
   const queue = await Promise.all(

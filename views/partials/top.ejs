@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=36">
+  <link rel="stylesheet" href="/css/style.css?v=37">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
 <body>
@@ -41,10 +41,10 @@
       </div>
       <div class="nav-actions">
         <% if (locals.user) { %>
-          <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? me.display_name : (isAdmin ? 'Admin' : user.email); %>
+          <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? (me.full_name || me.display_name) : (isAdmin ? 'Admin' : user.email); %>
           <details class="profile">
             <summary aria-label="Account menu">
-              <span class="profile-avatar" aria-hidden="true"><%= initials(me ? me.display_name : user.email) %></span>
+              <span class="profile-avatar" aria-hidden="true"><%= initials(me ? (me.full_name || me.display_name) : user.email) %></span>
               <span class="profile-name"><%= who %></span>
               <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>

@@ -626,6 +626,9 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
   background: none; border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer;
 }
 .pass-toggle:hover { color: var(--ink); background: var(--page); }
+.store-name-input { margin-top: 14px; }
+.store-name-input[hidden] { display: none; }
+.store-name-input > label { display: block; font-weight: 600; margin-bottom: 6px; }
 .pass-meter { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .pass-meter[hidden] { display: none; }
 .pass-bars { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }

@@ -114,14 +114,15 @@ async function readResetToken(token) {
 /* ---------- Verification ---------- */
 
 async function sendVerificationDecision(sellerId) {
-  const { data: s } = await db.from('sellers').select('display_name,verification_status,verification_note,paystack_subaccount_code,users(email)').eq('id', sellerId).maybeSingle();
+  const { data: s } = await db.from('sellers').select('*, users(email)').eq('id', sellerId).maybeSingle();
   if (!s || !s.users) return false;
   const approved = s.verification_status === 'approved';
+  const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
   const { html, text } = approved
     ? compose({
         heading: 'You’re verified',
         paragraphs: [
-          `Good news, ${esc(s.display_name)}: we’ve checked your documents and your seller account is approved.`,
+          `Good news, ${esc(first)}: we’ve checked your documents and your seller account is approved.`,
           s.paystack_subaccount_code
             ? 'Your published notes are now live for students.'
             : 'One step left: add your bank details so we can pay you. Your notes go live once that’s done.',
@@ -131,7 +132,7 @@ async function sendVerificationDecision(sellerId) {
     : compose({
         heading: 'We couldn’t verify your account yet',
         paragraphs: [
-          `Hi ${esc(s.display_name)}, we reviewed your documents but couldn’t approve them. Here’s why:`,
+          `Hi ${esc(first)}, we reviewed your documents but couldn’t approve them. Here’s why:`,
           `<em>${esc(s.verification_note || 'No reason given.')}</em>`,
           'Fix this and send your documents again. We’ll review them as soon as they arrive.',
         ],

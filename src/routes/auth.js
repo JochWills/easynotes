@@ -33,18 +33,24 @@ router.get('/signup', (req, res) => {
 });
 
 router.post('/signup', limiter, async (req, res) => {
+  const sameName = req.body.same_name === 'on';
+  const full_name = str(req.body.full_name, 80);
   const values = {
-    display_name: str(req.body.display_name, 80),
+    full_name,
+    same_name: sameName,
+    display_name: sameName ? full_name : str(req.body.display_name, 80),
     email: str(req.body.email, 200).toLowerCase(),
   };
   const password = String(req.body.password || '');
   const errors = {};
-  if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see on your storefront.';
+  if (full_name.length < 2) errors.full_name = 'Enter your full name.';
+  if (!sameName && values.display_name.length < 2) errors.display_name = 'Enter the name students will see on your storefront.';
   if (!EMAIL_RE.test(values.email)) errors.email = 'Enter a valid email address.';
   if (password.length < 8) errors.password = 'Use at least 8 characters.';
   else if (Buffer.byteLength(password) > 72) errors.password = 'Use 72 characters or fewer.'; // bcrypt ignores anything longer
   if (req.body.accept !== 'on') errors.accept = 'You need to accept the seller terms to continue.';
-  profanity.checkFields(values, ['display_name'], errors);
+  profanity.checkFields(values, ['full_name', 'display_name'], errors);
+  if (sameName && errors.display_name) delete errors.display_name; // already reported on the full name
 
   if (!errors.email) {
     const { data: existing } = await db.from('users').select('id').eq('email', values.email).maybeSingle();
@@ -57,7 +63,7 @@ router.post('/signup', limiter, async (req, res) => {
   if (error) throw error;
 
   const slug = await uniqueSlug(values.display_name);
-  const { error: sErr } = await db.from('sellers').insert({ user_id: user.id, display_name: values.display_name, slug });
+  const { error: sErr } = await db.from('sellers').insert({ user_id: user.id, full_name, display_name: values.display_name, slug });
   if (sErr) {
     await db.from('users').delete().eq('id', user.id);
     throw sErr;

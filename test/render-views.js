@@ -37,7 +37,7 @@ const cases = {
   login: [{ ...base, email: '', error: 'bad', next: '' }],
   forgot: [{ ...base, email: '', sent: false }, { ...base, email: 'a@b.co', sent: false, error: 'Enter the email' }, { ...base, email: 'a@b.co', sent: true }, { ...base, emailEnabled: false, email: '', sent: false }],
   reset: [{ ...base, token: 'tok', errors: {} }, { ...base, token: 'tok', errors: { confirm: 'No match' } }, { ...base, token: null, errors: {} }],
-  signup: [{ ...base, values: {}, errors: { email: 'Bad', accept: 'Tick' } }],
+  signup: [{ ...base, values: {}, errors: { email: 'Bad', accept: 'Tick' } }, { ...base, values: { full_name: 'Thandi Mokoena', same_name: false, display_name: 'Thandi M' }, errors: { display_name: 'Enter it' } }],
   how: [base, sellerBase, adminBase], sell: [base, sellerBase, adminBase], terms: [base], 'seller-terms': [base], privacy: [base], '404': [base],
   error: [{ ...base, title: 'Oops', message: 'Bad' }, { title: 'No locals', message: 'Minimal', ...helpers }],
   'seller/dashboard': [{ ...sellerBase, title: 'Seller dashboard', tab: 'overview', notes: [note, { ...note, status: 'draft' }, { ...note, status: 'removed' }], sales: 3, earnings: 28800 }, { ...sellerBase, me: { ...seller, verification_status: 'rejected', verification_note: 'Blurry', paystack_subaccount_code: null }, title: 'D', tab: 'overview', notes: [], sales: 0, earnings: 0 }],

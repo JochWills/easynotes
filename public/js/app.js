@@ -717,6 +717,18 @@
     });
   });
 
+  // Sign up: the storefront name box only shows when it should differ from the seller's own name
+  document.querySelectorAll('[data-same-name]').forEach(function (f) {
+    var box = f.querySelector('input[name="same_name"]');
+    var wrap = f.querySelector('[data-store-name]');
+    var update = function () {
+      wrap.hidden = box.checked;
+      if (!box.checked) { var i = wrap.querySelector('input'); if (!i.value) setTimeout(function () { i.focus(); }, 0); }
+    };
+    box.addEventListener('change', update);
+    wrap.hidden = box.checked;
+  });
+
   // Password strength bar on sign up: a rough guide only (the server just needs 8+ characters)
   document.querySelectorAll('[data-pass-meter]').forEach(function (input) {
     var meter = document.getElementById(input.getAttribute('data-pass-meter'));

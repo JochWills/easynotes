@@ -6,6 +6,7 @@
     <div class="card">
       <h2 style="font-size:1.35rem"><%= s.display_name %> <%- include('../partials/status-pill', { status: s.verification_status }) %></h2>
       <dl class="facts">
+        <dt>Full name</dt><dd><%= s.full_name || '—' %></dd>
         <dt>Email</dt><dd><%= s.users ? s.users.email : '' %></dd>
         <dt>Storefront</dt><dd><a href="<%= storeUrl(s) %>">/<%= s.slug %></a></dd>
         <dt>Degree</dt><dd><%= s.degree || '—' %></dd>
