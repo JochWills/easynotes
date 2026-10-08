@@ -157,61 +157,95 @@ router.post('/verification', eduFiles([{ name: 'id_doc', maxCount: 1 }]), afterU
 });
 
 // Adding education, or "I've finished this" (?finish=id) / "Fix and send again" (?retry=id), once verified.
-// mode: 'finish' (I've finished this) or 'update' (still studying, new dates) for an approved in-progress entry.
+// Which entry a form is about, and how:
+//   finish  - "I've finished this" on a verified entry still being studied (sent for review, replaces it once approved)
+//   edit    - any change to a verified entry (same: reviewed, the current one stays live meanwhile)
+//   pending - changing an entry that's still waiting for review (updated in place, stays in review)
+//   retry   - "Fix and send again" on an entry that wasn't approved
 async function eduStart(req) {
-  const retry = req.query.retry || req.body?.retry;
-  const mode = req.query.update || req.body?.mode === 'update' ? 'update' : 'finish';
-  const id = req.query.finish || req.query.update || retry || req.body?.replaces;
-  if (!id || !isUuid(String(id))) return { q: {}, replaces: null };
-  const { data: row } = await db.from('qualifications').select('*').eq('id', id).eq('seller_id', req.seller.id).maybeSingle();
-  if (!row) return { q: {}, replaces: null };
-  if (retry && row.review_status === 'rejected') {
-    const { doc_path, record_path, review_note, ...rest } = row;
-    return { q: rest, replaces: null, retryOf: row };
+  const src = { ...req.query, ...(req.body || {}) };
+  const id = src.finish || src.edit || src.retry || src.replaces || src.editing;
+  if (!id || !isUuid(String(id))) return { q: {}, mode: 'add' };
+  const quals = await education.forSeller(req.seller.id);
+  const row = quals.find((x) => x.id === id);
+  if (!row) return { q: {}, mode: 'gone' };
+  const { doc_path, record_path, review_note, ...fields } = row;
+  if (src.retry && row.review_status === 'rejected') return { q: fields, mode: 'retry', retryOf: row };
+  const isDegree = (x) => x.review_status === 'approved' && x.status === 'completed';
+  const isOnlyDegree = (x) => !!x && isDegree(x) && quals.filter(isDegree).length === 1;
+  if (row.review_status === 'pending') {
+    // A pending change to the seller's only completed degree can't turn it into "still studying" either
+    return { q: fields, mode: 'pending', editing: row, onlyDegree: isOnlyDegree(quals.find((x) => x.id === row.replaces_id)) };
   }
-  if (row.review_status === 'approved' && row.status === 'in_progress') {
-    const keep = { level: row.level, name: row.name, institution: row.institution, honours: row.honours, average_mark: row.average_mark, distinctions: row.distinctions };
-    return mode === 'update'
-      ? { q: { ...keep, status: 'in_progress', current_year: row.current_year }, replaces: row, mode }
-      : { q: keep, replaces: row, mode };
+  if (row.review_status !== 'approved') return { q: {}, mode: 'gone' };
+  if (quals.some((x) => x.replaces_id === row.id && x.review_status === 'pending')) return { q: {}, mode: 'gone' }; // a change is already in review
+  const onlyDegree = isOnlyDegree(row);
+  if ((src.finish || src.mode === 'finish') && row.status === 'in_progress') {
+    const { status, year_completed, current_year, expected_completion, ...keep } = fields;
+    return { q: keep, mode: 'finish', replaces: row };
   }
-  return { q: {}, replaces: null };
+  return { q: fields, mode: 'edit', replaces: row, onlyDegree };
 }
 
-const eduTitle = (replaces, mode) => (!replaces ? 'Add education' : mode === 'update' ? 'Update your studies' : 'Finished your studies');
+const EDU_TITLES = { add: 'Add education', finish: 'Finished your studies', edit: 'Edit education', pending: 'Edit education', retry: 'Fix and send again' };
+// Finishing is always "completed"; your only completed degree can't become "still studying".
+const studyingAllowed = (st) => !(st.mode === 'finish' || st.onlyDegree);
 
 router.get('/verification/education/new', async (req, res) => {
   if (req.seller.verification_status !== 'approved') return res.redirect('/seller/verification');
-  const { q, replaces, retryOf, mode } = await eduStart(req);
-  res.render('seller/education-form', eduLocals({ title: eduTitle(replaces, mode), q, replaces, retryOf, mode }));
+  const st = await eduStart(req);
+  if (st.mode === 'gone') return res.redirect('/seller/verification');
+  res.render('seller/education-form', eduLocals({ title: EDU_TITLES[st.mode], ...st, allowStudying: studyingAllowed(st) }));
 });
 
-router.post('/verification/education', eduFiles(), afterUpload(() => '/seller/verification/education/new'), verifyCsrf, async (req, res) => {
+router.post('/verification/education', eduFiles(), afterUpload(() => '/seller/verification'), verifyCsrf, async (req, res) => {
   const s = req.seller;
   if (s.verification_status !== 'approved') return res.redirect('/seller/verification');
-  const { replaces, retryOf, mode } = await eduStart(req);
-  if (req.body.replaces && !replaces) return res.redirect('/seller/verification'); // already finished or not theirs
-  const { values, errors, docs } = education.validate(req.body, req.files, { allowStudying: !replaces || mode === 'update' });
+  const st = await eduStart(req);
+  if (st.mode === 'gone') return res.redirect('/seller/verification'); // already changed, removed or not theirs
+  const keepsDocs = st.mode === 'edit' || st.mode === 'pending';
+  const { values, errors, docs } = education.validate(req.body, req.files, { allowStudying: studyingAllowed(st), docOptional: keepsDocs });
   if (Object.keys(errors).length) {
-    return res.status(400).render('seller/education-form', eduLocals({ title: eduTitle(replaces, mode), q: values, replaces, retryOf, mode, errors }));
+    return res.status(400).render('seller/education-form', eduLocals({ title: EDU_TITLES[st.mode], ...st, q: values, errors, allowStudying: studyingAllowed(st) }));
+  }
+  const fields = education.rowFrom(values);
+  const before = st.replaces || st.editing;
+  if (keepsDocs && !docs.doc && !docs.record && !education.changes(before, fields).length) {
+    flash(req, 'ok', 'Nothing changed, so there was nothing to send.');
+    return res.redirect('/seller/verification');
   }
   const paths = await education.saveDocs(s.id, docs);
-  const { data: row, error } = await db
-    .from('qualifications')
-    .insert({ seller_id: s.id, ...education.rowFrom(values), ...paths, replaces_id: replaces ? replaces.id : null })
-    .select('id')
-    .single();
-  if (error) {
-    await storage.remove('verification', [paths.doc_path, paths.record_path]);
-    throw error;
+  // Edits keep the documents already on file unless new ones were uploaded
+  if (keepsDocs) {
+    paths.doc_path = paths.doc_path || before.doc_path;
+    paths.record_path = paths.record_path || before.record_path;
   }
-  if (retryOf) {
-    // The new entry takes the place of the one that wasn't approved
-    await db.from('qualifications').delete().eq('id', retryOf.id).eq('seller_id', s.id);
-    await storage.remove('verification', [retryOf.doc_path, retryOf.record_path]);
+
+  let id;
+  if (st.mode === 'pending') {
+    const { error } = await db.from('qualifications').update({ ...fields, ...paths, submitted_at: new Date().toISOString() }).eq('id', before.id).eq('seller_id', s.id);
+    if (error) throw error;
+    id = before.id;
+    await education.removeUnusedFiles([before.doc_path, before.record_path]);
+  } else {
+    const { data: row, error } = await db
+      .from('qualifications')
+      .insert({ seller_id: s.id, ...fields, ...paths, replaces_id: st.replaces ? st.replaces.id : null })
+      .select('id')
+      .single();
+    if (error) {
+      await education.removeUnusedFiles([docs.doc && paths.doc_path, docs.record && paths.record_path]);
+      throw error;
+    }
+    id = row.id;
+    if (st.retryOf) {
+      // The new entry takes the place of the one that wasn't approved
+      await db.from('qualifications').delete().eq('id', st.retryOf.id).eq('seller_id', s.id);
+      await education.removeUnusedFiles([st.retryOf.doc_path, st.retryOf.record_path]);
+    }
   }
-  events.log('qualification.submitted', { seller_id: s.id, qualification_id: row.id, name: values.name, seller: s.display_name, finished: !!replaces && values.status === 'completed', updated: !!replaces && values.status === 'in_progress' }, req.user.email);
-  flash(req, 'ok', 'Sent for review. Your storefront stays as it is until we’ve checked it.');
+  events.log('qualification.submitted', { seller_id: s.id, qualification_id: id, name: values.name, seller: s.display_name, finished: st.mode === 'finish', updated: st.mode === 'edit' || st.mode === 'pending' }, req.user.email);
+  flash(req, 'ok', st.mode === 'pending' ? 'Changes saved. It’s still in review.' : 'Sent for review. Your storefront stays as it is until we’ve checked it.');
   res.redirect('/seller/verification');
 });
 
@@ -228,11 +262,11 @@ router.post('/verification/education/:id/remove', async (req, res, next) => {
     flash(req, 'error', 'This is the completed degree your verification is based on, so it can’t be removed.');
     return res.redirect('/seller/verification');
   }
-  // An update waiting on this entry goes with it
+  // A change waiting on this entry goes with it
   const linked = quals.filter((x) => x.replaces_id === q.id && x.review_status === 'pending');
   const gone = [q, ...linked];
   await db.from('qualifications').delete().in('id', gone.map((x) => x.id)).eq('seller_id', s.id);
-  await storage.remove('verification', gone.flatMap((x) => [x.doc_path, x.record_path]));
+  await education.removeUnusedFiles(gone.flatMap((x) => [x.doc_path, x.record_path]));
   if (q.review_status === 'approved') await education.refreshHeadline(s.id);
   events.log('qualification.removed', { seller_id: s.id, name: q.name, seller: s.display_name }, req.user.email);
   flash(req, 'ok', `${q.name} removed from your education.`);

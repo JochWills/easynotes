@@ -131,9 +131,14 @@ router.get('/verifications', async (req, res) => {
   );
   // For "I've finished this": what the update replaces
   const replacedIds = (updates || []).map((q) => q.replaces_id).filter(Boolean);
-  const { data: replaced } = replacedIds.length ? await db.from('qualifications').select('id,name,institution,status,expected_completion,current_year,year_completed').in('id', replacedIds) : { data: [] };
+  const { data: replaced } = replacedIds.length ? await db.from('qualifications').select('*').in('id', replacedIds) : { data: [] };
   const replacedById = Object.fromEntries((replaced || []).map((q) => [q.id, q]));
-  const changes = await Promise.all((updates || []).map(async (q) => ({ ...(await docLinks(q)), replaced: replacedById[q.replaces_id] || null })));
+  const changes = await Promise.all(
+    (updates || []).map(async (q) => {
+      const replaced = replacedById[q.replaces_id] || null;
+      return { ...(await docLinks(q)), replaced, diff: replaced ? education.changes(replaced, q) : [], sameDocs: !!replaced && replaced.doc_path === q.doc_path };
+    })
+  );
   res.render('admin/verifications', { title: 'Verifications', tab: 'verifications', queue, changes, decided });
 });
 

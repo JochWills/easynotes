@@ -46,8 +46,16 @@
           <div class="card queue-item">
             <div>
               <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
-              <span class="small muted"><%= s.users ? s.users.email : '' %> · sent <%= date(q.submitted_at) %> · <%= q.replaced ? (q.status === 'completed' ? 'finished a course' : 'updated their dates') : 'new education' %></span>
-              <% if (q.replaced) { %><p class="small">Replaces: <%= q.replaced.name %>, <%= q.replaced.institution %> (<%= edu.when(q.replaced) %>)</p><% } %>
+              <span class="small muted"><%= s.users ? s.users.email : '' %> · sent <%= date(q.submitted_at) %> · <%= !q.replaced ? 'new education' : (q.replaced.status === 'in_progress' && q.status === 'completed') ? 'finished a course' : 'changed a verified entry' %></span>
+              <% if (q.replaced) { %>
+                <div class="diff">
+                  <p class="small"><strong>What changed</strong> (currently live: <%= q.replaced.name %>, <%= q.replaced.institution %>)</p>
+                  <% if (q.diff.length) { %>
+                    <ul><% q.diff.forEach(function (d) { %><li><span class="muted"><%= d[0] %>:</span> <del><%= d[1] %></del> → <ins><%= d[2] %></ins></li><% }) %></ul>
+                  <% } else { %><p class="small muted">Only the documents changed.</p><% } %>
+                  <% if (q.sameDocs) { %><p class="small muted">No new document uploaded. The links below are the ones already on file.</p><% } %>
+                </div>
+              <% } %>
               <%- include('qual-detail', { q: q }) %>
             </div>
             <form class="form" method="post" action="/admin/qualifications/<%= q.id %>/review">

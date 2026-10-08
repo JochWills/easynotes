@@ -29,14 +29,16 @@
                 <p class="edu-results"><% if (q.honours !== 'none') { %><span class="honours"><%= edu.honoursLabel(q) %></span><% } %><%= edu.results(q) %></p>
               <% } %>
               <% var waiting = quals.some(function (o) { return o.replaces_id === q.id && o.review_status === 'pending'; }); %>
-              <% if (q.review_status === 'approved' && edu.isOverdue(q) && !waiting) { %><p class="edu-due">Your expected finish date has passed. Finished? Tell us below. Still studying? Update your dates so your storefront stays current.</p><% } %>
+              <% if (q.review_status === 'approved' && edu.isOverdue(q) && !waiting) { %><p class="edu-due">Your expected finish date has passed. Finished? Click <strong>I’ve finished this</strong>. Still studying? Click <strong>Edit</strong> and update your dates so your storefront stays current.</p><% } %>
               <% if (q.review_status === 'rejected' && q.review_note) { %><p class="edu-note">Why: <%= q.review_note %></p><% } %>
-              <% if (q.replaces_id && q.review_status === 'pending') { %><p class="small muted">Update to an earlier entry. The earlier one stays on your storefront until this is checked.</p><% } %>
+              <% if (q.replaces_id && q.review_status === 'pending') { %><p class="small muted">A change to one of your verified entries. The current one stays on your storefront until this is checked.</p><% } %>
               <% if (st === 'approved') { %>
                 <div class="edu-actions">
                   <% if (q.review_status === 'approved' && q.status === 'in_progress' && !waiting) { %>
                     <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?finish=<%= q.id %>">I’ve finished this</a>
-                    <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?update=<%= q.id %>">Update dates</a>
+                  <% } %>
+                  <% if ((q.review_status === 'approved' && !waiting) || q.review_status === 'pending') { %>
+                    <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?edit=<%= q.id %>">Edit</a>
                   <% } %>
                   <% if (q.review_status === 'rejected') { %><a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?retry=<%= q.id %>">Fix and send again</a><% } %>
                   <% var degrees = quals.filter(function (o) { return o.review_status === 'approved' && o.status === 'completed'; }); %>
@@ -57,7 +59,7 @@
         <ul class="checklist checklist-dark">
           <li>Finished a qualification you were studying? Click <strong>I’ve finished this</strong> and upload your certificate or final record.</li>
           <li>Started or completed further study, like honours or a master’s? Use <strong>Add education</strong>.</li>
-          <li>Finishing later than planned? Use <strong>Update dates</strong>.</li>
+          <li>Something wrong or out of date, like your dates or marks? Click <strong>Edit</strong>. Changes are checked before they show.</li>
           <li>We check every change. Your verified education stays on your storefront and your notes stay on sale while we do.</li>
           <li>Dropped something? <strong>Remove</strong> it any time. Your completed degree stays, since your verification is based on it.</li>
         </ul>

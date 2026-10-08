@@ -10,7 +10,8 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 // Checks the education form. `files` holds multer's doc / record uploads.
 // allowStudying: false for the first verification (a finished degree is the minimum) and for "I've finished this".
-function validate(body, files, { allowStudying = false } = {}) {
+// docOptional: editing an entry, where the documents already on file can be kept.
+function validate(body, files, { allowStudying = false, docOptional = false } = {}) {
   const now = new Date();
   const thisYear = now.getFullYear();
   const pickedUni = str(body.institution, 120);
@@ -70,7 +71,7 @@ function validate(body, files, { allowStudying = false } = {}) {
     else if (f.size > 10 * MB) errors[field] = 'This file is larger than 10 MB.';
     else docs[field] = { file: f, type };
   };
-  checkFile('doc', true, status === 'in_progress' ? 'Upload your proof of registration or latest academic record.' : 'Upload your certificate or academic record.');
+  checkFile('doc', !docOptional, status === 'in_progress' ? 'Upload your proof of registration or latest academic record.' : 'Upload your certificate or academic record.');
   checkFile('record', false);
   return { values: { ...values, institution_picked: pickedUni, institution_other: body.institution_other, expected_month: body.expected_month, expected_year: body.expected_year }, errors, docs };
 }
@@ -152,4 +153,28 @@ function results(q) {
 
 const honoursLabel = (q) => HONOURS[q.honours] || '';
 
-module.exports = { validate, saveDocs, rowFrom, forSeller, sortQuals, headlineOf, refreshHeadline, when, results, isOverdue, honoursLabel, MONTHS };
+// What a seller changed in an entry, in words, for the review queue: [['Average', '78%', '81%'], ...]
+const FIELDS = [
+  ['level', 'Level', (q) => q.level],
+  ['name', 'Qualification', (q) => q.name],
+  ['institution', 'Institution', (q) => q.institution],
+  ['status', 'Status', (q) => when(q)],
+  ['honours', 'Distinction', (q) => honoursLabel(q) || 'None'],
+  ['average_mark', 'Average', (q) => (q.average_mark ? q.average_mark + '%' : 'None')],
+  ['distinctions', 'Distinctions in', (q) => q.distinctions || 'None'],
+];
+function changes(before, after) {
+  return FIELDS.map(([, label, show]) => [label, show(before), show(after)]).filter(([, a, b]) => a !== b);
+}
+
+// Deletes documents no entry points at any more (an edit can keep using the files of the entry it replaces).
+async function removeUnusedFiles(paths) {
+  const list = [...new Set(paths.filter(Boolean))];
+  if (!list.length) return;
+  const quoted = list.map((p) => `"${p}"`).join(',');
+  const { data: still } = await db.from('qualifications').select('doc_path,record_path').or(`doc_path.in.(${quoted}),record_path.in.(${quoted})`);
+  const used = new Set((still || []).flatMap((q) => [q.doc_path, q.record_path]));
+  await storage.remove('verification', list.filter((p) => !used.has(p)));
+}
+
+module.exports = { changes, removeUnusedFiles, validate, saveDocs, rowFrom, forSeller, sortQuals, headlineOf, refreshHeadline, when, results, isOverdue, honoursLabel, MONTHS };
