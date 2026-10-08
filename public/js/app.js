@@ -663,6 +663,33 @@
     });
   });
 
+  // Password strength bar on sign up: a rough guide only (the server just needs 8+ characters)
+  document.querySelectorAll('[data-pass-meter]').forEach(function (input) {
+    var meter = document.getElementById(input.getAttribute('data-pass-meter'));
+    if (!meter) return;
+    var label = meter.querySelector('.pass-label');
+    var names = ['Too short', 'Weak', 'Okay', 'Good', 'Strong'];
+    var score = function (p) {
+      if (p.length < 8) return 0;
+      var kinds = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(p); }).length;
+      var s = 1;
+      if (p.length >= 12) s++;
+      if (p.length >= 16) s++;
+      if (kinds >= 3) s++;
+      if (/^(.)\1+$/.test(p) || /^(password|12345678|qwerty)/i.test(p)) s = 1;
+      return Math.min(s, 4);
+    };
+    var update = function () {
+      var p = input.value;
+      meter.hidden = !p;
+      var s = score(p);
+      meter.setAttribute('data-score', s);
+      label.textContent = names[s];
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
     f.addEventListener('submit', function () {

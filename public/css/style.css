@@ -571,6 +571,18 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
   background: none; border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer;
 }
 .pass-toggle:hover { color: var(--ink); background: var(--page); }
+.pass-meter { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.pass-meter[hidden] { display: none; }
+.pass-bars { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.pass-bars span { height: 5px; border-radius: 99px; background: var(--rule); transition: background-color .2s; }
+.pass-label { font-size: .82rem; font-weight: 600; min-width: 5.5em; text-align: right; color: var(--muted); }
+.pass-meter[data-score="0"] .pass-bars span:nth-child(-n+1) { background: var(--bad); }
+.pass-meter[data-score="1"] .pass-bars span:nth-child(-n+1) { background: #E8590C; }
+.pass-meter[data-score="2"] .pass-bars span:nth-child(-n+2) { background: var(--hi-deep); }
+.pass-meter[data-score="3"] .pass-bars span:nth-child(-n+3) { background: #2F9E6B; }
+.pass-meter[data-score="4"] .pass-bars span:nth-child(-n+4) { background: var(--ok); }
+.pass-meter[data-score="0"] .pass-label { color: var(--bad); }
+.pass-meter[data-score="4"] .pass-label, .pass-meter[data-score="3"] .pass-label { color: var(--ok); }
 .auth-split { display: flex; align-items: center; gap: 14px; margin: 26px 0 16px; color: var(--muted); font-size: .88rem; }
 .auth-split::before, .auth-split::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
 .auth-foot { text-align: center; font-size: .9rem; color: var(--muted); margin: 22px auto 0; }
