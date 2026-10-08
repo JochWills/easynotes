@@ -5,9 +5,6 @@
   <% var pill = function (q) { return q.review_status === 'approved' ? '<span class="pill pill-ok">Verified</span>' : q.review_status === 'pending' ? '<span class="pill pill-wait">In review</span>' : '<span class="pill pill-bad">Not approved</span>'; }; %>
 
   <% if (st === 'approved' || st === 'pending') { %>
-    <% if (st === 'pending') { %>
-      <div class="alert alert-info"><strong>Your documents are in review.</strong><p>Submitted on <%= date(me.submitted_at) %>. We’ll update this page once a person on our team has checked them, usually within two working days.</p></div>
-    <% } %>
     <div class="dash-grid edu-grid">
       <section>
         <div class="section-row">
