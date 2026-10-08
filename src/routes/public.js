@@ -39,10 +39,21 @@ router.get('/notes', async (req, res) => {
   const sort = sorts[req.query.sort] ? req.query.sort : 'new';
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
+  // Subjects that have notes on sale right now (so picking one never shows an empty page), one per spelling
+  const { data: subjectRows } = await publicNotes('subject,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
+  const subjectsByKey = new Map();
+  for (const r of subjectRows || []) {
+    const name = String(r.subject || '').trim();
+    if (name && !subjectsByKey.has(name.toLowerCase())) subjectsByKey.set(name.toLowerCase(), name);
+  }
+  const subjects = [...subjectsByKey.values()].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+  const subject = subjectsByKey.get(String(req.query.subject || '').trim().toLowerCase()) || '';
+
   let query = publicNotes();
   if (q) query = query.or(['title', 'subject', 'module_code', 'description'].map((c) => `${c}.ilike."%${q}%"`).join(','));
   if (university) query = query.eq('university', university);
   if (level) query = query.eq('level', level);
+  if (subject) query = query.ilike('subject', subject.replace(/[\\%_]/g, (c) => '\\' + c)); // any capitals
   const [col, asc] = sorts[sort];
   query = query
     .order(col, { ascending: asc })
@@ -56,10 +67,11 @@ router.get('/notes', async (req, res) => {
   }
 
   res.render('browse', {
-    title: q ? `Notes matching "${q}"` : university ? `Notes for ${university}` : 'Browse notes',
+    title: q ? `Notes matching "${q}"` : subject && university ? `${subject} notes for ${university}` : subject ? `${subject} notes` : university ? `Notes for ${university}` : 'Browse notes',
     notes: notes || [],
     count: count || 0,
-    filters: { q, university, level, sort },
+    filters: { q, subject, university, level, sort },
+    subjects,
     page,
     pages: Math.max(1, Math.ceil((count || 0) / PAGE_SIZE)),
     institutions: NOTE_INSTITUTIONS,

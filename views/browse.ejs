@@ -1,15 +1,22 @@
 <%- include('partials/top') %>
 <section class="page-head">
   <div class="wrap">
-    <h1><%= filters.q ? 'Results for “' + filters.q + '”' : (filters.university ? filters.university : 'Browse notes') %></h1>
+    <h1><%= filters.q ? 'Results for “' + filters.q + '”' : filters.subject ? filters.subject + ' notes' : (filters.university ? filters.university : 'Browse notes') %></h1>
     <p><%= count %> <%= count === 1 ? 'set' : 'sets' %> of notes<%= filters.level ? ' at ' + filters.level.toLowerCase() + ' level' : '' %>.</p>
   </div>
 </section>
 <div class="wrap browse">
-  <form class="filters" method="get" action="/notes" data-autosubmit role="search" aria-label="Filter notes">
+  <form class="filters" id="filters" method="get" action="/notes" data-autosubmit role="search" aria-label="Filter notes">
     <div class="field">
       <label for="f-q">Search</label>
       <input id="f-q" type="search" name="q" maxlength="80" value="<%= filters.q %>" placeholder="Module code or subject">
+    </div>
+    <div class="field">
+      <label for="f-subject">Subject</label>
+      <select id="f-subject" name="subject">
+        <option value="">All subjects</option>
+        <% subjects.forEach(function (s) { %><option <%= filters.subject === s ? 'selected' : '' %>><%= s %></option><% }) %>
+      </select>
     </div>
     <div class="field">
       <label for="f-uni">Institution</label>
@@ -25,21 +32,24 @@
         <% levels.forEach(function (l) { %><option <%= filters.level === l ? 'selected' : '' %>><%= l %></option><% }) %>
       </select>
     </div>
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        <option value="new" <%= filters.sort === 'new' ? 'selected' : '' %>>Newest</option>
-        <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Most bought</option>
-        <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: low to high</option>
-        <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: high to low</option>
-      </select>
-    </div>
     <button class="btn btn-block" type="submit">Show notes</button>
-    <% if (filters.q || filters.university || filters.level) { %><a href="/notes" class="small">Clear filters</a><% } %>
+    <% if (filters.q || filters.subject || filters.university || filters.level) { %><a href="/notes" class="small">Clear filters</a><% } %>
   </form>
 
   <div>
     <% if (notes.length) { %>
+      <div class="results-bar">
+        <p>Showing <strong><%= notes.length %></strong> of <%= count %></p>
+        <div class="sort-by">
+          <label for="f-sort">Sort by</label>
+          <select id="f-sort" name="sort" form="filters">
+            <option value="new" <%= filters.sort === 'new' ? 'selected' : '' %>>Newest</option>
+            <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Most bought</option>
+            <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: low to high</option>
+            <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: high to low</option>
+          </select>
+        </div>
+      </div>
       <div class="grid-notes">
         <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
       </div>

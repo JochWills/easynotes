@@ -528,7 +528,8 @@
   });
 
   // Browse filters apply as soon as a dropdown changes
-  document.querySelectorAll('form[data-autosubmit] select').forEach(function (s) {
+  document.querySelectorAll('form[data-autosubmit] select, select[form]').forEach(function (s) {
+    if (!s.form || !s.form.hasAttribute('data-autosubmit')) return;
     s.addEventListener('change', function () { s.form.submit(); });
   });
 
