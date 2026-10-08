@@ -13,7 +13,7 @@ const { scanPdf } = require('../lib/scan');
 // After an upload: record the seller's declaration and flag anything that looks like someone else's
 // material for an admin to check (Admin > Reports). Never blocks the upload.
 async function afterPdfSaved(req, noteId, title, buffer) {
-  events.log('note.uploaded', { note_id: noteId, title, seller_id: req.seller.id, declaration: 'own-work-v2' }, req.user.email);
+  events.log('note.uploaded', { note_id: noteId, title, seller_id: req.seller.id, declaration: 'own-work-v3' }, req.user.email);
   const flags = await scanPdf(buffer);
   if (flags.length) events.log('note.flagged', { note_id: noteId, title, seller_id: req.seller.id, flags }, 'scanner');
 }
@@ -283,7 +283,7 @@ async function ownNote(req, res, next) {
 }
 
 function validateNote(body) {
-  const priceRand = parseFloat(String(body.price || '').replace(',', '.'));
+  const priceRand = parseFloat(String(body.price || '').replace(/[R\s]/gi, '').replace(',', '.')); // "R 120,50" → 120.5
   const values = {
     title: str(body.title, 120),
     description: str(body.description, 4000),

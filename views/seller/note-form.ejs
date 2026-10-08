@@ -3,63 +3,66 @@
   <%- include('../partials/seller-nav') %>
   <% var editing = !!note; %>
   <% if (errors.files) { %><div class="alert alert-error" role="alert"><%= errors.files %></div><% } %>
-  <form class="form" method="post" action="<%= editing ? '/seller/notes/' + note.id : '/seller/notes' %>" enctype="multipart/form-data" novalidate>
+  <form class="note-form" method="post" action="<%= editing ? '/seller/notes/' + note.id : '/seller/notes' %>" enctype="multipart/form-data" novalidate data-note-form>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
-    <div class="dash-grid">
-      <div class="form card">
-        <div class="field <%= errors.title ? 'has-error' : '' %>">
-          <label for="n-title">Title</label>
-          <input id="n-title" type="text" name="title" value="<%= values.title || '' %>" maxlength="120" required placeholder="e.g. Financial Accounting I: complete exam summary">
-          <%- include('../partials/field-error', { name: 'title' }) %>
-        </div>
-        <div class="row-2">
-          <div class="field <%= errors.subject ? 'has-error' : '' %>">
-            <label for="n-subject">Subject</label>
-            <input id="n-subject" type="text" name="subject" value="<%= values.subject || '' %>" maxlength="80" required placeholder="e.g. Accounting">
-            <%- include('../partials/field-error', { name: 'subject' }) %>
+    <div class="note-form-grid">
+      <section class="card form-section note-form-main" aria-labelledby="sec-details">
+        <header class="form-section-head">
+          <h2 id="sec-details">About your notes</h2>
+          <p class="muted">This is what students see when they search and decide to buy.</p>
+        </header>
+        <div class="form">
+          <div class="field <%= errors.title ? 'has-error' : '' %>">
+            <label for="n-title">Title</label>
+            <input id="n-title" type="text" name="title" value="<%= values.title || '' %>" maxlength="120" required data-min="5" data-msg="Give your notes a clear title (at least 5 characters)." placeholder="e.g. Financial Accounting I: complete exam summary">
+            <%- include('../partials/field-error', { name: 'title' }) %>
           </div>
-          <div class="field <%= errors.module_code ? 'has-error' : '' %>">
-            <label for="n-code">Module code <span class="muted">(optional)</span></label>
-            <input id="n-code" type="text" name="module_code" value="<%= values.module_code || '' %>" maxlength="20" placeholder="e.g. ACC1006F" spellcheck="false">
-            <%- include('../partials/field-error', { name: 'module_code' }) %>
+          <div class="row-2">
+            <div class="field <%= errors.subject ? 'has-error' : '' %>">
+              <label for="n-subject">Subject</label>
+              <input id="n-subject" type="text" name="subject" value="<%= values.subject || '' %>" maxlength="80" required data-min="2" data-msg="Enter the subject, e.g. Financial Accounting." placeholder="e.g. Accounting">
+              <%- include('../partials/field-error', { name: 'subject' }) %>
+            </div>
+            <div class="field <%= errors.module_code ? 'has-error' : '' %>">
+              <label for="n-code">Module code <span class="muted">(optional)</span></label>
+              <input id="n-code" type="text" name="module_code" value="<%= values.module_code || '' %>" maxlength="20" placeholder="e.g. ACC1006F" spellcheck="false">
+              <%- include('../partials/field-error', { name: 'module_code' }) %>
+            </div>
+          </div>
+          <div class="row-2">
+            <div class="field <%= errors.university ? 'has-error' : '' %>">
+              <label for="n-uni">Institution</label>
+              <select id="n-uni" name="university" required data-msg="Choose an institution.">
+                <option value="">Choose</option>
+                <% institutions.forEach(function (u) { %><option <%= values.university === u ? 'selected' : '' %>><%= u %></option><% }) %>
+              </select>
+              <%- include('../partials/field-error', { name: 'university' }) %>
+            </div>
+            <div class="field <%= errors.level ? 'has-error' : '' %>">
+              <label for="n-level">Level</label>
+              <select id="n-level" name="level" required data-msg="Choose a level.">
+                <option value="">Choose</option>
+                <% levels.forEach(function (l) { %><option <%= values.level === l ? 'selected' : '' %>><%= l %></option><% }) %>
+              </select>
+              <%- include('../partials/field-error', { name: 'level' }) %>
+            </div>
+          </div>
+          <div class="field <%= errors.description ? 'has-error' : '' %>">
+            <label for="n-desc">What’s covered</label>
+            <textarea id="n-desc" name="description" maxlength="4000" required data-min="40" data-msg="Describe what’s covered in at least 40 characters. Students buy on this." data-counter="n-desc-count" placeholder="Which chapters or topics, how the notes are laid out, which year you wrote them, and what makes them useful."><%= values.description || '' %></textarea>
+            <span class="hint hint-row"><span>List topics so students can match them to their course outline.</span><span class="char-count" id="n-desc-count" aria-live="polite"></span></span>
+            <%- include('../partials/field-error', { name: 'description' }) %>
           </div>
         </div>
-        <div class="row-2">
-          <div class="field <%= errors.university ? 'has-error' : '' %>">
-            <label for="n-uni">Institution</label>
-            <select id="n-uni" name="university" required>
-              <option value="">Choose</option>
-              <% institutions.forEach(function (u) { %><option <%= values.university === u ? 'selected' : '' %>><%= u %></option><% }) %>
-            </select>
-            <%- include('../partials/field-error', { name: 'university' }) %>
-          </div>
-          <div class="field <%= errors.level ? 'has-error' : '' %>">
-            <label for="n-level">Level</label>
-            <select id="n-level" name="level" required>
-              <option value="">Choose</option>
-              <% levels.forEach(function (l) { %><option <%= values.level === l ? 'selected' : '' %>><%= l %></option><% }) %>
-            </select>
-            <%- include('../partials/field-error', { name: 'level' }) %>
-          </div>
-        </div>
-        <div class="field <%= errors.description ? 'has-error' : '' %>">
-          <label for="n-desc">What’s covered</label>
-          <textarea id="n-desc" name="description" maxlength="4000" required placeholder="Which chapters or topics, how the notes are laid out, which year you wrote them, and what makes them useful."><%= values.description || '' %></textarea>
-          <span class="hint">Specific beats general. List topics so students can match them to their course outline.</span>
-          <%- include('../partials/field-error', { name: 'description' }) %>
-        </div>
-      </div>
+      </section>
 
-      <div class="form">
-        <div class="card form">
-          <div class="field <%= errors.price ? 'has-error' : '' %>">
-            <label for="n-price">Price</label>
-            <div class="prefix"><span>R</span><input id="n-price" type="text" inputmode="decimal" name="price" maxlength="10" value="<%= values.price || '' %>" required data-price data-fee="<%= feePercent %>"></div>
-            <span class="hint">R10 to R2,000. You receive <strong data-earn>R0.00</strong> per sale after the <%= feePercent %>% EasyNotes fee.</span>
-            <%- include('../partials/field-error', { name: 'price' }) %>
-          </div>
+      <div class="note-form-side">
+        <section class="card form-section" aria-labelledby="sec-file">
+          <header class="form-section-head">
+            <h2 id="sec-file">Your PDF</h2>
+            <p class="muted"><%= editing ? 'Leave this alone to keep the current file. A new file goes to past buyers too.' : 'This is what buyers download. They see a preview of the first 2½ pages first.' %></p>
+          </header>
           <div class="field <%= errors.pdf ? 'has-error' : '' %>">
-            <label for="n-pdf"><%= editing ? 'Replace PDF' : 'Notes PDF' %></label>
             <% if (editing && note.file_path) { %>
               <a class="current-file" href="/seller/notes/<%= note.id %>/file" target="_blank" rel="noopener">
                 <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 13h6M9 16.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -68,33 +71,56 @@
                 <span class="sr-only">(opens in a new tab)</span>
               </a>
             <% } %>
-            <input id="n-pdf" type="file" name="pdf" accept="application/pdf" <%= editing ? '' : 'required' %>>
-            <span class="hint"><%= editing ? 'Leave empty to keep the current file. If you choose a new one, past buyers get the new version.' : 'PDF only, up to 50 MB. This is what buyers download.' %> Students see a preview of the first 2½ pages on your listing (less for short notes).</span>
+            <label class="dropzone" for="n-pdf" data-dropzone>
+              <input id="n-pdf" class="dropzone-input" type="file" name="pdf" accept="application/pdf,.pdf" <%= editing ? '' : 'required' %> data-max-mb="50">
+              <span class="dropzone-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="dropzone-empty"><span><strong><%= editing ? 'Choose a new PDF' : 'Choose your PDF' %></strong><span class="dz-drag"> or drag it here</span></span><small>PDF only, up to 50 MB</small></span>
+              <span class="dropzone-chosen" hidden><strong data-file-name></strong><small data-file-meta></small></span>
+            </label>
             <%- include('../partials/field-error', { name: 'pdf' }) %>
           </div>
-          <div class="field declaration <%= errors.own_work ? 'has-error' : '' %>">
-            <p class="declaration-title">Before you <%= editing ? 'save' : 'upload' %>: these notes must be your own work</p>
-            <p class="small">They must <strong>not</strong> contain any of the following, in full, in part or as photos or screenshots:</p>
-            <ul class="checklist checklist-dark checklist-no">
-              <li>Lecture slides, lecturer notes or handouts</li>
-              <li>Pages or passages copied from textbooks, study guides or course packs</li>
-              <li>Past exam papers, class tests or their memos</li>
-              <li>Assignment, tutorial or test answers given out by your institution</li>
-              <li>Anything downloaded from your institution’s learning platform (Vula, ClickUP, myUnisa, Moodle and so on)</li>
-            </ul>
-            <label class="check"><input type="checkbox" name="own_work"> <span>I confirm these notes are my own original work, contain none of the above, and that I have the right to sell them. I understand that EasyNotes may remove them, suspend my account and recover refunds from my earnings if they don’t comply with the <a href="/seller-terms" target="_blank" rel="noopener">seller terms</a>.</span></label>
+        </section>
+
+        <section class="card form-section" aria-labelledby="sec-price">
+          <header class="form-section-head"><h2 id="sec-price">Price</h2></header>
+          <div class="field <%= errors.price ? 'has-error' : '' %>">
+            <label class="sr-only" for="n-price">Price in rand</label>
+            <div class="prefix"><span>R</span><input id="n-price" type="text" inputmode="decimal" name="price" maxlength="10" value="<%= values.price || '' %>" required data-price data-fee="<%= feePercent %>" placeholder="e.g. 120"></div>
+            <div class="earn-row"><span>You earn per sale</span><strong data-earn>R0.00</strong></div>
+            <span class="hint">Between R10 and R2,000. EasyNotes keeps <%= feePercent %>%.</span>
+            <%- include('../partials/field-error', { name: 'price' }) %>
+          </div>
+        </section>
+
+        <section class="card form-section declaration <%= errors.own_work ? 'has-error' : '' %>" aria-labelledby="sec-own">
+          <header class="form-section-head">
+            <h2 id="sec-own">Your own work only</h2>
+            <p class="muted">Notes must not include any of these, in full, in part, or as photos or screenshots:</p>
+          </header>
+          <ul class="checklist checklist-no">
+            <li>Lecture slides, lecturer notes or handouts</li>
+            <li>Pages copied from textbooks, study guides or course packs</li>
+            <li>Past exam papers, class tests or their memos</li>
+            <li>Assignment, tutorial or test answers from your institution</li>
+            <li>Anything from your institution’s learning platform (Vula, ClickUP, myUnisa, Moodle…)</li>
+          </ul>
+          <div class="field">
+            <label class="check"><input type="checkbox" name="own_work" data-msg="Confirm the notes are your own work and contain none of the listed material."> <span>I confirm these notes are my own original work, contain none of the above, and that I have the right to sell them. EasyNotes may remove notes that break the <a href="/seller-terms" target="_blank" rel="noopener">seller terms</a>, suspend my account and recover refunds from my earnings.</span></label>
             <%- include('../partials/field-error', { name: 'own_work' }) %>
           </div>
-        </div>
-        <div class="form-actions">
+        </section>
+
+        <div class="note-form-actions">
           <% if (editing) { %>
-            <button class="btn" type="submit">Save changes</button>
+            <button class="btn btn-hi" type="submit">Save changes</button>
           <% } else { %>
             <button class="btn btn-hi" type="submit" name="publish" value="1">Upload and publish</button>
             <button class="btn btn-ghost" type="submit" name="publish" value="0">Save as draft</button>
           <% } %>
-          <a href="/seller">Cancel</a>
-          <% if (editing) { %><a class="delete-link" href="/seller/notes/<%= note.id %>/delete">Delete these notes</a><% } %>
+          <div class="note-form-links">
+            <a href="/seller">Cancel</a>
+            <% if (editing) { %><a class="delete-link" href="/seller/notes/<%= note.id %>/delete">Delete these notes</a><% } %>
+          </div>
         </div>
       </div>
     </div>

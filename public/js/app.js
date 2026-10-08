@@ -494,7 +494,7 @@
   if (price && earn) {
     var pct = Number(price.getAttribute('data-fee'));
     var update = function () {
-      var v = parseFloat(String(price.value).replace(',', '.'));
+      var v = parseFloat(String(price.value).replace(/[R\s]/gi, '').replace(',', '.'));
       earn.textContent = isFinite(v) && v > 0 ? 'R' + (v * (100 - pct) / 100).toFixed(2) : 'R0.00';
     };
     price.addEventListener('input', update);
@@ -690,12 +690,116 @@
     update();
   });
 
+  // PDF drop zone: drag a file on, or click to choose; shows the chosen file's name and size
+  var fmtSize = function (n) { return n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; };
+  document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
+    var input = zone.querySelector('input[type="file"]');
+    var empty = zone.querySelector('.dropzone-empty');
+    var chosen = zone.querySelector('.dropzone-chosen');
+    var update = function () {
+      var file = input.files && input.files[0];
+      zone.classList.toggle('has-file', !!file);
+      empty.hidden = !!file;
+      chosen.hidden = !file;
+      if (file) {
+        chosen.querySelector('[data-file-name]').textContent = file.name;
+        chosen.querySelector('[data-file-meta]').textContent = fmtSize(file.size) + ' · click to change';
+      }
+    };
+    input.addEventListener('change', update);
+    ['dragenter', 'dragover'].forEach(function (t) { zone.addEventListener(t, function (e) { e.preventDefault(); zone.classList.add('is-over'); }); });
+    ['dragleave', 'drop'].forEach(function (t) { zone.addEventListener(t, function () { zone.classList.remove('is-over'); }); });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+      try { input.files = e.dataTransfer.files; } catch (err) { return; }
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    update();
+  });
+
+  // Character count under "What's covered"
+  document.querySelectorAll('[data-counter]').forEach(function (el) {
+    var out = document.getElementById(el.getAttribute('data-counter'));
+    var min = Number(el.getAttribute('data-min')) || 0;
+    var max = Number(el.getAttribute('maxlength')) || 0;
+    var update = function () {
+      var n = el.value.trim().length;
+      var short = n < min;
+      out.classList.toggle('is-short', short && n > 0);
+      out.textContent = short ? (min - n) + ' more characters needed' : n.toLocaleString('en-US') + ' / ' + max.toLocaleString('en-US');
+    };
+    el.addEventListener('input', update);
+    update();
+  });
+
+  // Upload form: check the fields before sending, so a big PDF isn't uploaded only to be sent back
+  // (the server checks everything again; these messages match its own)
+  document.querySelectorAll('[data-note-form]').forEach(function (f) {
+    var setError = function (el, msg) {
+      var field = el.closest('.field');
+      var box = el.closest('.declaration') || field;
+      var old = field.querySelector('.error-text');
+      if (old) old.remove();
+      box.classList.toggle('has-error', !!msg);
+      if (field !== box) field.classList.toggle('has-error', !!msg);
+      if (msg) {
+        var s = document.createElement('span');
+        s.className = 'error-text';
+        s.textContent = msg;
+        field.appendChild(s);
+      }
+    };
+    var check = function (el) {
+      var v = el.type === 'checkbox' ? el.checked : el.value.trim();
+      if (el.type === 'checkbox') return v ? '' : el.getAttribute('data-msg');
+      if (el.type === 'file') {
+        var file = el.files && el.files[0];
+        if (!file) return el.required ? 'Choose the PDF of your notes.' : '';
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return 'This file isn’t a PDF. Export your notes as PDF and try again.';
+        if (file.size > Number(el.getAttribute('data-max-mb')) * 1048576) return 'This PDF is ' + fmtSize(file.size) + '. The limit is ' + el.getAttribute('data-max-mb') + ' MB: try exporting it with smaller images.';
+        return '';
+      }
+      if (el.hasAttribute('data-price')) {
+        var p = parseFloat(v.replace(/[R\s]/gi, '').replace(',', '.'));
+        return isFinite(p) && p >= 10 && p <= 2000 ? '' : 'Set a price between R10 and R2,000.';
+      }
+      var min = Number(el.getAttribute('data-min')) || (el.required ? 1 : 0);
+      return v.length < min ? el.getAttribute('data-msg') : '';
+    };
+    var fields = function () { return f.querySelectorAll('[data-msg], [data-price], input[type="file"]'); };
+    // Clear a field's error as soon as it's fixed
+    f.addEventListener('input', function (e) { if (e.target.closest('.has-error') && !check(e.target)) setError(e.target, ''); });
+    f.addEventListener('change', function (e) {
+      if (!e.target.matches('[data-msg], [data-price], input[type="file"]')) return;
+      var msg = check(e.target);
+      if (e.target.type === 'file' || !msg) setError(e.target, msg);
+    });
+    f.addEventListener('submit', function (e) {
+      var first = null;
+      fields().forEach(function (el) {
+        var msg = check(el);
+        setError(el, msg);
+        if (msg && !first) first = el;
+      });
+      if (!first) return;
+      e.preventDefault();
+      var target = first.closest('.field') || first;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first.focus({ preventScroll: true });
+    });
+  });
+
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (f) {
-    f.addEventListener('submit', function () {
-      f.querySelectorAll('button[type="submit"]').forEach(function (b) {
-        setTimeout(function () { b.disabled = true; b.textContent = 'Uploading…'; }, 0);
-      });
+    f.addEventListener('submit', function (e) {
+      setTimeout(function () {
+        if (e.defaultPrevented) return;
+        f.querySelectorAll('button[type="submit"]').forEach(function (b) {
+          b.disabled = true;
+          if (b === e.submitter || !e.submitter) b.textContent = f.querySelector('input[type="file"]') && f.querySelector('input[type="file"]').files.length ? 'Uploading…' : 'Saving…';
+        });
+      }, 0);
     });
   });
 })();
