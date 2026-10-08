@@ -603,6 +603,29 @@
     });
   }
 
+  // Pop-up forms (e.g. Change bank details). Without JavaScript the open link loads the page with it open.
+  document.querySelectorAll('dialog.modal').forEach(function (d) {
+    if (typeof d.showModal !== 'function') return;
+    var form = d.querySelector('form');
+    var reset = function () {
+      if (!form || d.querySelector('.has-error')) return; // keep what they typed if it was sent back with errors
+      form.reset();
+      form.querySelectorAll('select').forEach(function (s) { s.dispatchEvent(new Event('change', { bubbles: true })); });
+    };
+    if (d.hasAttribute('data-open-on-load')) { d.close(); d.showModal(); }
+    document.querySelectorAll('[data-dialog-open="' + d.id + '"]').forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); d.showModal(); var f = d.querySelector('input:not([type=hidden])'); if (f) f.focus(); });
+    });
+    d.querySelectorAll('[data-dialog-close]').forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); d.close(); });
+    });
+    d.addEventListener('click', function (e) { if (e.target === d) d.close(); }); // click outside
+    d.addEventListener('close', function () {
+      reset();
+      if (/[?&]change=1/.test(location.search)) history.replaceState(null, '', location.pathname);
+    });
+  });
+
   // Confirm destructive actions
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) {

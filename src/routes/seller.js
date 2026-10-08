@@ -292,7 +292,7 @@ router.post('/verification/education/:id/remove', async (req, res, next) => {
 
 /* ---------- Payouts (Paystack subaccount) ---------- */
 
-async function renderPayouts(res, req, values, errors, status = 200) {
+async function renderPayouts(res, req, values, errors, status = 200, changeOpen = false) {
   let banks = [];
   let bankError = null;
   try {
@@ -318,6 +318,7 @@ async function renderPayouts(res, req, values, errors, status = 200) {
   res.status(status).render('seller/payouts', {
     title: 'Payouts',
     tab: 'payouts',
+    changeOpen,
     banks,
     bankError,
     values,
@@ -330,7 +331,7 @@ async function renderPayouts(res, req, values, errors, status = 200) {
   });
 }
 
-router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}));
+router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}, 200, req.query.change === '1'));
 
 router.post('/payouts', async (req, res) => {
   const s = req.seller;
@@ -348,7 +349,7 @@ router.post('/payouts', async (req, res) => {
   if (values.business_name.length < 2) errors.business_name = 'Enter the account holder’s name.';
   if (!bank) errors.bank_code = 'Choose your bank.';
   if (!/^\d{6,16}$/.test(values.account_number)) errors.account_number = 'Enter your account number using digits only.';
-  if (Object.keys(errors).length) return renderPayouts(res, req, values, errors, 400);
+  if (Object.keys(errors).length) return renderPayouts(res, req, values, errors, 400, true);
 
   const payload = {
     business_name: values.business_name,
@@ -366,7 +367,7 @@ router.post('/payouts', async (req, res) => {
     else code = (await paystack.createSubaccount(payload)).subaccount_code;
   } catch (err) {
     console.error('[payouts] subaccount failed', err.message, err.paystack);
-    return renderPayouts(res, req, values, { form: `Paystack didn’t accept these details: ${err.message}` }, 400);
+    return renderPayouts(res, req, values, { form: `Paystack didn’t accept these details: ${err.message}` }, 400, true);
   }
 
   const { error } = await db
@@ -381,7 +382,7 @@ router.post('/payouts', async (req, res) => {
     .eq('id', s.id);
   if (error) throw error;
   flash(req, 'ok', `Payout account saved. Your share of each sale will be paid into ${bank.name} ••••${values.account_number.slice(-4)}.`);
-  res.redirect('/seller');
+  res.redirect(s.paystack_subaccount_code ? '/seller/payouts' : '/seller'); // first setup goes back to the checklist
 });
 
 /* ---------- Notes ---------- */

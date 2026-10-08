@@ -1,49 +1,13 @@
 <%- include('../partials/top', { noindex: true }) %>
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
+  <% var hasAccount = !!me.paystack_subaccount_code; %>
   <% var payLabels = { success: ['pill-ok', 'Paid'], processing: ['pill-wait', 'On its way'], pending: ['pill-wait', 'Scheduled'], failed: ['pill-bad', 'Failed'] }; %>
-  <section class="payouts" aria-labelledby="payouts-title">
-    <h2 id="payouts-title">Your payouts</h2>
-    <div class="stats payout-stats">
-      <div class="stat"><b><%= rand(earned) %></b><span>Earned from sales</span></div>
-      <div class="stat"><b><%= rand(paidOut) %></b><span>Paid into your bank</span></div>
-    </div>
-    <% if (payoutsError) { %>
-      <div class="alert alert-error" role="alert"><%= payoutsError %></div>
-    <% } else if (!me.paystack_subaccount_code) { %>
-      <div class="empty payouts-empty"><h3>No payout account yet</h3><p>Add your bank details below. Your payouts will be listed here once students start buying.</p></div>
-    <% } else if (!payouts.length) { %>
-      <div class="empty payouts-empty">
-        <h3>No payouts yet</h3>
-        <p>After a sale, Paystack pays your share into your bank account, usually the next working day. Each payout will be listed here.</p>
-        <% if (testMode) { %><p class="fineprint">EasyNotes is in test mode, so no real money moves and this list stays empty until live payments are switched on.</p><% } %>
-      </div>
-    <% } else { %>
-      <div class="table-wrap">
-        <table class="data">
-          <thead><tr><th>Date</th><th>Status</th><th class="num">Amount</th></tr></thead>
-          <tbody>
-            <% payouts.forEach(function (p) { var lab = payLabels[p.status] || ['pill-muted', p.status || 'Unknown']; %>
-              <tr>
-                <td><%= p.date ? date(p.date) : '—' %></td>
-                <td><span class="pill <%= lab[0] %>"><%= lab[1] %></span></td>
-                <td class="num"><strong><%= rand(p.amount) %></strong></td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-      <p class="fineprint">Amounts are what Paystack paid into your bank account. A payout can cover several sales.</p>
-    <% } %>
-  </section>
 
-  <h2 class="payout-account-title">Payout account</h2>
-  <div class="dash-grid">
-    <form class="form card" method="post" action="/seller/payouts" novalidate data-unsaved>
+  <%# The bank details form: on its own before setup, in a pop-up after %>
+  <% var bankForm = function () { %>
+    <form class="form" method="post" action="/seller/payouts" novalidate data-unsaved>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <% if (me.paystack_subaccount_code) { %>
-        <div class="alert alert-ok"><strong>Payouts are set up.</strong><p>Paying into <%= me.bank_name %> ••••<%= me.account_number_last4 %> (<%= me.business_name %>). Fill in the form to change account.</p></div>
-      <% } %>
       <% if (errors.form) { %><div class="alert alert-error" role="alert"><%= errors.form %></div><% } %>
       <% if (bankError) { %><div class="alert alert-error" role="alert"><%= bankError %></div><% } %>
       <div class="field <%= errors.business_name ? 'has-error' : '' %>">
@@ -62,16 +26,90 @@
       </div>
       <div class="field <%= errors.account_number ? 'has-error' : '' %>">
         <label for="b-acc">Account number</label>
-        <input id="b-acc" type="text" name="account_number" maxlength="20" inputmode="numeric" autocomplete="off" value="" required style="max-width:280px">
+        <input id="b-acc" type="text" name="account_number" maxlength="20" inputmode="numeric" autocomplete="off" value="" required>
         <%- include('../partials/field-error', { name: 'account_number' }) %>
       </div>
-      <div class="form-actions"><button class="btn" type="submit"><%= me.paystack_subaccount_code ? 'Update payout account' : 'Save payout account' %></button></div>
+      <p class="fineprint" style="margin:0">EasyNotes stores only your bank name and the last four digits of your account number. The full details are held securely by Paystack.</p>
+      <div class="form-actions">
+        <button class="btn btn-hi" type="submit"><%= hasAccount ? 'Save new bank details' : 'Set up payouts' %></button>
+        <% if (hasAccount) { %><a href="/seller/payouts" data-dialog-close>Cancel</a><% } %>
+      </div>
     </form>
-    <div>
-      <h2 style="font-size:1.2rem">How you get paid</h2>
-      <p>When a student buys your notes, the payment is split automatically: <strong><%= 100 - feePercent %>%</strong> goes to you and <%= feePercent %>% to EasyNotes. Your share is paid into this account, usually the next working day.</p>
-      <p class="fineprint">EasyNotes stores only your bank name and the last four digits of your account number. The full details are held by Paystack.</p>
+  <% }; %>
+
+  <% if (!hasAccount) { %>
+    <div class="payout-setup">
+      <div class="card payout-setup-card">
+        <header class="form-section-head">
+          <h2>Set up payouts</h2>
+          <p class="muted">Add the bank account you want to be paid into. Your notes go on sale once this is done.</p>
+        </header>
+        <% bankForm(); %>
+      </div>
+      <aside class="payout-how">
+        <h2>How you get paid</h2>
+        <ul class="steps-mini">
+          <li><span>1</span><p>A student buys your notes.</p></li>
+          <li><span>2</span><p>Paystack splits the payment automatically: <strong><%= 100 - feePercent %>%</strong> to you, <%= feePercent %>% to EasyNotes.</p></li>
+          <li><span>3</span><p>Your share is paid into your bank account, usually the next working day.</p></li>
+        </ul>
+      </aside>
     </div>
-  </div>
+
+  <% } else { %>
+    <div class="payout-account">
+      <span class="payout-bank-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div class="payout-account-text">
+        <span class="small muted">Paid into</span>
+        <strong><%= me.bank_name %> ••••<%= me.account_number_last4 %></strong>
+        <span class="small muted"><%= me.business_name %></span>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="/seller/payouts?change=1" data-dialog-open="bank-dialog">Change bank details</a>
+    </div>
+
+    <div class="stats payout-stats">
+      <div class="stat"><b><%= rand(earned) %></b><span>Earned from sales</span></div>
+      <div class="stat"><b><%= rand(paidOut) %></b><span>Paid into your bank</span></div>
+      <div class="stat"><b><%= 100 - feePercent %>%</b><span>Your share of each sale</span></div>
+    </div>
+
+    <section aria-labelledby="payouts-title">
+      <h2 id="payouts-title" class="payouts-title">Payout history</h2>
+      <% if (payoutsError) { %>
+        <div class="alert alert-error" role="alert"><%= payoutsError %></div>
+      <% } else if (!payouts.length) { %>
+        <div class="empty payouts-empty">
+          <h3>No payouts yet</h3>
+          <p>After a sale, your share is paid into your bank account, usually the next working day. Each payout will be listed here.</p>
+          <% if (testMode) { %><p class="fineprint">EasyNotes is in test mode, so no real money moves and this list stays empty until live payments are switched on.</p><% } %>
+        </div>
+      <% } else { %>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Date</th><th>Status</th><th class="num">Amount</th></tr></thead>
+            <tbody>
+              <% payouts.forEach(function (p) { var lab = payLabels[p.status] || ['pill-muted', p.status || 'Unknown']; %>
+                <tr>
+                  <td><%= p.date ? date(p.date) : '—' %></td>
+                  <td><span class="pill <%= lab[0] %>"><%= lab[1] %></span></td>
+                  <td class="num"><strong><%= rand(p.amount) %></strong></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <p class="fineprint">Amounts are what Paystack paid into your bank account. A payout can cover several sales.</p>
+      <% } %>
+    </section>
+
+    <dialog class="modal" id="bank-dialog" aria-labelledby="bank-dialog-title" <%= locals.changeOpen ? 'open data-open-on-load' : '' %>>
+      <div class="modal-head">
+        <h2 id="bank-dialog-title">Change bank details</h2>
+        <a class="modal-x" href="/seller/payouts" data-dialog-close aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></a>
+      </div>
+      <p class="muted small">Currently paying into <%= me.bank_name %> ••••<%= me.account_number_last4 %>. Your next payouts go to the new account once you save.</p>
+      <% bankForm(); %>
+    </dialog>
+  <% } %>
 </div>
 <%- include('../partials/bottom') %>

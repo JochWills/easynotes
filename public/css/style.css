@@ -361,7 +361,6 @@ html:has(dialog.drawer[open]) { overflow: hidden; }
 @media (max-width: 420px) { .copy-in [data-copy-label] { display: none; } .prefix-copy > span { padding: 0 .6em; font-size: .88rem; } }
 .payouts { margin-bottom: 40px; }
 .payouts h2, .payout-account-title { font-size: 1.3rem; margin: 0 0 14px; }
-.stats.payout-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
 .payouts-empty { padding: 28px 20px; }
 .current-file { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); text-decoration: none; transition: border-color .15s, background .15s; }
 .current-file:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--ink); }
@@ -1204,3 +1203,34 @@ main > :nth-child(n+4) { animation-delay: .12s; }
 /* Storefront settings: the live preview stays in view while the seller scrolls the form */
 .sticky-preview { position: sticky; top: 92px; align-self: start; }
 @media (max-width: 920px) { .sticky-preview { position: static; } }
+
+/* ---------- Payouts ---------- */
+.payout-setup { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.payout-setup-card { padding: 28px; }
+.payout-how h2, .payouts-title { font-size: 1.2rem; margin: 0 0 14px; }
+.payout-how { padding-top: 6px; }
+.steps-mini { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.steps-mini li { display: flex; gap: 14px; align-items: flex-start; }
+.steps-mini span { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: .9rem; }
+.steps-mini p { margin: 4px 0 0; color: var(--ink-soft); }
+.payout-account { display: flex; align-items: center; gap: 16px; padding: 18px 22px; margin-bottom: 18px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.payout-bank-icon { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--ok-bg); color: var(--ok); }
+.payout-account-text { display: grid; flex: 1; min-width: 0; line-height: 1.35; }
+.payout-account-text strong { font-size: 1.05rem; }
+.stats.payout-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 30px; }
+dialog.modal { width: min(480px, calc(100% - 32px)); overflow: visible; /* lets dropdowns open past the edge */ padding: 26px 28px 28px; border: 0; border-radius: 18px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow-lg); }
+dialog.modal[open] { animation: fade-in .16s ease-out; }
+dialog.modal::backdrop { background: rgba(14, 26, 58, .45); backdrop-filter: blur(2px); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.modal-head h2 { font-size: 1.3rem; margin: 0; }
+.modal-x { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; color: var(--muted); }
+.modal-x:hover { background: var(--page); color: var(--ink); }
+dialog.modal > p { margin: 0 0 18px; }
+@media (max-width: 920px) { .payout-setup { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .stats.payout-stats { grid-template-columns: 1fr 1fr; }
+  .stats.payout-stats .stat:last-child { grid-column: 1 / -1; }
+  .payout-account { flex-wrap: wrap; }
+  .payout-account .btn { width: 100%; }
+}
+@media (max-height: 640px) { dialog.modal { max-height: calc(100vh - 24px); overflow: auto; } }
