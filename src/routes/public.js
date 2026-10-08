@@ -4,6 +4,9 @@ const config = require('../lib/config');
 const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
 const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
+
+// The "Popular at" links on the home page, in this order
+const HOME_UNIS = ['UCT', 'Stellenbosch', 'NMU', 'Milpark', 'Emeris', 'UP', 'UJ', 'UNISA'];
 const { isUuid, noteUrl, storeUrl, str } = require('../lib/helpers');
 const rateLimit = require('express-rate-limit');
 const events = require('../lib/events');
@@ -22,7 +25,7 @@ router.get('/', async (req, res) => {
     title: null,
     notes: notes || [],
     total: count || 0,
-    popularUnis: UNIVERSITIES.filter((u) => u.popular),
+    popularUnis: HOME_UNIS.map((short) => UNIVERSITIES.find((u) => u.short === short)).filter(Boolean),
   });
 });
 
