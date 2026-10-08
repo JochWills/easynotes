@@ -2,12 +2,11 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
   <p><a href="/seller/verification">← Your education</a></p>
-  <% var m = locals.mode || 'add'; var target = locals.replaces || locals.editing || locals.retryOf; %>
+  <% var m = locals.mode || 'add'; var target = locals.replaces || locals.retryOf; %>
   <% var heads = {
        add: ['Add education', 'Add another qualification you’ve completed, or further study you’re doing now, like honours, a master’s or a PhD.'],
        finish: ['You’ve finished ' + (target && target.name), 'Congratulations! Upload your certificate or final academic record. Your current entry stays on your storefront until we’ve checked it.'],
        edit: ['Edit ' + (target && target.name), 'Change anything that’s out of date or wrong. We check every change before it shows, and your current entry stays on your storefront until then.'],
-       pending: ['Edit ' + (target && target.name), 'This is still waiting for review, so your changes are added to it. It stays in review.'],
        retry: ['Fix and send again', 'Update the details or upload a clearer document, then send it back for review.']
      }; %>
   <div class="dash-grid edu-grid">
@@ -15,17 +14,16 @@
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <input type="hidden" name="mode" value="<%= m %>">
       <% if (locals.replaces) { %><input type="hidden" name="replaces" value="<%= replaces.id %>"><% } %>
-      <% if (locals.editing) { %><input type="hidden" name="editing" value="<%= editing.id %>"><% } %>
       <% if (locals.retryOf) { %><input type="hidden" name="retry" value="<%= retryOf.id %>"><% } %>
       <% if (locals.retryOf && retryOf.review_note) { %><div class="alert alert-error"><strong>Why it wasn’t approved</strong><p><%= retryOf.review_note %></p></div><% } %>
       <header class="form-section-head">
         <h2><%= heads[m][0] %></h2>
         <p class="muted"><%= heads[m][1] %></p>
       </header>
-      <%- include('qual-fields', { allowStudying: locals.allowStudying !== false && m !== 'finish', keepDocs: m === 'edit' || m === 'pending', existing: m === 'add' || m === 'finish' ? null : target }) %>
+      <%- include('qual-fields', { allowStudying: locals.allowStudying !== false && m !== 'finish', keepDocs: m === 'edit', existing: m === 'add' || m === 'finish' ? null : target }) %>
       <% if (locals.onlyDegree) { %><p class="small muted">This is the completed degree your verification is based on, so it stays marked as finished.</p><% } %>
       <div class="form-actions">
-        <button class="btn btn-hi" type="submit"><%= m === 'pending' ? 'Save changes' : 'Send for review' %></button>
+        <button class="btn btn-hi" type="submit">Send for review</button>
         <a href="/seller/verification">Cancel</a>
       </div>
     </form>
@@ -34,6 +32,7 @@
       <ul class="checklist checklist-dark">
         <li>Someone on our team checks it against your documents, usually within two working days</li>
         <li>Your storefront and notes stay exactly as they are while we check</li>
+        <li>You can’t make changes while it’s under review</li>
         <li>Once approved, it shows on your storefront<%= locals.replaces ? ' in place of the current entry' : '' %></li>
       </ul>
     </div>

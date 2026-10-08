@@ -68,7 +68,6 @@ const cases = {
     { ...sellerBase, ...eduL, title: 'Update', tab: 'verification', q: { name: 'MPhil Tax', status: 'in_progress', honours: 'cum_laude' }, replaces: quals[3], mode: 'edit', onlyDegree: false, errors: { honours: 'Cum laude only on finishing', average_mark: 'Between 50 and 100' } },
     { ...sellerBase, ...eduL, title: 'Retry', tab: 'verification', q: quals[2], replaces: null, retryOf: quals[2], mode: 'retry', errors: {} },
     { ...sellerBase, ...eduL, title: 'Edit', tab: 'verification', q: quals[1], replaces: quals[1], mode: 'edit', onlyDegree: true, allowStudying: false, errors: {} },
-    { ...sellerBase, ...eduL, title: 'Edit', tab: 'verification', q: quals[3], editing: quals[3], mode: 'pending', errors: {} },
   ],
   'seller/payouts': [
     { ...sellerBase, title: 'P', tab: 'payouts', banks: [{ name: 'Capitec Bank', code: '470010' }], bankError: null, values: { bank_code: '470010' }, errors: { form: 'Paystack said no' }, changeOpen: true, payouts: [{ id: 1, status: 'success', amount: 19200, date: new Date() }, { id: 2, status: 'processing', amount: 9600, date: new Date() }, { id: 3, status: 'pending', amount: 4800, date: null }, { id: 4, status: 'failed', amount: 9600, date: new Date() }], payoutsError: null, earned: 43200, paidOut: 19200, testMode: false },

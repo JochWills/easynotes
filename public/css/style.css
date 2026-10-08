@@ -1235,3 +1235,9 @@ dialog.modal > p { margin: 0 0 18px; }
   .payout-account .btn { width: 100%; }
 }
 @media (max-height: 640px) { dialog.modal { max-height: calc(100vh - 24px); overflow: auto; } }
+
+.edu-review { display: flex; gap: 12px; align-items: flex-start; margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--wait-bg); border: 1px solid #F2DC8C; color: var(--wait); }
+.edu-review svg { flex: none; margin-top: 1px; }
+.edu-review strong { display: block; color: #5C4300; }
+.edu-review p { margin: 2px 0 0; font-size: .9rem; }
+.edu-locked { margin: 12px 0 0; font-size: .88rem; color: var(--muted); }
