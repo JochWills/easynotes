@@ -57,19 +57,12 @@
       <p class="eyebrow">Browse notes</p>
       <h2>Recently added</h2>
     </div>
-    <% var subjects = notes.map(function (n) { return n.subject; }).filter(function (s, i, a) { return s && a.indexOf(s) === i; }).slice(0, 6); %>
-    <% if (subjects.length > 1) { %>
-      <nav class="subject-tabs" aria-label="Browse by subject">
-        <a href="/notes" aria-current="page">All</a>
-        <% subjects.forEach(function (s) { %><a href="/notes<%= qs({ q: s }) %>"><%= s %></a><% }) %>
-      </nav>
-    <% } %>
+    <% if (notes.length) { %><a class="btn btn-ghost section-head-btn" href="/notes"><span class="btn-long">Browse all notes</span><span class="btn-short" aria-hidden="true">See all</span> <span aria-hidden="true">→</span></a><% } %>
   </div>
   <% if (notes.length) { %>
     <div class="grid-notes grid-swipe">
       <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
     </div>
-    <% if (total > notes.length) { %><p class="see-all"><a class="btn btn-ghost" href="/notes">See all <%= total %> sets of notes</a></p><% } %>
   <% } else { %>
     <div class="empty">
       <h3>The first notes are on their way</h3>

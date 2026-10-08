@@ -1325,3 +1325,13 @@ dialog.modal > p { margin: 0 0 18px; }
 @media (max-width: 920px) and (prefers-reduced-motion: reduce) {
   .nav, .menu-bars i, .menu-backdrop { transition: none !important; }
 }
+/* Home "Browse all notes": a compact button beside the heading on phones too */
+@media (max-width: 920px) {
+  .section-head:has(.section-head-btn) { flex-direction: row; flex-wrap: nowrap; align-items: flex-end; }
+  .section-head-btn { flex: none; padding: .55em 1em; font-size: .9rem; }
+}
+.btn-short { display: none; }
+@media (max-width: 520px) {
+  .section-head-btn .btn-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .section-head-btn .btn-short { display: inline; }
+}
