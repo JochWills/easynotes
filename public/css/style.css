@@ -784,9 +784,6 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .buy-fields.is-revealed { animation: reveal .25s ease; }
 @keyframes reveal { from { opacity: 0; transform: translateY(-6px); } }
 .buy-cart { margin: 0; }
-.buy-ticks { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 11px; }
-.buy-ticks li { position: relative; padding-left: 32px; color: var(--ink-soft); }
-.buy-ticks li::before { content: ""; position: absolute; left: 2px; top: 4px; width: 16px; height: 10px; border-left: 2.5px solid var(--ok); border-bottom: 2.5px solid var(--ok); transform: rotate(-45deg) scale(.85); transform-origin: 40% 60%; }
 .buy-secure { display: flex; gap: 14px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--rule); }
 .buy-secure svg { flex: none; color: var(--blue); }
 .buy-secure strong { display: block; font-size: .95rem; }
