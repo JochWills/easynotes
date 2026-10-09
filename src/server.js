@@ -46,6 +46,9 @@ app.use(
   })
 );
 
+// Domain verification files (e.g. Apple Pay through Paystack). The main static handler skips dot-folders.
+app.use('/.well-known', express.static(path.join(__dirname, '..', 'public', '.well-known')));
+
 app.get('/healthz', (req, res) => res.send('ok'));
 
 // Webhooks need the raw body for signature checks, so they mount before body parsing and sessions.
