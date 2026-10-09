@@ -796,6 +796,15 @@
     });
   });
 
+  // Sticky price box on note pages: sit 92px from the top, or higher if needed so its bottom stays reachable
+  var noteSide = document.querySelector('.note-side .buy-box');
+  if (noteSide) {
+    var fitSide = function () { noteSide.style.setProperty('--side-top', Math.min(92, window.innerHeight - noteSide.offsetHeight - 24) + 'px'); };
+    fitSide();
+    window.addEventListener('resize', fitSide);
+    if (window.ResizeObserver) new ResizeObserver(fitSide).observe(noteSide);
+  }
+
   // Note preview viewer: page number, zoom, thumbnails and full screen
   document.querySelectorAll('[data-viewer]').forEach(function (v) {
     var scroller = v.querySelector('[data-viewer-scroll]');

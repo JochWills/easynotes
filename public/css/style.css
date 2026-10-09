@@ -694,6 +694,13 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .note-view { grid-area: view; min-width: 0; }
 .note-main { grid-area: main; min-width: 0; }
 .note-side { grid-area: side; display: grid; gap: 18px; }
+/* Desktop: the price box follows the page down the column; the cards under it wait at the bottom.
+   If the box is taller than the screen, it stops once its bottom is in view (top set by app.js). */
+@media (min-width: 921px) {
+  .note-side { align-self: stretch; display: flex; flex-direction: column; }
+  .buy-track { flex: 1; }
+  .note-side .buy-box { position: sticky; top: var(--side-top, 92px); }
+}
 .note-page > .note-more { grid-area: more; margin-top: 56px; }
 
 /* Preview viewer */
@@ -753,7 +760,7 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .tabs-on .tab-panel[hidden] { display: none; }
 
 /* Buy box on the note page */
-.note-side .buy-box { position: static; padding: 28px; }
+.note-side .buy-box { padding: 28px; }
 .buy-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .note-side .buy-box .price { font-size: 2.6rem; margin: 0; line-height: 1; }
 .instant { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; background: var(--blue-soft); color: var(--blue); font-size: .86rem; font-weight: 600; white-space: nowrap; border: 1px solid rgba(30, 91, 216, .15); }
