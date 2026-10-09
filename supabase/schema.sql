@@ -51,7 +51,7 @@ create table if not exists notes (
   module_code text,
   university text not null,
   level text not null,
-  price_cents int not null check (price_cents between 1000 and 200000),
+  price_cents int not null check (price_cents between 200 and 50000),
   page_count int,
   file_path text not null,
   file_size int,
