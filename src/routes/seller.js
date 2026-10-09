@@ -42,20 +42,66 @@ const afterUpload = (back) => (req, res, next) => {
 
 /* ---------- Overview ---------- */
 
+// Overview periods. "Today" starts at midnight in South Africa (UTC+2, no daylight saving).
+const PERIODS = [
+  ['today', 'Today', 'Today'],
+  ['7d', 'Last 7 days', '7 days'],
+  ['30d', 'Last 30 days', '30 days'],
+  ['year', 'Last year', '1 year'],
+  ['all', 'All time', 'All'],
+];
+function periodStart(period) {
+  const now = Date.now();
+  const day = 86400000;
+  if (period === 'today') {
+    const sast = now + 2 * 3600000;
+    return new Date(sast - (sast % day) - 2 * 3600000);
+  }
+  if (period === '7d') return new Date(now - 7 * day);
+  if (period === '30d') return new Date(now - 30 * day);
+  if (period === 'year') return new Date(now - 365 * day);
+  return null;
+}
+
 router.get('/', async (req, res) => {
   const s = req.seller;
-  const [{ data: notes }, { data: totals }] = await Promise.all([
-    db.from('notes').select('id,title,slug,status,price_cents,sales_count,page_count,module_code,created_at').eq('seller_id', s.id).neq('status', 'deleted').order('created_at', { ascending: false }),
-    db.rpc('seller_totals', { p_seller_id: s.id }),
+  const period = PERIODS.some((p) => p[0] === req.query.period) ? req.query.period : 'all';
+  const since = periodStart(period);
+  const paid = (cols) => {
+    let q = db.from('orders').select(cols).eq('seller_id', s.id).eq('status', 'paid');
+    return since ? q.gte('paid_at', since.toISOString()) : q;
+  };
+  const [{ data: notes }, { data: orders }, totals] = await Promise.all([
+    db.from('notes').select('id,status').eq('seller_id', s.id).neq('status', 'deleted'),
+    paid('reference,email,amount_cents,seller_earnings_cents,paid_at,notes(title)').order('paid_at', { ascending: false }).limit(200),
+    since
+      ? paid('seller_earnings_cents').limit(10000).then(({ data }) => ({ sales: (data || []).length, earnings: (data || []).reduce((t, o) => t + (o.seller_earnings_cents || 0), 0) }))
+      : db.rpc('seller_totals', { p_seller_id: s.id }).then(({ data }) => (data && data[0]) || { sales: 0, earnings: 0 }),
   ]);
-  const t = (totals && totals[0]) || { sales: 0, earnings: 0 };
   res.render('seller/dashboard', {
     title: 'Seller dashboard',
     tab: 'overview',
-    notes: notes || [],
-    sales: Number(t.sales),
-    earnings: Number(t.earnings),
+    periods: PERIODS,
+    period,
+    hasNotes: (notes || []).length > 0,
+    published: (notes || []).filter((n) => n.status === 'published').length,
+    orders: orders || [],
+    sales: Number(totals.sales),
+    earnings: Number(totals.earnings),
+    feeBearer: config.feeBearer,
   });
+});
+
+/* ---------- Notes ---------- */
+
+router.get('/notes', async (req, res) => {
+  const { data: notes } = await db
+    .from('notes')
+    .select('id,title,slug,status,price_cents,sales_count,page_count,module_code,subject,created_at')
+    .eq('seller_id', req.seller.id)
+    .neq('status', 'deleted')
+    .order('created_at', { ascending: false });
+  res.render('seller/notes', { title: 'Your notes', tab: 'notes', notesList: true, notes: notes || [] });
 });
 
 /* ---------- Storefront profile ---------- */
@@ -497,7 +543,7 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
         : 'Notes published. Students can buy them now.'
       : 'Saved as a draft. Publish when you’re ready.'
   );
-  res.redirect('/seller');
+  res.redirect('/seller/notes');
 });
 
 // Lets the seller open the PDF they uploaded, through a short-lived link (the notes bucket is private).
@@ -516,7 +562,7 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
   const n = req.note;
   if (n.status === 'removed') {
     flash(req, 'error', 'These notes were removed by EasyNotes and can’t be edited. Contact support.');
-    return res.redirect('/seller');
+    return res.redirect('/seller/notes');
   }
   const { values, errors } = validateNote(req.body);
   const { pdf } = checkFiles(req, errors, { pdfRequired: false });
@@ -544,20 +590,20 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
   }
   await storage.remove('notes', oldFiles);
   flash(req, 'ok', pdf ? 'Changes saved. Past buyers will get the new file when they download again.' : 'Changes saved.');
-  res.redirect('/seller');
+  res.redirect('/seller/notes');
 });
 
 router.post('/notes/:id/status', ownNote, async (req, res) => {
   const n = req.note;
   if (n.status === 'removed') {
     flash(req, 'error', 'These notes were removed by EasyNotes. Contact support if you think this is a mistake.');
-    return res.redirect('/seller');
+    return res.redirect('/seller/notes');
   }
   const status = req.body.action === 'publish' ? 'published' : 'unpublished';
   if (status === 'published' && req.seller.verification_status !== 'approved') return requireApproved(req, res);
   await db.from('notes').update({ status }).eq('id', n.id);
   flash(req, 'ok', status === 'published' ? `“${n.title}” is published.` : `“${n.title}” is hidden from students. Past buyers can still download it.`);
-  res.redirect('/seller');
+  res.redirect('/seller/notes');
 });
 
 /* ---------- Delete ---------- */
@@ -579,7 +625,7 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
   const checkingOut = orders.some((o) => o.status === 'pending' && Date.now() - new Date(o.created_at).getTime() < PENDING_GRACE_MS);
   if (!sold && checkingOut) {
     flash(req, 'error', `Someone is paying for “${n.title}” right now. Hide it instead, or try deleting again in a couple of hours.`);
-    return res.redirect('/seller');
+    return res.redirect('/seller/notes');
   }
 
   if (sold) {
@@ -598,20 +644,12 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
   await preview.removePreview(n.file_path, n.page_count);
   events.log('note.deleted', { note_id: n.id, title: n.title, sold }, req.user.email);
   flash(req, 'ok', sold ? `“${n.title}” is deleted. People who bought it can still download it.` : `“${n.title}” is deleted.`);
-  res.redirect('/seller');
+  res.redirect('/seller/notes');
 });
 
-/* ---------- Sales ---------- */
+/* ---------- Old Sales tab ---------- */
 
-router.get('/sales', async (req, res) => {
-  const { data: orders } = await db
-    .from('orders')
-    .select('reference,email,amount_cents,seller_earnings_cents,paid_at,notes(title)')
-    .eq('seller_id', req.seller.id)
-    .eq('status', 'paid')
-    .order('paid_at', { ascending: false })
-    .limit(200);
-  res.render('seller/sales', { title: 'Sales', tab: 'sales', orders: orders || [], feeBearer: config.feeBearer });
-});
+// Sales now live on the overview
+router.get('/sales', (req, res) => res.redirect(301, '/seller'));
 
 module.exports = router;

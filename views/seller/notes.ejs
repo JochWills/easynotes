@@ -1,0 +1,52 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <% var verified = me.verification_status === 'approved'; %>
+  <% if (notes.length) { %>
+    <% var pub = notes.filter(function (n) { return n.status === 'published'; }).length; %>
+    <div class="notes-head">
+      <p class="muted"><%= notes.length %> <%= notes.length === 1 ? 'set' : 'sets' %> of notes · <%= pub %> published<%= notes.length - pub ? ' · ' + (notes.length - pub) + ' not live' : '' %></p>
+    </div>
+  <% } %>
+  <% if (notes.length) { %>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Title</th><th>Status</th><th>Added</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <% notes.forEach(function (n) { %>
+            <tr>
+              <td><a href="<%= noteUrl(n) %>"><%= n.title %></a><% if (n.module_code) { %> <span class="muted small"><%= n.module_code %></span><% } %><% if (n.subject) { %><br><span class="muted small"><%= n.subject %></span><% } %></td>
+              <td><%- include('../partials/status-pill', { status: n.status }) %></td>
+              <td class="nowrap"><%= date(n.created_at) %></td>
+              <td class="num"><%= rand(n.price_cents) %></td>
+              <td class="num"><%= n.sales_count %></td>
+              <td>
+                <div class="actions">
+                  <% if (n.status !== 'removed') { %>
+                    <a class="btn btn-ghost btn-sm" href="/seller/notes/<%= n.id %>/edit">Edit</a>
+                    <form method="post" action="/seller/notes/<%= n.id %>/status">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <% if (n.status === 'published') { %>
+                        <input type="hidden" name="action" value="unpublish"><button class="btn btn-ghost btn-sm" type="submit">Hide</button>
+                      <% } else { %>
+                        <input type="hidden" name="action" value="publish"><button class="btn btn-sm" type="submit" <%= verified ? '' : 'disabled' %>>Publish</button>
+                      <% } %>
+                    </form>
+                  <% } %>
+                  <a class="btn btn-ghost btn-sm btn-danger-ghost" href="/seller/notes/<%= n.id %>/delete">Delete</a>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <h3>No notes yet</h3>
+      <p><%= verified ? 'Upload a PDF to create your first listing.' : 'Once your degree is verified you can upload notes here.' %></p>
+      <% if (verified) { %><a class="btn" href="/seller/notes/new">Upload notes</a><% } %>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

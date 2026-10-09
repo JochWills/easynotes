@@ -2,7 +2,7 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
 
-  <% var verified = me.verification_status === 'approved'; var payouts = !!me.paystack_subaccount_code; var hasNotes = notes.length > 0; %>
+  <% var verified = me.verification_status === 'approved'; var payouts = !!me.paystack_subaccount_code; %>
   <% if (!(verified && payouts && hasNotes)) { %>
     <h2 style="font-size:1.35rem">Get your storefront live</h2>
     <ol class="setup">
@@ -26,51 +26,45 @@
     </ol>
   <% } %>
 
-  <div class="stats">
-    <div class="stat"><b><%= rand(earnings) %></b><span>Your earnings, all time</span></div>
-    <div class="stat"><b><%= sales %></b><span><%= sales === 1 ? 'Sale' : 'Sales' %></span></div>
-    <div class="stat"><b><%= notes.filter(function (n) { return n.status === 'published'; }).length %></b><span>Published notes</span></div>
+  <% var periodLabel = periods.filter(function (p) { return p[0] === period; })[0][1]; %>
+  <div class="period-row">
+    <h2 class="period-title"><%= periodLabel %></h2>
+    <nav class="period-pick" aria-label="Show stats for">
+      <% periods.forEach(function (p) { %>
+        <a href="/seller<%= p[0] === 'all' ? '' : '?period=' + p[0] %>" <%- p[0] === period ? 'aria-current="true"' : '' %>><span class="period-long"><%= p[1] %></span><span class="period-short" aria-hidden="true"><%= p[2] || p[1] %></span></a>
+      <% }) %>
+    </nav>
   </div>
 
-  <h2 style="font-size:1.35rem">Your notes</h2>
-  <% if (notes.length) { %>
+  <div class="stats">
+    <div class="stat"><b><%= rand(earnings) %></b><span>Your earnings</span></div>
+    <div class="stat"><b><%= sales %></b><span><%= sales === 1 ? 'Sale' : 'Sales' %></span></div>
+    <div class="stat"><b><%= published %></b><span>Published notes</span></div>
+  </div>
+
+  <h2 style="font-size:1.35rem">Sales</h2>
+  <% if (orders.length) { %>
     <div class="table-wrap">
       <table class="data">
-        <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>Date</th><th>Notes</th><th>Buyer</th><th class="num">Price</th><th class="num">You earn</th></tr></thead>
         <tbody>
-          <% notes.forEach(function (n) { %>
+          <% orders.forEach(function (o) { %>
             <tr>
-              <td><a href="<%= noteUrl(n) %>"><%= n.title %></a><% if (n.module_code) { %> <span class="muted small"><%= n.module_code %></span><% } %></td>
-              <td><%- include('../partials/status-pill', { status: n.status }) %></td>
-              <td class="num"><%= rand(n.price_cents) %></td>
-              <td class="num"><%= n.sales_count %></td>
-              <td>
-                <div class="actions">
-                  <% if (n.status !== 'removed') { %>
-                    <a class="btn btn-ghost btn-sm" href="/seller/notes/<%= n.id %>/edit">Edit</a>
-                    <form method="post" action="/seller/notes/<%= n.id %>/status">
-                      <input type="hidden" name="_csrf" value="<%= csrf %>">
-                      <% if (n.status === 'published') { %>
-                        <input type="hidden" name="action" value="unpublish"><button class="btn btn-ghost btn-sm" type="submit">Hide</button>
-                      <% } else { %>
-                        <input type="hidden" name="action" value="publish"><button class="btn btn-sm" type="submit" <%= verified ? '' : 'disabled' %>>Publish</button>
-                      <% } %>
-                    </form>
-                  <% } %>
-                  <a class="btn btn-ghost btn-sm btn-danger-ghost" href="/seller/notes/<%= n.id %>/delete">Delete</a>
-                </div>
-              </td>
+              <td><%= date(o.paid_at) %></td>
+              <td><%= o.notes ? o.notes.title : '' %></td>
+              <td><%= maskEmail(o.email) %></td>
+              <td class="num"><%= rand(o.amount_cents) %></td>
+              <td class="num"><strong><%= rand(o.seller_earnings_cents) %></strong></td>
             </tr>
           <% }) %>
         </tbody>
       </table>
     </div>
+    <p class="fineprint"><%= orders.length === 200 ? 'Showing your latest 200 sales. ' : '' %>Earnings are after the <%= feePercent %>% EasyNotes fee<%= feeBearer === 'subaccount' ? ' and before the card processing fee' : '' %>. They’re paid into your bank account.</p>
+  <% } else if (period !== 'all' && sales === 0) { %>
+    <div class="empty empty-sm"><h3>No sales in this period</h3><p>Try a longer period, or share your storefront link with study groups to get more sales.</p><a class="btn btn-ghost" href="/seller">Show all time</a></div>
   <% } else { %>
-    <div class="empty">
-      <h3>No notes yet</h3>
-      <p><%= verified ? 'Upload a PDF to create your first listing.' : 'Once your degree is verified you can upload notes here.' %></p>
-      <% if (verified) { %><a class="btn" href="/seller/notes/new">Upload notes</a><% } %>
-    </div>
+    <div class="empty"><h3>No sales yet</h3><p>Sales show up here as soon as a student pays. Sharing your storefront link with study groups is the fastest way to your first sale.</p><% if (me.verification_status === 'approved') { %><a class="btn btn-ghost" href="<%= storeUrl(me) %>">Open your storefront</a><% } %></div>
   <% } %>
 </div>
 <%- include('../partials/bottom') %>
