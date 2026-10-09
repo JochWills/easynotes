@@ -20,7 +20,7 @@ A South African study-notes marketplace. Verified academics run their own storef
 1. Sign up → storefront at `/s/their-name`.
 2. Upload degree certificate/transcript + ID → status "In review".
 3. Add bank details → a Paystack subaccount is created.
-4. Once you approve them, they upload PDFs (max 50 MB) with an optional free sample, and set their own price (R10–R2,000).
+4. Once you approve them, they upload PDFs (max 50 MB) with an optional free sample, and set their own price (R25–R500).
 
 Notes only appear to students when **all three** are true: note published, seller approved, payout account set up.
 
@@ -104,7 +104,7 @@ Paystack can't reach `localhost` for webhooks, but the browser callback still co
 | `SESSION_SECRET` | — | Signs the login cookie |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | — | Database + storage |
 | `PAYSTACK_SECRET_KEY` | — | Payments, subaccounts, webhook signature |
-| `PLATFORM_FEE_PERCENT` | `20` | Your cut of each sale |
+| `PLATFORM_FEE_PERCENT` | `15` | Your cut of each sale |
 | `PAYSTACK_FEE_BEARER` | `account` | Who pays Paystack's fee |
 | `MAX_DOWNLOADS` | `10` | Downloads allowed per purchase |
 | `RESEND_API_KEY` | — | Optional. Sends buyers their download link |

@@ -90,7 +90,7 @@
             <label class="sr-only" for="n-price">Price in rand</label>
             <div class="prefix"><span>R</span><input id="n-price" type="text" inputmode="decimal" name="price" maxlength="10" value="<%= values.price || '' %>" required data-price data-fee="<%= feePercent %>" placeholder="e.g. 120"></div>
             <div class="earn-row"><span>You earn per sale</span><strong data-earn>R0.00</strong></div>
-            <span class="hint">Between R10 and R2,000. EasyNotes keeps <%= feePercent %>%.</span>
+            <span class="hint">Between R25 and R500. EasyNotes keeps <%= feePercent %>%.</span>
             <%- include('../partials/field-error', { name: 'price' }) %>
           </div>
         </section>

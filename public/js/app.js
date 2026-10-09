@@ -1084,7 +1084,7 @@
       }
       if (el.hasAttribute('data-price')) {
         var p = parseFloat(v.replace(/[R\s]/gi, '').replace(',', '.'));
-        return isFinite(p) && p >= 10 && p <= 2000 ? '' : 'Set a price between R10 and R2,000.';
+        return isFinite(p) && p >= 25 && p <= 500 ? '' : 'Set a price between R25 and R500.';
       }
       var min = Number(el.getAttribute('data-min')) || (el.required ? 1 : 0);
       return v.length < min ? el.getAttribute('data-msg') : '';

@@ -6,7 +6,7 @@ function required(key) {
   return value;
 }
 
-const fee = Number(process.env.PLATFORM_FEE_PERCENT || 20);
+const fee = Number(process.env.PLATFORM_FEE_PERCENT || 15);
 if (!(fee >= 0 && fee < 100)) throw new Error('PLATFORM_FEE_PERCENT must be between 0 and 99');
 
 module.exports = {

@@ -457,7 +457,7 @@ function validateNote(body) {
   values.university = NOTE_INSTITUTIONS.find((u) => u.toLowerCase() === values.university.toLowerCase()) || values.university;
   if (values.university.length < 2) errors.university = 'Choose an institution, or type a new one to add it.';
   if (!LEVELS.includes(values.level)) errors.level = 'Choose a level.';
-  if (!(values.price_cents >= 1000 && values.price_cents <= 200000)) errors.price = 'Set a price between R10 and R2,000.';
+  if (!(values.price_cents >= 2500 && values.price_cents <= 50000)) errors.price = 'Set a price between R25 and R500.';
   if (body.own_work !== 'on') errors.own_work = 'Confirm the notes are your own work and contain none of the listed material.';
   profanity.checkFields(values, ['title', 'description', 'subject', 'university', 'module_code'], errors);
   return { values, errors };

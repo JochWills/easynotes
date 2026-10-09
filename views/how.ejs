@@ -66,12 +66,12 @@
       <li><h3>Create your account</h3><p>Pick the name and link for your storefront.</p></li>
       <li><h3>Verify your degree</h3><p>Upload your degree certificate or academic transcript and your ID. Someone on our team checks them, usually within two working days.</p></li>
       <li><h3>Add your bank account</h3><p>Your share of every sale is paid straight into your bank account, usually the next working day.</p></li>
-      <li><h3>Upload and price your notes</h3><p>PDF only, up to 50 MB. Set your own price from R10 to R2,000. We preview the first pages for you.</p></li>
+      <li><h3>Upload and price your notes</h3><p>PDF only, up to 50 MB. Set your own price from R25 to R500. We preview the first pages for you.</p></li>
     </ol>
     <div class="earn-card" data-earn-card data-fee="<%= feePercent %>">
       <p class="eyebrow">What you’d earn</p>
       <label for="earn-price" class="earn-label">If you price your notes at <b data-earn-price>R100</b></label>
-      <input id="earn-price" type="range" min="10" max="500" step="10" value="100">
+      <input id="earn-price" type="range" min="25" max="500" step="5" value="100">
       <dl class="earn-rows">
         <div><dt>Student pays</dt><dd data-earn-pays>R100.00</dd></div>
         <div><dt>EasyNotes keeps (<%= feePercent %>%)</dt><dd data-earn-fee>R<%= feePercent %>.00</dd></div>

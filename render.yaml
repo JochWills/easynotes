@@ -23,7 +23,7 @@ services:
       - key: PAYSTACK_SECRET_KEY
         sync: false
       - key: PLATFORM_FEE_PERCENT
-        value: "22"
+        value: "15"
       - key: PAYSTACK_FEE_BEARER
         value: account
       - key: MAX_DOWNLOADS
