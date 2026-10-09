@@ -1406,3 +1406,7 @@ dialog.modal > p { margin: 0 0 18px; }
 .share-more { background: var(--rule); color: var(--ink); }
 @media (max-width: 420px) { dialog.share-modal { padding: 22px 18px 22px; } .share-grid { gap: 12px 4px; } .share-ico { width: 44px; height: 44px; } }
 @media (max-width: 340px) { .share-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Checkout: message shown above the pay button when the pop-up can't start */
+.checkout-error { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--bad-bg); color: var(--bad); font-size: .9rem; font-weight: 600; }
+button.is-loading { cursor: progress; opacity: .75; }

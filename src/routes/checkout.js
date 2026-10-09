@@ -36,24 +36,19 @@ const ORDER_NOTE = 'id,title,slug,price_cents,status,seller_id,sellers(verificat
 // One seller: the seller's subaccount gets the payment minus EasyNotes' fee.
 // Several sellers: a multi-split pays each seller their share and EasyNotes keeps the rest.
 async function startCheckout(req, res, notes, back) {
+  // The buy buttons ask for JSON so they can open Paystack's pop-up on the page; without JavaScript it's the usual redirect.
+  const popup = req.get('X-Checkout') === 'popup';
+  const fail = (message) => {
+    if (popup) return res.status(400).json({ error: message });
+    flash(req, 'error', message);
+    return res.redirect(back);
+  };
   const name = str(req.body.name, 100).replace(/\s+/g, ' ');
   const email = str(req.body.email, 200).toLowerCase();
-  if (name.length < 2) {
-    flash(req, 'error', 'Enter your name.');
-    return res.redirect(back);
-  }
-  if (profanity.isProfane(name)) {
-    flash(req, 'error', 'Please enter your real name.');
-    return res.redirect(back);
-  }
-  if (!EMAIL_RE.test(email)) {
-    flash(req, 'error', 'Enter a valid email address. You’ll need it to download your notes.');
-    return res.redirect(back);
-  }
-  if (req.body.accept !== 'on') {
-    flash(req, 'error', 'Tick the box to confirm you understand all sales are final.');
-    return res.redirect(back);
-  }
+  if (name.length < 2) return fail('Enter your name.');
+  if (profanity.isProfane(name)) return fail('Please enter your real name.');
+  if (!EMAIL_RE.test(email)) return fail('Enter a valid email address. You’ll need it to download your notes.');
+  if (req.body.accept !== 'on') return fail('Tick the box to confirm you understand all sales are final.');
 
   // Sellers can't buy their own notes: not while logged in, and not by paying with their account email.
   const sellerIds = [...new Set(notes.map((n) => n.seller_id))];
@@ -61,8 +56,7 @@ async function startCheckout(req, res, notes, back) {
   if (ownersErr) throw ownersErr;
   const ownEmail = (owners || []).some((o) => (o.users?.email || '').toLowerCase() === email);
   if (ownEmail || (req.seller && sellerIds.includes(req.seller.id))) {
-    flash(req, 'error', notes.length === 1 ? 'You can’t buy your own notes.' : 'Your cart has notes you’re selling. Remove them, then check out.');
-    return res.redirect(back);
+    return fail(notes.length === 1 ? 'You can’t buy your own notes.' : 'Your cart has notes you’re selling. Remove them, then check out.');
   }
 
   const paymentRef = newReference();
@@ -117,12 +111,12 @@ async function startCheckout(req, res, notes, back) {
         custom_fields: [{ display_name: 'Name', variable_name: 'name', value: name }, { display_name: 'Notes', variable_name: 'notes', value: notes.map((n) => n.title).join('; ').slice(0, 250) }],
       },
     });
+    if (popup) return res.json({ accessCode: tx.access_code, url: tx.authorization_url, reference: paymentRef });
     res.redirect(303, tx.authorization_url);
   } catch (err) {
     console.error('[checkout] paystack initialize failed', err.message, err.paystack);
     await db.from('orders').update({ status: 'failed' }).eq('payment_ref', paymentRef);
-    flash(req, 'error', 'We couldn’t start the payment. Try again in a moment.');
-    res.redirect(back);
+    fail('We couldn’t start the payment. Try again in a moment.');
   }
 }
 

@@ -22,12 +22,13 @@ app.use(
       useDefaults: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'"],
-        'style-src': ["'self'", 'https://fonts.googleapis.com'],
+        'script-src': ["'self'", 'https://js.paystack.co'], // Paystack's pop-up checkout
+        'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // inline: Paystack's pop-up styles itself
         'style-src-attr': ["'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
         'img-src': ["'self'", 'data:', 'blob:', supabaseOrigin], // blob: previews a picture before it's uploaded
-        'connect-src': ["'self'"],
+        'connect-src': ["'self'", 'https://*.paystack.co', 'https://*.paystack.com'],
+        'frame-src': ['https://checkout.paystack.com', 'https://*.paystack.co', 'https://*.paystack.com'],
         // Form posts redirect to Paystack checkout and to signed Supabase download links
         'form-action': ["'self'", 'https://checkout.paystack.com', supabaseOrigin],
         'frame-ancestors': ["'none'"],

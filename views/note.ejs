@@ -132,7 +132,7 @@
           <a class="btn btn-ghost btn-block" href="/seller/notes/<%= note.id %>/edit">Edit these notes</a>
         </div>
       <% } else if (live) { %>
-        <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form>
+        <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form data-checkout>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="buy-fields" data-buy-fields>
             <div class="field">

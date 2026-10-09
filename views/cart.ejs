@@ -27,7 +27,7 @@
       </ul>
       <aside class="buy-box" aria-label="Checkout">
         <div class="cart-total"><span><%= notes.length %> <%= notes.length === 1 ? 'set' : 'sets' %> of notes</span><span class="price"><%= rand(total) %></span></div>
-        <form class="form" method="post" action="/checkout">
+        <form class="form" method="post" action="/checkout" data-checkout>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="field">
             <label for="cart-name">Your name</label>

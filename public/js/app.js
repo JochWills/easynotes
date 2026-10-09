@@ -769,6 +769,77 @@
     if (location.hash === '#buy') open(false);
   });
 
+  // Checkout opens Paystack's pop-up on the page (Apple Pay shows there on Safari). If anything about it fails,
+  // the buyer goes to Paystack's own payment page instead, exactly as without JavaScript.
+  var paystackLoaded = null;
+  var loadPaystack = function () {
+    if (window.PaystackPop) return Promise.resolve();
+    if (!paystackLoaded) {
+      paystackLoaded = new Promise(function (resolve, reject) {
+        var sc = document.createElement('script');
+        sc.src = 'https://js.paystack.co/v2/inline.js';
+        sc.onload = function () { window.PaystackPop ? resolve() : reject(); };
+        sc.onerror = reject;
+        document.head.appendChild(sc);
+      });
+      paystackLoaded.catch(function () { paystackLoaded = null; });
+    }
+    return paystackLoaded;
+  };
+  if (document.querySelector('form[data-checkout]')) {
+    // Fetch it early on pages with a buy form, so the pop-up opens straight away
+    var warm = function () { loadPaystack().catch(function () {}); };
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 }); else setTimeout(warm, 1500);
+  }
+  document.addEventListener('submit', function (e) {
+    var f = e.target.closest && e.target.closest('form[data-checkout]');
+    if (!f || e.defaultPrevented || !window.fetch || !window.Promise || !window.URLSearchParams) return;
+    if (f.hasAttribute('data-buy-form') && !f.classList.contains('is-open')) return;
+    e.preventDefault();
+    if (f.getAttribute('aria-busy') === 'true') return;
+    var btn = f.querySelector('button[type="submit"]');
+    var old = f.querySelector('.checkout-error');
+    if (old) old.remove();
+    var busy = function (on) {
+      f.setAttribute('aria-busy', on ? 'true' : 'false');
+      if (btn) { btn.disabled = on; btn.classList.toggle('is-loading', on); }
+    };
+    var showError = function (msg) {
+      var p = document.createElement('p');
+      p.className = 'checkout-error';
+      p.setAttribute('role', 'alert');
+      p.textContent = msg;
+      (btn || f.lastElementChild).insertAdjacentElement('beforebegin', p);
+    };
+    var plainSubmit = function () { busy(false); HTMLFormElement.prototype.submit.call(f); };
+    busy(true);
+    var script = loadPaystack();
+    script.catch(function () {});
+    fetch(f.action, {
+      method: 'POST',
+      body: new URLSearchParams(new FormData(f)),
+      headers: { 'X-Checkout': 'popup', Accept: 'application/json' },
+      credentials: 'same-origin',
+    }).then(function (r) {
+      if (!/json/.test(r.headers.get('content-type') || '')) return plainSubmit();
+      return r.json().then(function (d) {
+        if (!r.ok || !d.accessCode) { busy(false); return showError(d.error || 'We couldn’t start the payment. Try again in a moment.'); }
+        var toPaystack = function () { location.href = d.url; };
+        script.then(function () {
+          try {
+            var res = new window.PaystackPop().checkout({
+              accessCode: d.accessCode,
+              onSuccess: function () { location.href = '/checkout/callback?reference=' + encodeURIComponent(d.reference); },
+              onCancel: function () { busy(false); },
+              onError: toPaystack,
+            });
+            if (res && typeof res.catch === 'function') res.catch(toPaystack);
+          } catch (err) { toPaystack(); }
+        }, toPaystack);
+      });
+    }).catch(plainSubmit);
+  });
+
   // Note page tabs (all panels show without JS)
   document.querySelectorAll('[data-tabs]').forEach(function (list) {
     var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
