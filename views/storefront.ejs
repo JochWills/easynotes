@@ -15,6 +15,9 @@
         <% if (rv.count) { %>
           <a class="store-rating" href="#reviews" data-tab-link="reviews"><%- stars(rv.avg) %><strong><%= rv.avg.toFixed(1) %></strong><span class="store-rating-count"><%= rv.count %> <%= rv.count === 1 ? 'review' : 'reviews' %></span></a>
         <% } %>
+        <% if (locals.isOwner && locals.live !== false) { %>
+          <div class="store-owner-actions"><%- include('partials/share-store', { seller: author, btnClass: 'btn-sm' }) %><a class="btn btn-ghost btn-sm" href="/seller/profile">Edit storefront</a></div>
+        <% } %>
       </div>
     </div>
   </div>

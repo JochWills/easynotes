@@ -1,6 +1,11 @@
 <div class="dash-title">
   <h1><%= title %></h1>
-  <% if (me.verification_status === 'approved' && (tab !== 'notes' || locals.notesList)) { %><a class="btn btn-sm" href="/seller/notes/new">Upload notes</a><% } %>
+  <% if (me.verification_status === 'approved') { %>
+    <div class="dash-title-actions">
+      <%- include('share-store', { seller: me }) %>
+      <% if (tab !== 'notes' || locals.notesList) { %><a class="btn btn-sm" href="/seller/notes/new">Upload notes</a><% } %>
+    </div>
+  <% } %>
 </div>
 <nav class="dash-nav" aria-label="Seller">
   <% [['overview','/seller','Overview'],['notes','/seller/notes','Notes'],['payouts','/seller/payouts','Payouts'],['profile','/seller/profile','Storefront'],['verification','/seller/verification', me.verification_status === 'approved' ? 'Education' : 'Verification']].forEach(function (t) { %>

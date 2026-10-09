@@ -1369,3 +1369,34 @@ dialog.modal > p { margin: 0 0 18px; }
   .section-head-btn .btn-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .section-head-btn .btn-short { display: inline; }
 }
+
+/* Share my storefront: button row and pop-up */
+.dash-title-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.store-owner-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.share-modal .modal-x { border: 0; background: none; cursor: pointer; }
+.share-modal > p { margin: 0 0 16px; }
+.share-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--page); }
+.share-card .avatar-sm { width: 42px; height: 42px; font-size: .95rem; }
+.share-card div { min-width: 0; }
+.share-card strong { display: block; font-family: var(--display); }
+.share-card span { display: block; color: var(--muted); font-size: .86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share-copy { display: flex; gap: 8px; margin-top: 12px; }
+.share-copy input { flex: 1; min-width: 0; padding: .6em .8em; border: 1px solid var(--rule-strong); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-size: .9rem; text-overflow: ellipsis; }
+.share-copy input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.share-copy .btn { flex: none; padding: .6em 1em; font-size: .93rem; border-radius: 10px; }
+.share-copy .btn.is-copied { background: var(--ok); border-color: var(--ok); }
+.share-grid { list-style: none; margin: 18px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 8px; }
+.share-grid a, .share-grid button { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 6px 2px; border: 0; border-radius: 12px; background: none; color: var(--ink-soft); font: inherit; font-size: .82rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+.share-grid a:hover, .share-grid button:hover { background: var(--page); color: var(--ink); }
+.share-grid a:focus-visible, .share-grid button:focus-visible { outline: 3px solid var(--blue); outline-offset: 0; }
+.share-ico { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #fff; transition: transform .15s; }
+.share-grid a:hover .share-ico, .share-grid button:hover .share-ico { transform: translateY(-2px); }
+.share-wa { background: #1FA855; }
+.share-fb { background: #1877F2; }
+.share-x { background: #0F1419; }
+.share-li { background: #0A66C2; }
+.share-tg { background: #229ED9; }
+.share-mail { background: var(--ink-soft); }
+.share-more { background: var(--rule); color: var(--ink); }
+@media (max-width: 420px) { dialog.share-modal { padding: 22px 18px 22px; } .share-grid { gap: 12px 4px; } .share-ico { width: 44px; height: 44px; } }
+@media (max-width: 340px) { .share-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

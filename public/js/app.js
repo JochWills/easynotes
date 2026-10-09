@@ -620,7 +620,7 @@
     };
     if (d.hasAttribute('data-open-on-load')) { d.close(); d.showModal(); }
     document.querySelectorAll('[data-dialog-open="' + d.id + '"]').forEach(function (a) {
-      a.addEventListener('click', function (e) { e.preventDefault(); d.showModal(); var f = d.querySelector('input:not([type=hidden])'); if (f) f.focus(); });
+      a.addEventListener('click', function (e) { e.preventDefault(); d.showModal(); var f = d.querySelector(d.hasAttribute('data-focus') ? d.getAttribute('data-focus') : 'input:not([type=hidden])'); if (f) f.focus(); });
     });
     d.querySelectorAll('[data-dialog-close]').forEach(function (a) {
       a.addEventListener('click', function (e) { e.preventDefault(); d.close(); });
@@ -629,6 +629,15 @@
     d.addEventListener('close', function () {
       reset();
       if (/[?&]change=1/.test(location.search)) history.replaceState(null, '', location.pathname);
+    });
+  });
+
+  // Share pop-up: phones get a "More" option that opens their own share sheet
+  document.querySelectorAll('[data-native-share]').forEach(function (b) {
+    if (!navigator.share) return;
+    b.closest('[data-native-share-item]').hidden = false;
+    b.addEventListener('click', function () {
+      navigator.share({ title: b.getAttribute('data-share-title'), text: b.getAttribute('data-share-text'), url: b.getAttribute('data-share-url') }).catch(function () {});
     });
   });
 
