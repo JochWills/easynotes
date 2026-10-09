@@ -29,11 +29,13 @@
   <% var periodLabel = periods.filter(function (p) { return p[0] === period; })[0][1]; %>
   <div class="period-row">
     <h2 class="period-title"><%= periodLabel %></h2>
-    <nav class="period-pick" aria-label="Show stats for">
-      <% periods.forEach(function (p) { %>
-        <a href="/seller<%= p[0] === 'all' ? '' : '?period=' + p[0] %>" <%- p[0] === period ? 'aria-current="true"' : '' %>><span class="period-long"><%= p[1] %></span><span class="period-short" aria-hidden="true"><%= p[2] || p[1] %></span></a>
-      <% }) %>
-    </nav>
+    <form class="sort-by period-form" method="get" action="/seller" data-autosubmit>
+      <label for="period">Show</label>
+      <select id="period" name="period">
+        <% periods.forEach(function (p) { %><option value="<%= p[0] %>" <%= p[0] === period ? 'selected' : '' %>><%= p[1] %></option><% }) %>
+      </select>
+      <noscript><button class="btn btn-sm" type="submit">Go</button></noscript>
+    </form>
   </div>
 
   <div class="stats">

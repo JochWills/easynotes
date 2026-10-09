@@ -860,23 +860,10 @@ img.avatar, img.profile-avatar { object-fit: cover; background: var(--page); }
 .stat { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-sm); }
 .period-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 16px; }
 .period-title { font-size: 1.35rem; margin: 0; }
-.period-pick { position: relative; display: flex; gap: 4px; padding: 4px; background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow-sm); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-.period-pick::-webkit-scrollbar { display: none; }
-.period-pick a { flex: none; padding: 7px 13px; border-radius: 9px; color: var(--ink-soft); font-size: .9rem; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background .15s, color .15s; }
-.period-pick a:hover { background: var(--page); color: var(--ink); }
-.period-pick a[aria-current] { background: var(--ink); color: #fff; }
-.period-pick a:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
-.period-short { display: none; }
-@media (max-width: 600px) {
-  .period-row { flex-direction: column; align-items: stretch; }
-  .period-pick a { flex: 1; padding: 7px 6px; text-align: center; }
-  .period-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .period-short { display: inline; }
-}
-@media (max-width: 360px) {
-  .period-pick { gap: 2px; }
-  .period-pick a { padding: 7px 4px; font-size: .84rem; }
-}
+.sort-by.period-form .dd, .sort-by.period-form select { width: 180px; }
+.period-title { white-space: nowrap; }
+@media (max-width: 600px) { .period-row { flex-wrap: nowrap; } .period-title { font-size: 1.15rem; } .sort-by.period-form .dd, .sort-by.period-form select { width: 150px; } }
+@media (max-width: 360px) { .period-title { font-size: 1.05rem; } .sort-by.period-form .dd, .sort-by.period-form select { width: 136px; } .period-form .dd-btn { padding: .5em .6em; } }
 .notes-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .notes-head p { margin: 0; }
 .stat b { display: block; font-family: var(--display); font-size: 1.9rem; letter-spacing: -0.03em; line-height: 1.1; }

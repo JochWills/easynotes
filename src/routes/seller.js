@@ -44,11 +44,11 @@ const afterUpload = (back) => (req, res, next) => {
 
 // Overview periods. "Today" starts at midnight in South Africa (UTC+2, no daylight saving).
 const PERIODS = [
-  ['today', 'Today', 'Today'],
-  ['7d', 'Last 7 days', '7 days'],
-  ['30d', 'Last 30 days', '30 days'],
-  ['year', 'Last year', '1 year'],
-  ['all', 'All time', 'All'],
+  ['today', 'Today'],
+  ['7d', 'Last 7 days'],
+  ['30d', 'Last 30 days'],
+  ['year', 'Last year'],
+  ['all', 'All time'],
 ];
 function periodStart(period) {
   const now = Date.now();
