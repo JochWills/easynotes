@@ -763,6 +763,10 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .note-facts dt { display: flex; align-items: center; gap: 12px; color: var(--muted); }
 .note-facts dt svg { flex: none; color: var(--ink-soft); }
 .note-facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; padding-top: 1px; }
+.fact-seller a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+.fact-seller a:hover { color: var(--blue); text-decoration-color: currentColor; }
+.fact-tick { color: var(--ok); vertical-align: -2px; margin-left: 6px; }
+.buy-indie { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .btn-lg { padding: .95em 1.2em; font-size: 1.06rem; gap: 10px; }
 .buy-form { margin: 0 0 12px; }
 .buy-fields { display: grid; gap: 14px; margin-bottom: 16px; }
