@@ -788,11 +788,6 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .buy-secure svg { flex: none; color: var(--blue); }
 .buy-secure strong { display: block; font-size: .95rem; }
 .buy-secure span { display: block; font-size: .88rem; color: var(--muted); margin-top: 2px; }
-.multi-card { display: flex; gap: 16px; padding: 22px; background: var(--paper); border: 1px solid var(--rule); border-radius: 18px; box-shadow: var(--shadow-sm); }
-.multi-card svg { flex: none; color: var(--blue); }
-.multi-card strong { display: block; font-family: var(--display); }
-.multi-card span { display: block; color: var(--ink-soft); font-size: .93rem; margin: 2px 0 6px; }
-.multi-card a { font-weight: 600; font-size: .93rem; }
 .note-report { margin: 0; text-align: center; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 10px 24px; margin: 24px 0 30px; padding: 20px 22px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); }
 .facts dt { color: var(--muted); }
