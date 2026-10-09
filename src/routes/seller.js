@@ -488,6 +488,10 @@ async function ownOptions(sellerId, column, base, current) {
 }
 const byName = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' });
 
+// The database has its own price limits; if they're tighter than the site's, say so on the form instead of crashing.
+const isPriceCheck = (error) => error.code === '23514' && /price/i.test(error.message || '');
+const PRICE_CHECK_MSG = 'The database won’t accept this price yet. Its price limit needs updating in Supabase.';
+
 const formLocals = async (req, extra) => ({
   tab: 'notes', levels: LEVELS, feePercent: config.platformFeePercent,
   subjects: (await ownOptions(req.seller.id, 'subject', SUBJECTS, extra.values && extra.values.subject)).sort(byName),
@@ -527,6 +531,9 @@ router.post('/notes', requireApproved, noteFiles, afterUpload(() => '/seller/not
   });
   if (error) {
     await storage.remove('notes', [filePath]);
+    if (isPriceCheck(error)) {
+      return res.status(400).render('seller/note-form', await formLocals(req, { title: 'Upload notes', note: null, values: { ...values, price: req.body.price }, errors: { price: PRICE_CHECK_MSG } }));
+    }
     throw error;
   }
   await preview.makePreview(filePath, pdf.buffer, pageCount);
@@ -582,7 +589,13 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
   }
 
   const { error } = await db.from('notes').update(update).eq('id', n.id);
-  if (error) throw error;
+  if (error) {
+    if (pdf) await storage.remove('notes', [update.file_path]);
+    if (isPriceCheck(error)) {
+      return res.status(400).render('seller/note-form', await formLocals(req, { title: 'Edit notes', note: n, values: { ...n, ...values, price: req.body.price }, errors: { price: PRICE_CHECK_MSG } }));
+    }
+    throw error;
+  }
   if (pdf) {
     await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
     await preview.removePreview(n.file_path, n.page_count);
