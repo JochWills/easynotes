@@ -862,8 +862,14 @@ img.avatar, img.profile-avatar { object-fit: cover; background: var(--page); }
 .period-title { font-size: 1.35rem; margin: 0; }
 .sort-by.period-form .dd, .sort-by.period-form select { width: 180px; }
 .period-title { white-space: nowrap; }
+.refresh-btn { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--rule-strong); border-radius: 10px; background: var(--paper); color: var(--ink-soft); cursor: pointer; transition: background .15s, color .15s; }
+.refresh-btn:hover { background: var(--page); color: var(--ink); }
+.refresh-btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.refresh-btn.is-spinning svg { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .refresh-btn.is-spinning svg { animation: none; } }
 @media (max-width: 600px) { .period-row { flex-wrap: nowrap; } .period-title { font-size: 1.15rem; } .sort-by.period-form .dd, .sort-by.period-form select { width: 150px; } }
-@media (max-width: 360px) { .period-title { font-size: 1.05rem; } .sort-by.period-form .dd, .sort-by.period-form select { width: 136px; } .period-form .dd-btn { padding: .5em .6em; } }
+@media (max-width: 360px) { .period-row { gap: 8px; } .sort-by.period-form { gap: 6px; } .refresh-btn { width: 36px; height: 36px; } .period-title { font-size: 1.05rem; } .sort-by.period-form .dd, .sort-by.period-form select { width: 136px; } .period-form .dd-btn { padding: .5em .6em; } }
 .notes-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .notes-head p { margin: 0; }
 .stat b { display: block; font-family: var(--display); font-size: 1.9rem; letter-spacing: -0.03em; line-height: 1.1; }

@@ -641,6 +641,11 @@
     });
   });
 
+  // Refresh button on the seller overview spins while the page reloads
+  document.querySelectorAll('[data-refresh]').forEach(function (b) {
+    b.addEventListener('click', function () { b.classList.add('is-spinning'); });
+  });
+
   // Confirm destructive actions
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) {
