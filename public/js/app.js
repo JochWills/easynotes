@@ -826,6 +826,9 @@
         if (!r.ok || !d.accessCode) { busy(false); return showError(d.error || 'We couldn’t start the payment. Try again in a moment.'); }
         var toPaystack = function () { location.href = d.url; };
         script.then(function () {
+          // The slide-out cart sits in the browser's top layer, which would cover the pop-up: close it first
+          var drawer = f.closest('dialog');
+          if (drawer && drawer.open) drawer.close();
           try {
             var res = new window.PaystackPop().checkout({
               accessCode: d.accessCode,
