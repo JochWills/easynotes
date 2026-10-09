@@ -75,6 +75,8 @@ app.use((req, res, next) => {
   res.set('Speculation-Rules', '"/speculation-rules.json"');
   res.locals.currentPath = req.path;
   res.locals.feePercent = config.platformFeePercent;
+  res.locals.minPrice = config.minPrice;
+  res.locals.maxPrice = config.maxPrice;
   res.locals.supportEmail = config.supportEmail;
   res.locals.maxDownloads = config.maxDownloads;
   res.locals.baseUrl = config.baseUrl;
