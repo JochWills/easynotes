@@ -6,14 +6,21 @@
   </div>
 </section>
 <div class="wrap browse">
-  <% var activeFilters = [filters.q, filters.subject, filters.university, filters.level].filter(Boolean).length; %>
+  <% var activeFilters = [filters.subject, filters.university, filters.level].filter(Boolean).length; %>
+  <form class="search browse-search" method="get" action="/notes" role="search" aria-label="Search notes">
+    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <label for="m-q" class="sr-only">Search notes</label>
+    <input id="m-q" type="search" name="q" maxlength="80" value="<%= filters.q %>" placeholder="Module code or subject" autocomplete="off">
+    <% ['subject', 'university', 'level', 'sort'].forEach(function (k) { if (filters[k]) { %><input type="hidden" name="<%= k %>" value="<%= filters[k] %>"><% } }) %>
+    <button class="btn" type="submit">Search</button>
+  </form>
   <button class="filters-toggle" type="button" aria-expanded="false" aria-controls="filters" data-filters-toggle>
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
     <span>Filters</span><% if (activeFilters) { %><span class="filters-count"><%= activeFilters %> on</span><% } %>
     <svg class="filters-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <form class="filters" id="filters" method="get" action="/notes" data-autosubmit role="search" aria-label="Filter notes">
-    <div class="field">
+    <div class="field field-q">
       <label for="f-q">Search</label>
       <input id="f-q" type="search" name="q" maxlength="80" value="<%= filters.q %>" placeholder="Module code or subject">
     </div>

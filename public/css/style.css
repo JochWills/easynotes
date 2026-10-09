@@ -1231,7 +1231,7 @@ dialog.modal > p { margin: 0 0 18px; }
 }
 
 /* Browse filters fold behind a button on phones and tablets (only once the script is running) */
-.filters-toggle { display: none; }
+.filters-toggle, .browse-search { display: none; }
 @media (max-width: 920px) {
   .filters-js .filters-toggle {
     display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 18px; font: inherit; font-weight: 700; color: var(--ink);
@@ -1241,6 +1241,8 @@ dialog.modal > p { margin: 0 0 18px; }
   .filters-toggle .filters-chev { margin-left: auto; transition: transform .2s; }
   .filters-toggle[aria-expanded="true"] .filters-chev { transform: rotate(180deg); }
   .filters-js .filters:not(.is-open) { display: none; }
+  .filters-js .browse-search { display: flex; max-width: none; margin: 0; box-shadow: var(--shadow-sm); }
+  .filters-js .filters .field-q { display: none; }
   .browse { gap: 16px; }
 }
 @media (min-width: 600px) and (max-width: 920px) {
