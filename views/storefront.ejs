@@ -45,6 +45,14 @@
             <p class="review-avg"><strong><%= rv.avg.toFixed(1) %></strong><span>out of 5</span></p>
             <%- stars(rv.avg, 'stars-lg') %>
             <p class="muted small">From <%= rv.count %> verified <%= rv.count === 1 ? 'buyer' : 'buyers' %></p>
+            <ul class="review-bars" aria-label="Ratings breakdown">
+              <% (rv.breakdown || []).forEach(function (b) { %>
+                <li><span><%= b.stars %>★</span><span class="review-bar"><i style="width:<%= Math.round(b.count / rv.count * 100) %>%"></i></span><span class="review-bar-n"><%= b.count %><span class="sr-only"> <%= b.count === 1 ? 'review' : 'reviews' %> with <%= b.stars %> <%= b.stars === 1 ? 'star' : 'stars' %></span></span></li>
+              <% }) %>
+            </ul>
+          <% } else if (locals.isOwner) { %>
+            <p class="review-avg-empty">No reviews yet</p>
+            <p class="muted small">Your rating shows here and at the top of your storefront once buyers start reviewing.</p>
           <% } else { %>
             <p class="review-avg-empty">No reviews yet</p>
             <p class="muted small">Bought notes from <%= author.display_name %>? Be the first to say how they helped.</p>
@@ -86,10 +94,36 @@
             </details>
           <% } %>
         </div>
+        <% if (locals.isOwner) { %>
+          <div class="card review-ask">
+            <span class="review-ask-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+            <h2>Ask your buyers for a review</h2>
+            <% if (locals.live !== false) { %>
+              <p>Send this link to students who bought your notes. It opens the review form on your storefront.</p>
+              <div class="field review-link-field"><input type="text" readonly value="<%= reviewUrl.replace(/^https?:\/\//, '') %>" aria-label="Your review link" data-select-all></div>
+              <button class="btn btn-block review-copy" type="button" data-copy="<%= reviewUrl %>"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" fill="none" stroke="currentColor" stroke-width="2"/></svg><span data-copy-label>Copy review link</span></button>
+              <% var askText = 'Hi! If my notes helped you, would you mind leaving a quick review? It really helps other students find them: ' + reviewUrl; %>
+              <div class="review-share">
+                <a class="btn btn-ghost btn-sm" href="https://wa.me/?text=<%= encodeURIComponent(askText) %>" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1112 20a8 8 0 01-3.9-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>WhatsApp</a>
+                <a class="btn btn-ghost btn-sm" href="mailto:?subject=<%= encodeURIComponent('Could you review my notes?') %>&amp;body=<%= encodeURIComponent(askText) %>"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Email</a>
+              </div>
+              <ul class="review-tips">
+                <li>Only real buyers can post. They confirm with the order reference and email from their receipt.</li>
+                <li>The best time to ask is just after their exam, while the notes are fresh.</li>
+              </ul>
+            <% } else { %>
+              <p>Your review link will be ready here once your degree is verified and your storefront is live.</p>
+            <% } %>
+          </div>
+        <% } %>
       </aside>
       <div class="reviews-list">
         <% if (!rv.count) { %>
-          <div class="empty empty-sm"><h3>No reviews yet</h3><p>Reviews come only from students who bought <%= author.display_name %>’s notes, confirmed with their order reference.</p></div>
+          <% if (locals.isOwner) { %>
+            <div class="empty empty-sm"><h3>Your first review is one message away</h3><p>Reviews appear here as soon as buyers post them. Students are much more likely to buy from a seller with reviews, so share your review link with people who’ve bought your notes.</p></div>
+          <% } else { %>
+            <div class="empty empty-sm"><h3>No reviews yet</h3><p>Reviews come only from students who bought <%= author.display_name %>’s notes, confirmed with their order reference.</p></div>
+          <% } %>
         <% } %>
         <% rv.list.forEach(function (r) { %>
           <article class="review">

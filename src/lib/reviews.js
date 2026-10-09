@@ -17,7 +17,8 @@ async function forSeller(sellerId) {
     .limit(200);
   const list = data || [];
   const avg = list.length ? list.reduce((s, r) => s + r.rating, 0) / list.length : 0;
-  return { list, count: list.length, avg: Math.round(avg * 10) / 10 };
+  const breakdown = [5, 4, 3, 2, 1].map((stars) => ({ stars, count: list.filter((r) => r.rating === stars).length }));
+  return { list, count: list.length, avg: Math.round(avg * 10) / 10, breakdown };
 }
 
 // "Thabo Mokoena" -> "Thabo M."

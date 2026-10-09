@@ -7,6 +7,7 @@ const emails = require('../lib/emails');
 const flash = require('../lib/flash');
 const db = require('../lib/supabase');
 const { publicNotes } = require('../lib/queries');
+const config = require('../lib/config');
 const { RESERVED_SLUGS } = require('../lib/constants');
 
 // Mounted after every other route: /<slug> is a seller's storefront.
@@ -47,6 +48,7 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     quals,
     notes: notes || [],
     reviews: rev,
+    reviewUrl: `${config.baseUrl}/${author.slug}/review`,
     isOwner: !!(req.seller && req.seller.id === author.id),
     review: { values: {}, errors: {}, ...extra.review },
     tab: extra.tab || '',
@@ -60,6 +62,13 @@ router.get('/:slug', async (req, res, next) => {
   const store = await loadStore(req);
   if (!store) return next();
   await renderStore(req, res, store);
+});
+
+// Review link sellers share with their buyers: the storefront opens on Reviews with the form ready.
+router.get('/:slug/review', async (req, res, next) => {
+  const store = await loadStore(req);
+  if (!store) return next();
+  await renderStore(req, res, store, { tab: 'reviews', review: { open: store.live } });
 });
 
 const reviewLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-7', legacyHeaders: false });

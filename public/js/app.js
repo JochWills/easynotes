@@ -271,6 +271,11 @@
     });
   });
 
+  // Read-only links select in full when tapped, ready to copy by hand
+  document.querySelectorAll('[data-select-all]').forEach(function (i) {
+    i.addEventListener('focus', function () { i.select(); });
+  });
+
   // Storefront link: the copy button copies the saved link, so it's off while an unsaved change is typed
   document.querySelectorAll('[data-saved-slug]').forEach(function (input) {
     var btn = input.parentNode.querySelector('.copy-in');
@@ -766,6 +771,8 @@
     // Storefront tabs have their own address (#reviews, #about) so they can be linked to and survive a reload
     var byHash = function (h) { h = String(h || '').replace('#', ''); return h && tabs.filter(function (t) { return t.getAttribute('data-hash') === h; })[0]; };
     select(byHash(location.hash) || byHash(list.getAttribute('data-initial')) || tabs[0]);
+    // Opened straight on a tab (e.g. the review link a seller shares): bring the tabs into view
+    if (!location.hash && list.getAttribute('data-initial')) list.scrollIntoView({ block: 'start' });
     window.addEventListener('hashchange', function () { var t = byHash(location.hash); if (t) { select(t); list.scrollIntoView({ block: 'start' }); } });
     document.querySelectorAll('[data-tab-link]').forEach(function (a) {
       a.addEventListener('click', function (e) {
