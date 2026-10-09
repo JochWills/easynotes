@@ -740,11 +740,11 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .viewer:fullscreen .viewer-stack { max-width: 900px; }
 
 
-.note-tabs { display: flex; gap: 6px; margin-top: 28px; border-bottom: 1px solid var(--rule); overflow-x: auto; }
+.note-tabs { display: flex; gap: 6px; margin-top: 28px; box-shadow: inset 0 -1px var(--rule); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .note-tabs button { position: relative; padding: 12px 6px; margin-right: 18px; border: 0; background: none; font: inherit; font-weight: 500; color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
 .note-tabs button:hover { color: var(--ink); }
 .note-tabs button[aria-selected="true"] { color: var(--blue); font-weight: 600; }
-.note-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue); border-radius: 2px; }
+.note-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--blue); border-radius: 2px; }
 .note-tabs button:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; border-radius: 6px; }
 .tab-panel { padding: 24px 26px; margin-top: 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .tab-panel h2 { font-size: 1.2rem; margin: 0 0 8px; }
