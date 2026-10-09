@@ -42,12 +42,12 @@ const afterUpload = (back) => (req, res, next) => {
 
 /* ---------- Overview ---------- */
 
-// Overview periods. "Today" starts at midnight in South Africa (UTC+2, no daylight saving).
+// Overview periods. "Today" and "Year to date" start at midnight in South Africa (UTC+2, no daylight saving).
 const PERIODS = [
   ['today', 'Today'],
   ['7d', 'Last 7 days'],
   ['30d', 'Last 30 days'],
-  ['year', 'Last year'],
+  ['ytd', 'Year to date'],
   ['all', 'All time'],
 ];
 function periodStart(period) {
@@ -59,7 +59,7 @@ function periodStart(period) {
   }
   if (period === '7d') return new Date(now - 7 * day);
   if (period === '30d') return new Date(now - 30 * day);
-  if (period === 'year') return new Date(now - 365 * day);
+  if (period === 'ytd') return new Date(Date.UTC(new Date(now + 2 * 3600000).getUTCFullYear(), 0, 1) - 2 * 3600000);
   return null;
 }
 
