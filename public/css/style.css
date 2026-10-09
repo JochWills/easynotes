@@ -695,11 +695,12 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .note-main { grid-area: main; min-width: 0; }
 .note-side { grid-area: side; display: grid; gap: 18px; }
 /* Desktop: the price box follows the page down the column; the cards under it wait at the bottom.
-   If the box is taller than the screen, it stops once its bottom is in view (top set by app.js). */
+   */
 @media (min-width: 921px) {
   .note-side { align-self: stretch; display: flex; flex-direction: column; }
   .buy-track { flex: 1; }
-  .note-side .buy-box { position: sticky; top: var(--side-top, 92px); }
+  .note-side .buy-box { position: sticky; top: 88px; padding: 24px; }
+  .note-side .note-facts { gap: 10px 20px; margin: 18px 0 20px; }
 }
 .note-page > .note-more { grid-area: more; margin-top: 56px; }
 
@@ -775,7 +776,8 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .fact-seller .nowrap { white-space: nowrap; }
 @media (max-width: 400px) { .note-facts { column-gap: 14px; } .note-facts dt svg { display: none; } }
 .fact-tick { color: var(--ok); vertical-align: -2px; margin-left: 6px; }
-.buy-indie { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.buy-indie { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.buy-secure + .buy-indie { margin-top: 8px; padding-top: 0; border-top: 0; }
 .btn-lg { padding: .95em 1.2em; font-size: 1.06rem; gap: 10px; }
 .buy-form { margin: 0 0 12px; }
 .buy-fields { display: grid; gap: 14px; margin-bottom: 16px; }
@@ -784,10 +786,10 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .buy-fields.is-revealed { animation: reveal .25s ease; }
 @keyframes reveal { from { opacity: 0; transform: translateY(-6px); } }
 .buy-cart { margin: 0; }
-.buy-secure { display: flex; gap: 14px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--rule); }
+.buy-secure { display: flex; align-items: flex-start; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule); }
 .buy-secure svg { flex: none; color: var(--blue); }
-.buy-secure strong { display: block; font-size: .95rem; }
-.buy-secure span { display: block; font-size: .88rem; color: var(--muted); margin-top: 2px; }
+.buy-secure strong { color: var(--ink); font-weight: 600; }
+.buy-secure span { font-size: .85rem; color: var(--muted); line-height: 1.45; }
 .note-report { margin: 0; text-align: center; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 10px 24px; margin: 24px 0 30px; padding: 20px 22px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); }
 .facts dt { color: var(--muted); }
