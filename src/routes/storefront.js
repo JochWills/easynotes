@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const education = require('../lib/education');
 const reviews = require('../lib/reviews');
+const previousReviews = require('../lib/previous-reviews');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
 const flash = require('../lib/flash');
@@ -48,6 +49,7 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     quals,
     notes: notes || [],
     reviews: rev,
+    previous: previousReviews[author.slug] || null,
     reviewUrl: `${config.baseUrl}/${author.slug}/review`,
     isOwner: !!(req.seller && req.seller.id === author.id),
     review: { values: {}, errors: {}, ...extra.review },
