@@ -91,6 +91,11 @@ app.use((req, res, next) => {
   next();
 });
 app.use(loadUser);
+// Logged-in pages are never kept by the browser, so Back after logging out can't show them again.
+app.use((req, res, next) => {
+  if (req.user) res.set('Cache-Control', 'private, no-store');
+  next();
+});
 
 // Every urlencoded POST must carry the CSRF token. Multipart routes verify after multer parses the body.
 app.use((req, res, next) => {

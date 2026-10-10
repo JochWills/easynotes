@@ -142,18 +142,21 @@ router.post('/reset', limiter, async (req, res) => {
 // Logging out shouldn't fail because the page was old (another tab already logged out, or Back after
 // logging in again changed the form token). So a stale token is fine as long as the browser says the
 // click came from this site; a form on another site still can't log people out.
-router.post('/logout', (req, res, next) => {
+function logOut(req, res) {
+  for (const key of Object.keys(req.session)) delete req.session[key];
+  flash(req, 'ok', 'You’re logged out.');
+  // Throw away pages the browser saved or loaded ahead while logged in, so none of them shows up afterwards.
+  res.set('Clear-Site-Data', '"cache", "prefetchCache", "prerenderCache"');
+  res.set('Cache-Control', 'no-store');
+  res.redirect(303, '/');
+}
+
+router.post('/logout', (req, res) => {
   const site = req.get('sec-fetch-site');
   const origin = req.get('origin');
   const sameSite = site ? site === 'same-origin' : origin ? origin === new URL(config.baseUrl).origin : false;
-  if (!req.user || sameSite) {
-    req.session = null;
-    return res.redirect(303, '/');
-  }
-  return verifyCsrf(req, res, () => {
-    req.session = null;
-    res.redirect(303, '/');
-  });
+  if (!req.user || sameSite) return logOut(req, res);
+  return verifyCsrf(req, res, () => logOut(req, res));
 });
 
 module.exports = router;
