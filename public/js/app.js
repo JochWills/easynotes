@@ -1187,6 +1187,22 @@
     });
   });
 
+  // Row "⋯" menus: only one open at a time; a click elsewhere or Esc closes them
+  document.addEventListener('click', function (e) {
+    document.querySelectorAll('details.row-menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.open = false; });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('details.row-menu[open]').forEach(function (d) { d.open = false; d.querySelector('summary').focus(); });
+  });
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (!d.matches || !d.matches('details.row-menu') || !d.open) return;
+    // Open upwards when there isn't room below
+    var pop = d.querySelector('.row-menu-pop');
+    d.classList.toggle('opens-up', d.getBoundingClientRect().bottom + pop.offsetHeight + 16 > window.innerHeight);
+  }, true);
+
   // Note uploads: send in the background and show a pop-up with real upload progress, then each step the server
   // takes (pages, storage, previews, checks). Errors come back as the normal page; success goes to the next page.
   document.addEventListener('submit', function (e) {

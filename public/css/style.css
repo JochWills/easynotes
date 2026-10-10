@@ -1499,3 +1499,22 @@ dialog.upload-modal > .upload-note { margin: 18px 0 0; color: var(--muted); font
 @media (min-width: 701px) and (max-width: 1000px) { .notes-table th:nth-child(3), .notes-table td:nth-child(3) { display: none; } }
 .upload-modal.is-failed .upload-steps li.is-now::before { animation: none; border-color: var(--bad); }
 .upload-modal.is-failed .upload-bar i { background: var(--bad); }
+
+/* Row "⋯" menu (seller notes table) */
+.table-wrap-menus { overflow: visible; }
+.table-wrap-menus thead th:first-child { border-top-left-radius: var(--radius); }
+.table-wrap-menus thead th:last-child { border-top-right-radius: var(--radius); }
+.row-actions { align-items: center; }
+.row-menu { position: relative; }
+.row-menu summary { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--rule-strong); border-radius: 10px; background: var(--paper); color: var(--ink-soft); cursor: pointer; list-style: none; transition: background .15s, color .15s; }
+.row-menu summary::-webkit-details-marker { display: none; }
+.row-menu summary:hover, .row-menu[open] summary { background: var(--page); color: var(--ink); }
+.row-menu summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.row-menu-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 190px; padding: 6px; background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow-lg); animation: fade-in .12s ease-out; }
+.row-menu.opens-up .row-menu-pop { top: auto; bottom: calc(100% + 6px); }
+.row-menu-pop form { margin: 0; }
+.row-menu-pop a, .row-menu-pop button { display: block; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; font-size: .93rem; font-weight: 500; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.row-menu-pop a:hover, .row-menu-pop button:hover, .row-menu-pop a:focus-visible, .row-menu-pop button:focus-visible { background: var(--page); outline: none; }
+.row-menu-pop .is-danger { margin-top: 4px; border-top: 1px solid var(--rule); border-radius: 0 0 8px 8px; color: var(--bad); }
+.row-menu-pop .is-danger:hover { background: var(--bad-bg); }
+@media (max-width: 700px) { .row-menu-pop { right: auto; left: 0; } }

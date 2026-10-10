@@ -9,7 +9,7 @@
     </div>
   <% } %>
   <% if (notes.length) { %>
-    <div class="table-wrap">
+    <div class="table-wrap table-wrap-menus">
       <table class="data notes-table">
         <thead><tr><th>Title</th><th>Status</th><th>Added</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
@@ -21,19 +21,31 @@
               <td class="num"><%= rand(n.price_cents) %></td>
               <td class="num"><%= n.sales_count %></td>
               <td>
-                <div class="actions">
-                  <% if (n.status !== 'removed') { %>
-                    <a class="btn btn-ghost btn-sm" href="/seller/notes/<%= n.id %>/edit">Edit</a>
+                <div class="actions row-actions">
+                  <% if (n.status === 'draft' && verified) { %>
                     <form method="post" action="/seller/notes/<%= n.id %>/status">
-                      <input type="hidden" name="_csrf" value="<%= csrf %>">
-                      <% if (n.status === 'published') { %>
-                        <input type="hidden" name="action" value="unpublish"><button class="btn btn-ghost btn-sm" type="submit">Hide</button>
-                      <% } else { %>
-                        <input type="hidden" name="action" value="publish"><button class="btn btn-sm" type="submit" <%= verified ? '' : 'disabled' %>>Publish</button>
-                      <% } %>
+                      <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="publish">
+                      <button class="btn btn-sm" type="submit">Publish</button>
                     </form>
                   <% } %>
-                  <a class="btn btn-ghost btn-sm btn-danger-ghost" href="/seller/notes/<%= n.id %>/delete">Delete</a>
+                  <details class="row-menu">
+                    <summary aria-label="More actions for <%= n.title %>"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></summary>
+                    <div class="row-menu-pop" role="menu">
+                      <% if (n.status === 'published') { %><a role="menuitem" href="<%= noteUrl(n) %>" target="_blank" rel="noopener">View listing</a><% } %>
+                      <% if (n.status !== 'removed') { %>
+                        <a role="menuitem" href="/seller/notes/<%= n.id %>/edit">Edit</a>
+                        <form method="post" action="/seller/notes/<%= n.id %>/status">
+                          <input type="hidden" name="_csrf" value="<%= csrf %>">
+                          <% if (n.status === 'published') { %>
+                            <input type="hidden" name="action" value="unpublish"><button role="menuitem" type="submit">Hide from students</button>
+                          <% } else if (verified) { %>
+                            <input type="hidden" name="action" value="publish"><button role="menuitem" type="submit">Publish</button>
+                          <% } %>
+                        </form>
+                      <% } %>
+                      <a role="menuitem" class="is-danger" href="/seller/notes/<%= n.id %>/delete">Delete</a>
+                    </div>
+                  </details>
                 </div>
               </td>
             </tr>
