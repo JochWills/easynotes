@@ -1490,3 +1490,10 @@ dialog.upload-modal > .upload-pct { margin: 8px 0 0; color: var(--muted); font-s
 dialog.upload-modal > .upload-note { margin: 18px 0 0; color: var(--muted); font-size: .85rem; }
 .upload-note:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { .upload-spin::after, .upload-steps li.is-now::before { animation: none; } }
+
+/* Seller notes table: only the title wraps; date, price and buttons stay on one line */
+.nowrap { white-space: nowrap; }
+.notes-table td:first-child { overflow-wrap: anywhere; min-width: 180px; }
+.notes-table td:not(:first-child), .notes-table th { white-space: nowrap; }
+@media (min-width: 701px) { .notes-table .actions { flex-wrap: nowrap; } }
+@media (min-width: 701px) and (max-width: 1000px) { .notes-table th:nth-child(3), .notes-table td:nth-child(3) { display: none; } }
