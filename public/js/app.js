@@ -1245,10 +1245,10 @@
         if (i < steps.length - 1 && pct > share + (95 - share) * (i / steps.length)) setStep(++i);
       }, 400);
     };
-    var finish = function () {
+    var finish = function (saved) {
       clearInterval(timer);
       window.removeEventListener('beforeunload', stay);
-      f.removeAttribute('data-sending');
+      if (!saved) f.removeAttribute('data-sending'); // once saved, nothing is left unsaved: no "Leave site?" on the way out
     };
     var fail = function (msg) {
       finish();
@@ -1280,7 +1280,7 @@
       if (/json/.test(type)) {
         var next = null;
         try { next = JSON.parse(xhr.responseText).redirect; } catch (err) {}
-        finish();
+        finish(true);
         Array.prototype.forEach.call(list.children, function (li) { li.className = 'is-done'; });
         setPct(100);
         dlg.classList.add('is-done');
@@ -1291,7 +1291,7 @@
       }
       if (/html/.test(type) && xhr.responseText) {
         // The form came back with something to fix (or another message): show that page as normal
-        finish();
+        finish(true); // this page is being replaced by the one the server sent back
         document.open(); document.write(xhr.responseText); document.close();
         return;
       }
