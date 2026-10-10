@@ -1,5 +1,5 @@
 <%- include('partials/top', { noindex: locals.noindex }) %>
-<% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var imported = rv.imported || []; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
+<% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
 <% var stars = function (n, cls) { var out = '<span class="stars ' + (cls || '') + '" aria-hidden="true">'; for (var i = 1; i <= 5; i++) out += '<span class="' + (n >= i - 0.25 ? 'on' : n >= i - 0.75 ? 'half' : '') + '">★</span>'; return out + '</span>'; }; %>
 <% if (locals.live === false) { %>
   <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until the degree is verified.</div></div>
@@ -26,7 +26,7 @@
 <section class="wrap store-body">
   <div class="note-tabs store-tabs" role="tablist" aria-label="<%= author.display_name %>’s storefront" data-tabs data-initial="<%= locals.tab || '' %>">
     <button type="button" role="tab" id="tab-notes" aria-controls="notes" aria-selected="true" data-hash="notes">Notes <span class="tab-count"><%= notes.length %></span></button>
-    <button type="button" role="tab" id="tab-reviews" aria-controls="reviews" aria-selected="false" tabindex="-1" data-hash="reviews">Reviews <span class="tab-count"><%= rv.count + imported.length %></span></button>
+    <button type="button" role="tab" id="tab-reviews" aria-controls="reviews" aria-selected="false" tabindex="-1" data-hash="reviews">Reviews <span class="tab-count"><%= rv.count %></span></button>
     <button type="button" role="tab" id="tab-about" aria-controls="about" aria-selected="false" tabindex="-1" data-hash="about">About</button>
   </div>
 
@@ -54,10 +54,10 @@
               <% }) %>
             </ul>
           <% } else if (locals.isOwner) { %>
-            <p class="review-avg-empty"><%= imported.length ? 'No EasyNotes reviews yet' : 'No reviews yet' %></p>
+            <p class="review-avg-empty">No reviews yet</p>
             <p class="muted small">Your rating shows here and at the top of your storefront once buyers start reviewing.</p>
           <% } else { %>
-            <p class="review-avg-empty"><%= imported.length ? 'No EasyNotes reviews yet' : 'No reviews yet' %></p>
+            <p class="review-avg-empty">No reviews yet</p>
             <p class="muted small">Bought notes from <%= author.display_name %>? Be the first to say how they helped.</p>
           <% } %>
           <% if (!locals.isOwner && locals.live !== false) { %>
@@ -121,7 +121,7 @@
         <% } %>
       </aside>
       <div class="reviews-list">
-        <% if (!rv.count && !imported.length) { %>
+        <% if (!rv.count) { %>
           <% if (locals.isOwner) { %>
             <div class="empty empty-sm"><h3>Your first review is one message away</h3><p>Reviews appear here as soon as buyers post them. Students are much more likely to buy from a seller with reviews, so share your review link with people who’ve bought your notes.</p></div>
           <% } else { %>
@@ -138,24 +138,6 @@
             <p class="review-by"><strong><%= r.reviewer_name || 'Verified buyer' %></strong> <span class="verified-buy">Verified purchase</span><% if (r.notes_bought) { %><span class="muted"> · Bought <%= r.notes_bought %></span><% } %></p>
           </article>
         <% }) %>
-        <% if (imported.length) { %>
-          <div class="reviews-imported">
-            <h3>From <%= author.display_name %>’s previous store</h3>
-            <p class="muted small">Reviews <%= author.display_name %> received before joining EasyNotes, copied from <%= imported[0].source %>. They’re not counted in the EasyNotes rating.</p>
-          </div>
-          <% imported.forEach(function (r) { %>
-            <article class="review review-imported">
-              <% if (r.rating || r.original_date) { %>
-                <div class="review-head">
-                  <% if (r.rating) { %><%- stars(r.rating) %><span class="sr-only"><%= r.rating %> out of 5 stars</span><% } else { %><span></span><% } %>
-                  <% if (r.original_date) { %><span class="review-date"><%= date(r.original_date) %></span><% } %>
-                </div>
-              <% } %>
-              <p class="review-body"><%= r.body %></p>
-              <p class="review-by"><strong><%= r.reviewer_name || 'A student' %></strong> <% if (r.source_url) { %><a class="from-source" href="<%= r.source_url %>" target="_blank" rel="noopener nofollow">From <%= r.source %><span class="sr-only"> (opens in a new tab)</span></a><% } else { %><span class="from-source">From <%= r.source %></span><% } %></p>
-            </article>
-          <% }) %>
-        <% } %>
       </div>
     </div>
   </div>

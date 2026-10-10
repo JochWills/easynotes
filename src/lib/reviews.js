@@ -7,18 +7,18 @@ const { str } = require('./helpers');
 const REF_RE = /^EN[A-Z0-9]+(-\d+)?$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Reviews a seller brought from another store (source set) are shown separately, labelled with where they're
-// from, and never count towards the EasyNotes rating, which only buyers here can give.
 async function forSeller(sellerId) {
-  const query = (cols) => db.from('reviews').select(cols).eq('seller_id', sellerId).eq('status', 'published').order('created_at', { ascending: false }).limit(200);
-  let { data, error } = await query('id,rating,body,reviewer_name,notes_bought,created_at,source,source_url,original_date');
-  if (error) ({ data } = await query('id,rating,body,reviewer_name,notes_bought,created_at')); // before the imported-reviews columns exist
-  const all = data || [];
-  const imported = all.filter((r) => r.source);
-  const list = all.filter((r) => !r.source);
+  const { data } = await db
+    .from('reviews')
+    .select('id,rating,body,reviewer_name,notes_bought,created_at')
+    .eq('seller_id', sellerId)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  const list = data || [];
   const avg = list.length ? list.reduce((s, r) => s + r.rating, 0) / list.length : 0;
   const breakdown = [5, 4, 3, 2, 1].map((stars) => ({ stars, count: list.filter((r) => r.rating === stars).length }));
-  return { list, count: list.length, avg: Math.round(avg * 10) / 10, breakdown, imported };
+  return { list, count: list.length, avg: Math.round(avg * 10) / 10, breakdown };
 }
 
 // "Thabo Mokoena" -> "Thabo M."

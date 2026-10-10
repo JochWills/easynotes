@@ -62,13 +62,13 @@
     </div>
   <% } else { %><p class="muted">No notes uploaded.</p><% } %>
 
-  <h2 id="reviews" style="font-size:1.35rem;margin-top:34px">Reviews (<%= locals.reviews ? reviews.length : 0 %>)</h2>
+  <h2 style="font-size:1.35rem;margin-top:34px">Reviews (<%= locals.reviews ? reviews.length : 0 %>)</h2>
   <% if (locals.reviews && reviews.length) { %>
     <div class="reviews-list">
       <% reviews.forEach(function (r) { %>
         <article class="review <%= r.status === 'hidden' ? 'is-hidden' : '' %>">
           <div class="review-head">
-            <span><% if (r.rating) { %><strong><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></strong> · <% } %><%= r.reviewer_name || (r.source ? 'Anonymous' : 'Verified buyer') %> · <% if (r.source) { %><span class="pill pill-muted">From <%= r.source %></span><% } else { %><span class="muted small"><%= r.payment_ref %></span><% } %><% if (r.status === 'hidden') { %> <span class="pill pill-muted">Hidden</span><% } %></span>
+            <span><strong><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></strong> · <%= r.reviewer_name || 'Verified buyer' %> · <span class="muted small"><%= r.payment_ref %></span><% if (r.status === 'hidden') { %> <span class="pill pill-muted">Hidden</span><% } %></span>
             <form method="post" action="/admin/reviews/<%= r.id %>/status">
               <input type="hidden" name="_csrf" value="<%= csrf %>">
               <input type="hidden" name="back" value="/admin/sellers/<%= s.id %>">
@@ -76,30 +76,10 @@
             </form>
           </div>
           <% if (r.body) { %><p class="review-body"><%= r.body %></p><% } %>
-          <p class="review-by muted"><%= r.source ? (r.original_date ? 'Originally ' + date(r.original_date) + ' · ' : '') + 'Added ' + date(r.created_at) : date(r.created_at) %><%= r.notes_bought ? ' · Bought ' + r.notes_bought : '' %></p>
+          <p class="review-by muted"><%= date(r.created_at) %><%= r.notes_bought ? ' · Bought ' + r.notes_bought : '' %></p>
         </article>
       <% }) %>
     </div>
   <% } else { %><p class="muted">No reviews yet.</p><% } %>
-
-  <details class="card import-review">
-    <summary><strong>Add a review from their previous store</strong> <span class="muted small">Shown labelled with where it’s from. Doesn’t count towards their EasyNotes rating.</span></summary>
-    <form class="form" method="post" action="/admin/sellers/<%= s.id %>/reviews/import">
-      <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <div class="row-2">
-        <div class="field"><label for="ir-source">Where it’s from</label><input id="ir-source" type="text" name="source" required maxlength="80" placeholder="e.g. pgdanotes.co.za"></div>
-        <div class="field"><label for="ir-url">Link to it <span class="muted">(optional)</span></label><input id="ir-url" type="text" inputmode="url" name="source_url" maxlength="300" placeholder="https://pgdanotes.co.za/#reviews"></div>
-      </div>
-      <div class="row-2">
-        <div class="field"><label for="ir-name">Reviewer <span class="muted">(optional)</span></label><input id="ir-name" type="text" name="reviewer_name" maxlength="60" placeholder="First name and initial, e.g. Raquel P."></div>
-        <div class="field"><label for="ir-rating">Stars <span class="muted">(only if the original had them)</span></label>
-          <select id="ir-rating" name="rating" data-native><option value="">No star rating</option><% for (var i = 5; i >= 1; i--) { %><option value="<%= i %>"><%= i %> <%= i === 1 ? 'star' : 'stars' %></option><% } %></select>
-        </div>
-      </div>
-      <div class="field"><label for="ir-date">Original date <span class="muted">(optional)</span></label><input id="ir-date" type="date" name="original_date" style="max-width:220px"></div>
-      <div class="field"><label for="ir-body">Review, word for word</label><textarea id="ir-body" name="body" required maxlength="1000" style="min-height:120px"></textarea></div>
-      <div class="form-actions"><button class="btn" type="submit">Add review</button></div>
-    </form>
-  </details>
 </div>
 <%- include('../partials/bottom') %>

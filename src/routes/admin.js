@@ -256,40 +256,6 @@ router.post('/reviews/:id/status', async (req, res, next) => {
   res.redirect(backTo(req, `/admin/sellers/${r.seller_id}`));
 });
 
-// Add a review the seller earned on another store. It shows labelled with where it came from and doesn't count
-// towards their EasyNotes rating. Copy it word for word; leave rating or date empty if the original has none.
-router.post('/sellers/:id/reviews/import', async (req, res, next) => {
-  if (!isUuid(req.params.id)) return next();
-  const back = `/admin/sellers/${req.params.id}#reviews`;
-  const rating = req.body.rating ? parseInt(req.body.rating, 10) : null;
-  const body = str(req.body.body, 1000);
-  const source = str(req.body.source, 80).replace(/^https?:\/\//, '').replace(/\/$/, '');
-  let sourceUrl = str(req.body.source_url, 300);
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(req.body.original_date || '') ? req.body.original_date : null;
-  if (sourceUrl && !/^https?:\/\//.test(sourceUrl)) sourceUrl = 'https://' + sourceUrl;
-  if (!body || body.length < 10) { flash(req, 'error', 'Paste the review text (at least 10 characters).'); return res.redirect(back); }
-  if (!source) { flash(req, 'error', 'Say where the review is from, e.g. pgdanotes.co.za.'); return res.redirect(back); }
-  if (rating !== null && !(rating >= 1 && rating <= 5)) { flash(req, 'error', 'Rating must be 1 to 5 stars, or left empty.'); return res.redirect(back); }
-  const { error } = await db.from('reviews').insert({
-    seller_id: req.params.id,
-    payment_ref: `IMPORT-${crypto.randomUUID()}`,
-    rating,
-    body,
-    reviewer_name: str(req.body.reviewer_name, 60) || null,
-    source,
-    source_url: sourceUrl || null,
-    original_date: date,
-  });
-  if (error) {
-    console.error('[admin] import review failed', error.message);
-    flash(req, 'error', /column|null value/i.test(error.message) ? 'The database needs updating first: run the imported-reviews snippet from supabase/schema.sql in Supabase.' : 'Couldn’t save the review: ' + error.message);
-    return res.redirect(back);
-  }
-  events.log('review.imported', { seller_id: req.params.id, source }, req.user.email);
-  flash(req, 'ok', `Review from ${source} added. It shows on their storefront, labelled with where it came from.`);
-  res.redirect(back);
-});
-
 /* ---------- Notes ---------- */
 
 router.get('/notes', async (req, res) => {
