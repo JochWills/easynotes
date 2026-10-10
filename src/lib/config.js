@@ -18,8 +18,8 @@ module.exports = {
   supabaseServiceKey: required('SUPABASE_SERVICE_ROLE_KEY'),
   paystackSecret: required('PAYSTACK_SECRET_KEY'),
   platformFeePercent: fee,
-  // Note price limits in rand. The minimum is lowered while testing live payments: set it back to 25.
-  minPrice: 2,
+  // Note price limits in rand
+  minPrice: 25,
   maxPrice: 500,
   feeBearer: process.env.PAYSTACK_FEE_BEARER === 'subaccount' ? 'subaccount' : 'account',
   maxDownloads: Number(process.env.MAX_DOWNLOADS || 10),
