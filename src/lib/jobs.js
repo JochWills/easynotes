@@ -8,6 +8,7 @@ const emails = require('./emails');
 const DAY = 24 * 60 * 60 * 1000;
 const ID_KEEP_DAYS = 30; // ID copies are deleted this long after approval (POPIA: keep only what's needed)
 const REJECTED_KEEP_DAYS = 60; // ...or this long after a rejected submission that was never resent
+const WEBHOOK_LOG_KEEP_DAYS = 30; // every Paystack webhook is logged; old entries are only noise
 
 const thisMonth = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
@@ -55,8 +56,15 @@ async function deleteOldIdDocs() {
   return list.length;
 }
 
+async function pruneWebhookLog() {
+  const before = new Date(Date.now() - WEBHOOK_LOG_KEEP_DAYS * DAY).toISOString();
+  const { data, error } = await db.from('events').delete().eq('kind', 'webhook.received').lt('created_at', before).select('id');
+  if (error) throw error;
+  return (data || []).length;
+}
+
 async function runAll() {
-  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs]]) {
+  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog]]) {
     try {
       const n = await task();
       if (n) console.log(`[jobs] ${name}: ${n}`);
@@ -71,4 +79,4 @@ function start() {
   setInterval(runAll, 6 * 60 * 60 * 1000).unref();
 }
 
-module.exports = { start, runAll, remindOverdueStudies, deleteOldIdDocs, ID_KEEP_DAYS };
+module.exports = { start, runAll, remindOverdueStudies, deleteOldIdDocs, pruneWebhookLog, ID_KEEP_DAYS };

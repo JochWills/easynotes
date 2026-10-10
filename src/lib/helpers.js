@@ -36,6 +36,9 @@ const qs = (params) =>
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
 
+// For HTML a view builds as a string and prints with <%- %>
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
 const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s));
 
 const str = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -50,4 +53,4 @@ function sellCta(user, me) {
   return { href: '/seller', label: 'Go to your dashboard' };
 }
 
-module.exports = { sellCta, rand, date, initials, slugify, fileName, noteUrl, storeUrl, avatarUrl, maskEmail, qs, isUuid, str, feeFor };
+module.exports = { sellCta, rand, date, initials, slugify, fileName, noteUrl, storeUrl, avatarUrl, maskEmail, qs, escapeHtml, isUuid, str, feeFor };

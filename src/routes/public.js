@@ -38,7 +38,7 @@ router.get('/notes', async (req, res) => {
     price_asc: ['price_cents', true],
     price_desc: ['price_cents', false],
   };
-  const sort = sorts[req.query.sort] ? req.query.sort : 'new';
+  const sort = Object.hasOwn(sorts, String(req.query.sort)) ? req.query.sort : 'new'; // not names every object has, like ?sort=constructor
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
   // Subjects and added institutions that have notes on sale right now (so picking one never shows an empty page), one per spelling

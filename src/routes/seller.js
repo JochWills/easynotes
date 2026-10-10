@@ -25,7 +25,7 @@ const { requireSeller, logIn } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
 const avatar = require('../lib/avatar');
 const { slugify, str, isUuid } = require('../lib/helpers');
-const { RESERVED_SLUGS } = require('../lib/constants');
+const { isReservedSlug } = require('../lib/constants');
 const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, SUBJECTS, QUAL_LEVELS, STUDY_YEARS, HONOURS } = require('../lib/constants');
 const education = require('../lib/education');
 
@@ -122,20 +122,21 @@ router.get('/profile', (req, res) => {
   res.render('seller/profile', { title: 'Your storefront', tab: 'profile', values: req.seller, errors: {} });
 });
 
-router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }]), afterUpload(() => '/seller/profile'), verifyCsrf, async (req, res) => {
+router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }], { maxMb: avatar.MAX_MB }), afterUpload(() => '/seller/profile'), verifyCsrf, async (req, res) => {
   const picture = req.files?.avatar?.[0];
   const values = {
     display_name: str(req.body.display_name, 80),
     headline: str(req.body.headline, 120),
     bio: str(req.body.bio, 1500),
-    slug: slugify(req.body.slug || req.body.display_name).slice(0, 40),
+    // slugify() falls back to "notes" when there are no letters or numbers to use; here that's just too short
+    slug: /[a-z0-9]/i.test(String(req.body.slug || req.body.display_name || '').normalize('NFKD')) ? slugify(req.body.slug || req.body.display_name).slice(0, 40) : '',
   };
   const errors = {};
   const pictureError = avatar.checkAvatar(picture);
   if (pictureError) errors.avatar = pictureError;
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
-  else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
+  else if (isReservedSlug(values.slug) && values.slug !== req.seller.slug) errors.slug = 'That link is reserved by EasyNotes. Try another.';
   profanity.checkFields(values, ['display_name', 'headline', 'bio', 'slug'], errors);
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
@@ -166,7 +167,7 @@ const eduLocals = (extra) => ({
   tab: 'verification', errors: {}, universities: DEGREE_UNIVERSITIES, otherLabel: OTHER_UNIVERSITY,
   levels: QUAL_LEVELS, studyYears: STUDY_YEARS, honours: HONOURS, months: education.MONTHS, ...extra,
 });
-const eduFiles = (extra = []) => upload.fields([{ name: 'doc', maxCount: 1 }, { name: 'record', maxCount: 1 }, ...extra]);
+const eduFiles = (extra = []) => upload.fields([{ name: 'doc', maxCount: 1 }, { name: 'record', maxCount: 1 }, ...extra], { maxMb: 10 });
 
 router.get('/verification', async (req, res) => {
   const quals = await education.forSeller(req.seller.id);
@@ -821,7 +822,7 @@ router.post('/account/delete', deleteLimiter, async (req, res) => {
     if (e5) throw e5;
     if (e6) throw e6;
     const { error: e7 } = await db.from('sellers').update({
-      display_name: 'Deleted seller', full_name: null, avatar_path: null, slug: `deleted-${s.id.slice(0, 8)}`,
+      display_name: 'Deleted seller', full_name: null, avatar_path: null, slug: `deleted-${s.id}`,
       headline: null, bio: null, degree: null, university: null, graduation_year: null,
       degree_doc_path: null, id_doc_path: null, verification_status: 'unsubmitted', verification_note: null,
       submitted_at: null, verified_at: null, business_name: null, bank_code: null, bank_name: null, account_number_last4: null,

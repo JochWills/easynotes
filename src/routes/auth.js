@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const db = require('../lib/supabase');
 const flash = require('../lib/flash');
 const { slugify, str } = require('../lib/helpers');
-const { RESERVED_SLUGS } = require('../lib/constants');
+const { isReservedSlug } = require('../lib/constants');
 const emails = require('../lib/emails');
 
 const profanity = require('../lib/profanity');
@@ -16,14 +16,16 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser', 12); // compared when the email doesn't exist
 
-const safeNext = (n) => (typeof n === 'string' && /^\/(?!\/)/.test(n) ? n : null);
+// A path on this site only: browsers treat a backslash as a slash, so /\evil.com would leave the site like //evil.com does.
+const safeNext = (n) => (typeof n === 'string' && /^\/(?![\/\\])[^\\\s]*$/.test(n) ? n : null);
 
 async function uniqueSlug(base) {
-  let slug = slugify(base).slice(0, 40);
+  const root = slugify(base).replace(/^deleted(?=-|$)/, 'seller'); // deleted-… is kept for deleted accounts
+  let slug = root.slice(0, 40);
   for (let i = 0; i < 5; i++) {
     const { data } = await db.from('sellers').select('id').eq('slug', slug).maybeSingle();
-    if (!data && slug.length >= 3 && !RESERVED_SLUGS.has(slug)) return slug;
-    slug = `${slugify(base).slice(0, 34)}-${Math.random().toString(36).slice(2, 6)}`;
+    if (!data && slug.length >= 3 && !isReservedSlug(slug)) return slug;
+    slug = `${root.slice(0, 34)}-${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${slug}-${Date.now().toString(36)}`;
 }

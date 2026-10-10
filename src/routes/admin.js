@@ -18,6 +18,15 @@ router.use(requireAdmin);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const cleanSearch = (q) => String(q || '').replace(/["%,()*\\:]/g, ' ').trim().slice(0, 80);
 const backTo = (req, fallback) => (typeof req.body.back === 'string' && /^\/admin(\/|$)/.test(req.body.back) ? req.body.back : fallback);
+// The admin page the button was on (from the Referer), or the fallback.
+const backToReferer = (req, fallback) => {
+  try {
+    const u = new URL(req.get('referer'));
+    return u.host === req.get('host') && /^\/admin(\/|$)/.test(u.pathname) ? u.pathname + u.search : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 // Reports, automatic upload flags and payments that didn't match an order stay open until an admin marks them resolved.
 const REPORT_KINDS = ['note.reported', 'note.flagged', 'payment.unmatched', 'payment.mismatch'];
@@ -276,12 +285,12 @@ router.post('/notes/:id/status', async (req, res, next) => {
     const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).neq('status', 'deleted').select('title').maybeSingle();
     if (!n) {
       flash(req, 'error', 'The seller deleted these notes, so they can’t be changed. Past buyers can still download them.');
-      return res.redirect(req.get('referer')?.includes('/admin/') ? req.get('referer') : '/admin/notes');
+      return res.redirect(backToReferer(req, '/admin/notes'));
     }
     flash(req, 'ok', req.body.action === 'remove' ? 'Notes removed. The seller can’t republish them.' : 'Notes updated.');
     events.log(`note.${req.body.action === 'remove' ? 'removed' : req.body.action === 'restore' ? 'restored' : 'hidden'}`, { note_id: req.params.id, title: n?.title }, req.user.email);
   }
-  res.redirect(req.get('referer')?.includes('/admin/') ? req.get('referer') : '/admin/notes');
+  res.redirect(backToReferer(req, '/admin/notes'));
 });
 
 /* ---------- Orders ---------- */

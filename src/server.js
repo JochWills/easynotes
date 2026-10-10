@@ -35,6 +35,8 @@ app.use(
         'upgrade-insecure-requests': config.isProd ? [] : null,
       },
     },
+    // Send the Referer only within the site: "back to where you were" redirects need it, other sites never see our URLs.
+    referrerPolicy: { policy: 'same-origin' },
   })
 );
 app.use(compression());

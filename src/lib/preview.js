@@ -5,6 +5,7 @@ const storage = require('./storage');
 
 const WIDTH = 1100; // px, enough to read comfortably when zoomed in a bit
 const HALF = 0.5; // share of the last preview page that is shown
+const MAX_ASPECT = 3; // preview images are at most this many times taller than wide
 
 // How much of a note is previewed: about 2.5 pages, less for short notes so the preview isn't most of it.
 function previewPlan(pageCount) {
@@ -53,7 +54,8 @@ async function renderImages(buffer, pageCount) {
       const page = await doc.getPage(i);
       const base = page.getViewport({ scale: 1 });
       const viewport = page.getViewport({ scale: WIDTH / base.width });
-      const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height));
+      // A very tall, thin page would otherwise need a canvas many thousands of pixels high: show its top only.
+      const canvas = createCanvas(Math.round(viewport.width), Math.min(Math.round(viewport.height), WIDTH * MAX_ASPECT));
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#fff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);

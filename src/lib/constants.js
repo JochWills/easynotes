@@ -73,9 +73,11 @@ const LEVELS = ['Undergraduate', 'Honours / postgraduate', 'Professional exam', 
 const RESERVED_SLUGS = new Set([
   'about', 'account', 'admin', 'api', 'app', 'assets', 'blog', 'browse', 'cart', 'checkout', 'contact', 'css',
   'dashboard', 'download', 'downloads', 'easynotes', 'favicon', 'forgot', 'help', 'healthz', 'how-it-works', 'img', 'js',
-  'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'copyright', 'report', 'reports', 'register', 'reset', 'robots', 'search', 'sell',
+  'confirm-email', 'library', 'login', 'logout', 'note', 'notes', 'pricing', 'privacy', 'copyright', 'report', 'reports', 'register', 'reset', 'robots', 'search', 'sell',
   'seller', 'seller-terms', 'sellers', 'settings', 'signup', 'sitemap', 'static', 'store', 'support', 'terms',
   'webhooks', 'www',
 ]);
+// Also reserved: deleted-…, which accounts that are deleted after making sales get (routes/seller.js).
+const isReservedSlug = (slug) => RESERVED_SLUGS.has(slug) || /^deleted(-|$)/.test(slug);
 
-module.exports = { STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, PRIVATE_INSTITUTION };
+module.exports = { isReservedSlug, STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, PRIVATE_INSTITUTION };
