@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const config = require('../lib/config');
 const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
@@ -9,6 +11,7 @@ const preview = require('../lib/preview');
 const events = require('../lib/events');
 const profanity = require('../lib/profanity');
 const { scanPdf } = require('../lib/scan');
+const emails = require('../lib/emails');
 
 // After an upload: record the seller's declaration and flag anything that looks like someone else's
 // material for an admin to check (Admin > Reports). Never blocks the upload.
@@ -667,6 +670,100 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
   events.log('note.deleted', { note_id: n.id, title: n.title, sold }, req.user.email);
   flash(req, 'ok', sold ? `“${n.title}” is deleted. People who bought it can still download it.` : `“${n.title}” is deleted.`);
   res.redirect('/seller/notes');
+});
+
+/* ---------- Delete account ---------- */
+
+const deleteLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-7', legacyHeaders: false });
+
+async function paidSales(sellerId) {
+  const { count } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('seller_id', sellerId).eq('status', 'paid');
+  return count || 0;
+}
+
+router.get('/account/delete', async (req, res) => {
+  res.render('seller/account-delete', { title: 'Delete your account', sold: await paidSales(req.seller.id), error: null });
+});
+
+// Erases the seller's personal details, documents, storefront and unsold notes, and logs them out.
+// Sellers with no sales are removed completely. Sellers with sales keep an anonymous record ("Deleted seller")
+// because orders point to it: sales records are kept for the books, and sold PDFs stay so buyers can still download them.
+router.post('/account/delete', deleteLimiter, async (req, res) => {
+  const s = req.seller;
+  const again = async (error) => res.status(400).render('seller/account-delete', { title: 'Delete your account', sold: await paidSales(s.id), error });
+  const { data: user } = await db.from('users').select('id,email,password_hash').eq('id', req.user.id).single();
+  if (!(await bcrypt.compare(String(req.body.password || ''), user.password_hash))) return again('That password isn’t right.');
+  if (req.body.confirm !== 'on') return again('Tick the box to confirm you want to delete your account.');
+
+  const [{ data: notes, error: notesErr }, { data: orders, error: ordersErr }] = await Promise.all([
+    db.from('notes').select('id,title,file_path,page_count').eq('seller_id', s.id),
+    db.from('orders').select('note_id,status,created_at').eq('seller_id', s.id),
+  ]);
+  if (notesErr) throw notesErr;
+  if (ordersErr) throw ordersErr;
+  if (orders.some((o) => o.status === 'pending' && Date.now() - new Date(o.created_at).getTime() < PENDING_GRACE_MS)) {
+    return again('Someone is paying for your notes right now. Try again in a couple of hours.');
+  }
+
+  const soldIds = new Set(orders.filter((o) => o.status === 'paid').map((o) => o.note_id));
+  const sold = notes.filter((n) => soldIds.has(n.id));
+  const unsold = notes.filter((n) => !soldIds.has(n.id));
+  const { data: quals } = await db.from('qualifications').select('doc_path,record_path').eq('seller_id', s.id);
+
+  // Unpaid checkouts would block deleting the notes and the seller.
+  const { error: e1 } = await db.from('orders').delete().eq('seller_id', s.id).neq('status', 'paid');
+  if (e1) throw e1;
+  if (unsold.length) {
+    const { error: e2 } = await db.from('notes').delete().in('id', unsold.map((n) => n.id));
+    if (e2) throw e2;
+  }
+  if (sold.length) {
+    const { error: e3 } = await db.from('notes').update({ status: 'deleted' }).in('id', sold.map((n) => n.id));
+    if (e3) throw e3;
+  }
+
+  if (!sold.length) {
+    // The seller, education and reviews go with the user.
+    const { error: e4 } = await db.from('users').delete().eq('id', user.id);
+    if (e4) throw e4;
+  } else {
+    const [{ error: e5 }, { error: e6 }] = await Promise.all([
+      db.from('qualifications').delete().eq('seller_id', s.id),
+      db.from('reviews').delete().eq('seller_id', s.id),
+    ]);
+    if (e5) throw e5;
+    if (e6) throw e6;
+    const { error: e7 } = await db.from('sellers').update({
+      display_name: 'Deleted seller', full_name: null, avatar_path: null, slug: `deleted-${s.id.slice(0, 8)}`,
+      headline: null, bio: null, degree: null, university: null, graduation_year: null,
+      degree_doc_path: null, id_doc_path: null, verification_status: 'unsubmitted', verification_note: null,
+      submitted_at: null, verified_at: null, business_name: null, bank_code: null, bank_name: null, account_number_last4: null,
+    }).eq('id', s.id);
+    if (e7) throw e7;
+    // The login stops working: the email is freed up and the password can't match.
+    const { error: e8 } = await db.from('users').update({
+      email: `deleted-${user.id}@deleted.invalid`,
+      password_hash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),
+    }).eq('id', user.id);
+    if (e8) throw e8;
+  }
+
+  // Files last, so a storage hiccup can't leave the account half deleted.
+  await Promise.all([
+    storage.remove('notes', unsold.map((n) => n.file_path)),
+    storage.remove('verification', [s.id_doc_path, s.degree_doc_path, ...(quals || []).flatMap((q) => [q.doc_path, q.record_path])]),
+    avatar.removeAvatar(s.avatar_path),
+    ...notes.map((n) => preview.removePreview(n.file_path, n.page_count)),
+  ]);
+
+  // Paystack keeps paying out recent sales; the subaccount code stays on the record so an admin can find it.
+  events.log('seller.account_deleted', { seller_id: s.id, display_name: s.display_name, slug: s.slug, subaccount: s.paystack_subaccount_code, sold_notes: sold.length, erased_notes: unsold.length }, 'seller');
+  emails.sendAccountDeleted(user.email, s.full_name || s.display_name, sold.length > 0).catch((err) => console.error('[seller] goodbye email not sent', err.message));
+
+  for (const key of Object.keys(req.session)) delete req.session[key];
+  flash(req, 'ok', 'Your account is deleted. Thanks for being part of EasyNotes.');
+  res.set('Clear-Site-Data', '"prefetchCache", "prerenderCache"');
+  res.redirect(303, '/');
 });
 
 /* ---------- Old Sales tab ---------- */

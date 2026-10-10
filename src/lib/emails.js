@@ -100,6 +100,23 @@ async function sendSaleEmails(orders) {
   }
 }
 
+// Confirms a seller deleted their account. Sent to the address they used, which we no longer keep.
+async function sendAccountDeleted(email, name, hadSales) {
+  const first = String(name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Your account is deleted',
+    paragraphs: [
+      `Hi ${esc(first)}, as you asked, we’ve deleted your EasyNotes seller account. Your storefront, profile, documents and unsold notes are gone.`,
+      hadSales
+        ? 'Students who bought your notes can still download them, and we keep a record of those sales as the law requires. Money from recent sales is still paid to your bank account as usual.'
+        : '',
+      'Thanks for being part of EasyNotes. You’re welcome back any time.',
+    ].filter(Boolean),
+    small: ['Didn’t do this? Reply to this email straight away.'],
+  });
+  return mail.send({ to: email, subject: 'Your EasyNotes account is deleted', html, text });
+}
+
 /* ---------- Sellers and admins: password reset ---------- */
 
 const RESET_MINUTES = 60;
@@ -281,6 +298,7 @@ module.exports = {
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
+  sendAccountDeleted,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail, sendSaleEmails,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,

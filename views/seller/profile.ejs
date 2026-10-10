@@ -2,6 +2,7 @@
 <div class="wrap dash">
   <%- include('../partials/seller-nav') %>
   <div class="dash-grid">
+    <div>
     <form class="form card" method="post" action="/seller/profile" enctype="multipart/form-data" novalidate data-unsaved>
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="field <%= errors.avatar ? 'has-error' : '' %>">
@@ -50,6 +51,12 @@
       </div>
       <div class="form-actions"><button class="btn" type="submit">Save storefront</button></div>
     </form>
+    <section class="danger-zone" aria-labelledby="danger-h">
+      <h2 id="danger-h">Delete your account</h2>
+      <p>Permanently delete your storefront, documents and login. Students who bought your notes keep their downloads.</p>
+      <a class="btn btn-ghost btn-danger-ghost btn-sm" href="/seller/account/delete">Delete account</a>
+    </section>
+    </div>
     <div class="sticky-preview">
       <h2 style="font-size:1.2rem">What students see</h2>
       <div class="author" style="margin-top:12px">

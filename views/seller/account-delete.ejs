@@ -1,0 +1,40 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap narrow dash">
+  <div class="card delete-card">
+    <h1>Delete your account?</h1>
+    <p>This permanently deletes:</p>
+    <ul class="plain-list">
+      <li>Your storefront, profile, picture and reviews</li>
+      <li>Your ID, degree documents and education details</li>
+      <li>Your notes<%= sold ? ' that nobody has bought' : '' %>, with their PDFs</li>
+      <li>Your login. You won’t be able to sign in again with this account.</li>
+    </ul>
+    <% if (sold) { %>
+      <p>You have <strong><%= sold %> <%= sold === 1 ? 'sale' : 'sales' %></strong>, so:</p>
+      <ul class="plain-list">
+        <li>Students who bought your notes can still download them.</li>
+        <li>We keep a record of those sales, without your personal details, as the law requires.</li>
+        <li>Money from recent sales is still paid to your bank account as usual.</li>
+      </ul>
+    <% } %>
+    <p class="muted">This can’t be undone. Just want a break? <a href="/seller/notes">Hide your notes</a> instead and come back whenever you like.</p>
+
+    <form method="post" action="/seller/account/delete" class="delete-account-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <div class="field">
+        <label for="del-password">Enter your password to confirm</label>
+        <input id="del-password" type="password" name="password" required autocomplete="current-password">
+      </div>
+      <label class="check">
+        <input type="checkbox" name="confirm" required>
+        <span>I understand my account will be permanently deleted.</span>
+      </label>
+      <div class="form-actions">
+        <button class="btn btn-danger" type="submit">Delete my account</button>
+        <a class="btn btn-ghost" href="/seller/profile">Keep my account</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/bottom') %>
