@@ -58,10 +58,10 @@ const STUDYING_MIN_RANK = 4; // honours / PGDip and up
 const SUBJECTS = [
   'Accounting', 'Actuarial Science', 'Afrikaans', 'Anatomy', 'Auditing', 'Biochemistry', 'Biology', 'Botany',
   'Business Management', 'Chemistry', 'Civil Engineering', 'Commercial Law', 'Computer Science', 'Constitutional Law',
-  'Contract Law', 'Corporate Finance', 'Criminal Law', 'Criminology', 'Economics', 'Education', 'Electrical Engineering',
-  'English', 'Environmental Science', 'Financial Accounting', 'Financial Management', 'Geography', 'Geology', 'History',
+  'Contract Law', 'Corporate Finance', 'Corporate Governance & Auditing', 'Criminal Law', 'Criminology', 'Economics', 'Education', 'Electrical Engineering',
+  'English', 'Environmental Science', 'Financial Accounting', 'Financial Management', 'Financial Reporting', 'Geography', 'Geology', 'History',
   'Human Resource Management', 'Industrial Psychology', 'Information Systems', 'isiXhosa', 'isiZulu', 'Law of Delict',
-  'Life Sciences', 'Management Accounting', 'Marketing', 'Mathematical Literacy', 'Mathematics', 'Mechanical Engineering',
+  'Life Sciences', 'Management Accounting', 'Management Accounting & Finance', 'Marketing', 'Mathematical Literacy', 'Mathematics', 'Mechanical Engineering',
   'Medicine', 'Microbiology', 'Nursing', 'Pharmacology', 'Philosophy', 'Physical Sciences', 'Physics', 'Physiology',
   'Political Science', 'Private Law', 'Psychology', 'Public Administration', 'Sociology', 'Statistics', 'Supply Chain Management',
   'Taxation', 'Zoology',
