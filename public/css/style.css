@@ -1462,10 +1462,4 @@ button.is-loading { cursor: progress; opacity: .75; }
   .hw-panel { padding-top: 60px; padding-bottom: 56px; }
 }
 
-/* Storefront: reviews a seller earned on their own site before EasyNotes */
-.reviews-previous { margin-top: 10px; }
-.reviews-previous h3 { margin: 0; font-size: 1.05rem; }
-.reviews-previous p { margin: 4px 0 0; }
-.review-previous { background: var(--page); box-shadow: none; }
-.review-previous .review-body { margin-top: 0; }
-.from-source { display: inline-flex; align-items: center; padding: .1em .55em; border-radius: 999px; background: var(--rule); color: var(--ink-soft); font-size: .76rem; font-weight: 700; }
+.review-body.review-body-first { margin-top: 0; }

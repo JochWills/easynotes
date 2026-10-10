@@ -1,5 +1,6 @@
-// Reviews a seller earned on their own site before EasyNotes, keyed by storefront slug. Shown on the storefront
-// labelled with where they're from, and not counted in the EasyNotes rating (only buyers here can give that).
+// Reviews a seller's buyers left on their own site before EasyNotes (shared with the reviewers' permission), keyed by
+// storefront slug. They show in the normal reviews list tagged "Bought via <source>", not "Verified purchase",
+// since those purchases weren't made on EasyNotes. Add a rating (1-5) only if the reviewer gave one.
 module.exports = {
   'pgda-notes-by-courts': {
     source: 'pgdanotes.co.za',

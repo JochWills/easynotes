@@ -54,11 +54,11 @@
               <% }) %>
             </ul>
           <% } else if (locals.isOwner) { %>
-            <p class="review-avg-empty"><%= prevCount ? 'No EasyNotes reviews yet' : 'No reviews yet' %></p>
+            <p class="review-avg-empty"><%= prevCount ? 'No star ratings yet' : 'No reviews yet' %></p>
             <p class="muted small">Your rating shows here and at the top of your storefront once buyers start reviewing.</p>
           <% } else { %>
-            <p class="review-avg-empty"><%= prevCount ? 'No EasyNotes reviews yet' : 'No reviews yet' %></p>
-            <p class="muted small">Bought notes from <%= author.display_name %>? Be the first to say how they helped.</p>
+            <p class="review-avg-empty"><%= prevCount ? 'No star ratings yet' : 'No reviews yet' %></p>
+            <p class="muted small">Bought notes from <%= author.display_name %>? <%= prevCount ? 'Leave a review with your star rating.' : 'Be the first to say how they helped.' %></p>
           <% } %>
           <% if (!locals.isOwner && locals.live !== false) { %>
             <details class="review-write" <%= form.open ? 'open' : '' %>>
@@ -138,18 +138,13 @@
             <p class="review-by"><strong><%= r.reviewer_name || 'Verified buyer' %></strong> <span class="verified-buy">Verified purchase</span><% if (r.notes_bought) { %><span class="muted"> · Bought <%= r.notes_bought %></span><% } %></p>
           </article>
         <% }) %>
-        <% if (prevCount) { %>
-          <div class="reviews-previous">
-            <h3>Reviews from <%= prev.source %></h3>
-            <p class="muted small">From before <%= author.display_name %> joined EasyNotes, copied from <a href="<%= prev.url %>" target="_blank" rel="noopener"><%= prev.source %></a>. Not counted in the EasyNotes rating.</p>
-          </div>
-          <% prev.reviews.forEach(function (r) { %>
-            <article class="review review-previous">
-              <p class="review-body"><%= r.body %></p>
-              <p class="review-by"><strong><%= r.name %></strong> <span class="from-source">From <%= prev.source %></span></p>
-            </article>
-          <% }) %>
-        <% } %>
+        <% if (prevCount) { prev.reviews.forEach(function (r) { %>
+          <article class="review">
+            <% if (r.rating) { %><div class="review-head"><%- stars(r.rating) %><span class="sr-only"><%= r.rating %> out of 5 stars</span></div><% } %>
+            <p class="review-body<%= r.rating ? '' : ' review-body-first' %>"><%= r.body %></p>
+            <p class="review-by"><strong><%= r.name %></strong> <span class="verified-buy">Bought via <%= prev.source %></span></p>
+          </article>
+        <% }); } %>
       </div>
     </div>
   </div>
