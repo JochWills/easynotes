@@ -1289,6 +1289,10 @@
         setTimeout(function () { location.href = next || '/seller/notes'; }, 700);
         return;
       }
+      if (xhr.status >= 500 || xhr.status === 0) {
+        // The server restarted or fell over (e.g. Render redeploying): keep the form so they can try again
+        return fail('The server was busy and the upload didn’t finish. Check your Notes tab in case it saved; if not, try again in a minute.');
+      }
       if (/html/.test(type) && xhr.responseText) {
         // The form came back with something to fix (or another message): show that page as normal
         finish(true); // this page is being replaced by the one the server sent back

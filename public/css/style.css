@@ -1497,3 +1497,5 @@ dialog.upload-modal > .upload-note { margin: 18px 0 0; color: var(--muted); font
 .notes-table td:not(:first-child), .notes-table th { white-space: nowrap; }
 @media (min-width: 701px) { .notes-table .actions { flex-wrap: nowrap; } }
 @media (min-width: 701px) and (max-width: 1000px) { .notes-table th:nth-child(3), .notes-table td:nth-child(3) { display: none; } }
+.upload-modal.is-failed .upload-steps li.is-now::before { animation: none; border-color: var(--bad); }
+.upload-modal.is-failed .upload-bar i { background: var(--bad); }
