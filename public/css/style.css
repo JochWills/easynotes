@@ -442,7 +442,13 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .delete-account-form .check { margin: 14px 0 4px; }
 .plain-list { margin: 0 0 18px; padding-left: 1.2em; }
 .plain-list li { margin: 6px 0; }
-.danger-zone { margin-top: 24px; padding: 20px; border: 1px solid var(--rule); border-radius: 14px; }
+.danger-zone { padding: 20px; border: 1px solid var(--rule); border-radius: 14px; }
+.settings { display: grid; gap: 20px; max-width: 680px; }
+.settings-head { margin-bottom: 16px; }
+.settings-head h2 { font-size: 1.15rem; margin: 0 0 4px; }
+.settings-head p { margin: 0; color: var(--muted); font-size: .93rem; overflow-wrap: anywhere; }
+.settings-card .form-actions { margin-top: 4px; }
+.settings-toggles { display: grid; gap: 14px; margin-bottom: 18px; }
 .danger-zone h2 { font-size: 1.05rem; margin: 0 0 4px; }
 .danger-zone p { margin: 0 0 14px; color: var(--muted); font-size: .93rem; }
 .delete-card .checklist { margin: 4px 0 18px; }

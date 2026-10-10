@@ -1,0 +1,95 @@
+<%- include('../partials/top', { noindex: true }) %>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <div class="settings">
+
+    <section class="card settings-card" aria-labelledby="set-name">
+      <div class="settings-head">
+        <h2 id="set-name">Your name</h2>
+        <p>Private. Used on your account, emails and payouts. Students see your <a href="/seller/profile">storefront name</a> instead.</p>
+      </div>
+      <form class="form" method="post" action="/seller/settings/name" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field <%= errors.full_name ? 'has-error' : '' %>">
+          <label for="s-full">Full name</label>
+          <input id="s-full" type="text" name="full_name" value="<%= values.full_name %>" required maxlength="80" autocomplete="name">
+          <%- include('../partials/field-error', { name: 'full_name' }) %>
+        </div>
+        <div class="form-actions"><button class="btn" type="submit">Save name</button></div>
+      </form>
+    </section>
+
+    <section class="card settings-card" aria-labelledby="set-email">
+      <div class="settings-head">
+        <h2 id="set-email">Login email</h2>
+        <p>You log in with <strong><%= email %></strong>. Sales and review emails go here too.</p>
+      </div>
+      <form class="form" method="post" action="/seller/settings/email" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field <%= errors.new_email ? 'has-error' : '' %>">
+          <label for="s-email">New email</label>
+          <input id="s-email" type="email" name="new_email" value="<%= values.new_email || '' %>" required maxlength="200" autocomplete="email">
+          <span class="hint">We’ll send a link to the new address. The change happens once you click it.</span>
+          <%- include('../partials/field-error', { name: 'new_email' }) %>
+        </div>
+        <div class="field <%= errors.email_password ? 'has-error' : '' %>">
+          <label for="s-email-pw">Your password</label>
+          <input id="s-email-pw" type="password" name="email_password" required autocomplete="current-password">
+          <%- include('../partials/field-error', { name: 'email_password' }) %>
+        </div>
+        <div class="form-actions"><button class="btn" type="submit">Send confirmation link</button></div>
+      </form>
+    </section>
+
+    <section class="card settings-card" aria-labelledby="set-pw">
+      <div class="settings-head">
+        <h2 id="set-pw">Password</h2>
+        <p>Use at least 8 characters.</p>
+      </div>
+      <form class="form" method="post" action="/seller/settings/password" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="text" name="username" value="<%= email %>" autocomplete="username" hidden>
+        <div class="field <%= errors.current_password ? 'has-error' : '' %>">
+          <label for="s-pw-now">Current password</label>
+          <input id="s-pw-now" type="password" name="current_password" required autocomplete="current-password">
+          <%- include('../partials/field-error', { name: 'current_password' }) %>
+          <span class="hint"><a href="/forgot">Forgotten it?</a></span>
+        </div>
+        <div class="field <%= errors.new_password ? 'has-error' : '' %>">
+          <label for="s-pw-new">New password</label>
+          <input id="s-pw-new" type="password" name="new_password" required minlength="8" autocomplete="new-password">
+          <%- include('../partials/field-error', { name: 'new_password' }) %>
+        </div>
+        <div class="field <%= errors.confirm_password ? 'has-error' : '' %>">
+          <label for="s-pw-again">New password again</label>
+          <input id="s-pw-again" type="password" name="confirm_password" required minlength="8" autocomplete="new-password">
+          <%- include('../partials/field-error', { name: 'confirm_password' }) %>
+        </div>
+        <div class="form-actions"><button class="btn" type="submit">Change password</button></div>
+      </form>
+    </section>
+
+    <section class="card settings-card" aria-labelledby="set-notify">
+      <div class="settings-head">
+        <h2 id="set-notify">Email notifications</h2>
+        <p>Important emails about your account, verification and payouts always come through.</p>
+      </div>
+      <form class="form" method="post" action="/seller/settings/notifications">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="settings-toggles">
+          <label class="check"><input type="checkbox" name="notify_sales" <%= notify.sales ? 'checked' : '' %>><span><strong>Sales</strong><br><span class="muted small">An email each time someone buys your notes</span></span></label>
+          <label class="check"><input type="checkbox" name="notify_reviews" <%= notify.reviews ? 'checked' : '' %>><span><strong>Reviews</strong><br><span class="muted small">An email when a buyer reviews your storefront</span></span></label>
+        </div>
+        <div class="form-actions"><button class="btn" type="submit">Save email settings</button></div>
+      </form>
+    </section>
+
+    <section class="settings-card danger-zone" aria-labelledby="set-delete">
+      <h2 id="set-delete">Delete your account</h2>
+      <p>Permanently delete your storefront, documents and login. Students who bought your notes keep their downloads.</p>
+      <a class="btn btn-ghost btn-danger-ghost btn-sm" href="/seller/account/delete">Delete account</a>
+    </section>
+
+  </div>
+</div>
+<%- include('../partials/bottom') %>

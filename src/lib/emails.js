@@ -74,10 +74,10 @@ async function sendSaleEmails(orders) {
   for (const [sellerId, list] of bySeller) {
     try {
       const [{ data: s }, { data: notes }] = await Promise.all([
-        db.from('sellers').select('display_name,full_name,users(email)').eq('id', sellerId).maybeSingle(),
+        db.from('sellers').select('*,users(email)').eq('id', sellerId).maybeSingle(),
         db.from('notes').select('id,title').in('id', list.map((o) => o.note_id)),
       ]);
-      if (!s || !s.users) continue;
+      if (!s || !s.users || s.notify_sales === false) continue; // switched off in Settings
       const title = (id) => (notes || []).find((n) => n.id === id)?.title || 'Your notes';
       const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
       const earned = list.reduce((sum, o) => sum + o.seller_earnings_cents, 0);
@@ -115,6 +115,39 @@ async function sendAccountDeleted(email, name, hadSales) {
     small: ['Didn’t do this? Reply to this email straight away.'],
   });
   return mail.send({ to: email, subject: 'Your EasyNotes account is deleted', html, text });
+}
+
+/* ---------- Sellers: changing their login email ---------- */
+
+const EMAIL_CHANGE_HOURS = 24;
+
+// The link goes to the new address, so the change only happens once they've shown they can read it.
+async function sendEmailChangeLink(user, newEmail, name) {
+  const t = tokens.make('email-change', { u: user.id, from: user.email, to: newEmail }, EMAIL_CHANGE_HOURS * 3600000);
+  const first = String(name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Confirm your new email',
+    paragraphs: [`Hi ${esc(first)}, you asked to log in to EasyNotes with this email address from now on. Confirm it’s yours to make the switch.`],
+    button: { url: `${config.baseUrl}/confirm-email?t=${t}`, label: 'Confirm new email' },
+    small: [`This link works for ${EMAIL_CHANGE_HOURS} hours. Until you confirm, you keep logging in with ${esc(user.email)}. Didn’t ask for this? Ignore this email.`],
+  });
+  return mail.send({ to: newEmail, subject: 'Confirm your new EasyNotes email', html, text });
+}
+
+function readEmailChangeToken(token) {
+  const t = tokens.read('email-change', token);
+  return t && t.u && t.from && t.to ? t : null;
+}
+
+// Heads-up to the old address once the change is made.
+async function sendEmailChangedNotice(oldEmail, newEmail, name) {
+  const first = String(name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Your login email changed',
+    paragraphs: [`Hi ${esc(first)}, your EasyNotes account now logs in with <strong>${esc(newEmail)}</strong>. Emails about sales and reviews go there too.`],
+    small: ['Didn’t do this? Reply to this email straight away and we’ll lock the account.'],
+  });
+  return mail.send({ to: oldEmail, subject: 'Your EasyNotes login email changed', html, text });
 }
 
 /* ---------- Sellers and admins: password reset ---------- */
@@ -235,8 +268,8 @@ async function sendReportReceipt(report) {
 
 // Tells a seller someone reviewed their storefront.
 async function sendNewReview(sellerId, review) {
-  const { data: s } = await db.from('sellers').select('display_name,full_name,slug,users(email)').eq('id', sellerId).maybeSingle();
-  if (!s || !s.users) return false;
+  const { data: s } = await db.from('sellers').select('*,users(email)').eq('id', sellerId).maybeSingle();
+  if (!s || !s.users || s.notify_reviews === false) return false; // switched off in Settings
   const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
   const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
   const { html, text } = compose({
@@ -298,7 +331,7 @@ module.exports = {
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
-  sendAccountDeleted,
+  sendAccountDeleted, EMAIL_CHANGE_HOURS, sendEmailChangeLink, readEmailChangeToken, sendEmailChangedNotice,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail, sendSaleEmails,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,

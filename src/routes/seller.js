@@ -125,20 +125,18 @@ router.get('/profile', (req, res) => {
 router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }]), afterUpload(() => '/seller/profile'), verifyCsrf, async (req, res) => {
   const picture = req.files?.avatar?.[0];
   const values = {
-    full_name: str(req.body.full_name, 80),
     display_name: str(req.body.display_name, 80),
     headline: str(req.body.headline, 120),
     bio: str(req.body.bio, 1500),
     slug: slugify(req.body.slug || req.body.display_name).slice(0, 40),
   };
   const errors = {};
-  if (values.full_name.length < 2) errors.full_name = 'Enter your full name.';
   const pictureError = avatar.checkAvatar(picture);
   if (pictureError) errors.avatar = pictureError;
   if (values.display_name.length < 2) errors.display_name = 'Enter the name students will see.';
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
   else if (RESERVED_SLUGS.has(values.slug)) errors.slug = 'That link is reserved by EasyNotes. Try another.';
-  profanity.checkFields(values, ['full_name', 'display_name', 'headline', 'bio', 'slug'], errors);
+  profanity.checkFields(values, ['display_name', 'headline', 'bio', 'slug'], errors);
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
     if (taken) errors.slug = 'That link is taken. Try another.';
@@ -670,6 +668,85 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
   events.log('note.deleted', { note_id: n.id, title: n.title, sold }, req.user.email);
   flash(req, 'ok', sold ? `“${n.title}” is deleted. People who bought it can still download it.` : `“${n.title}” is deleted.`);
   res.redirect('/seller/notes');
+});
+
+/* ---------- Settings ---------- */
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const settingsLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+
+// errors are keyed by field; each form posts on its own, so only the one that was sent shows errors.
+function renderSettings(req, res, { status = 200, errors = {}, values = {} } = {}) {
+  res.status(status).render('seller/settings', {
+    title: 'Settings', tab: 'settings', errors,
+    values: { full_name: req.seller.full_name || '', ...values },
+    email: req.user.email,
+    notify: { sales: req.seller.notify_sales !== false, reviews: req.seller.notify_reviews !== false },
+  });
+}
+
+const passwordMatches = async (req, password) => {
+  const { data: u } = await db.from('users').select('password_hash').eq('id', req.user.id).single();
+  return bcrypt.compare(String(password || ''), u.password_hash);
+};
+
+router.get('/settings', (req, res) => renderSettings(req, res));
+
+router.post('/settings/name', async (req, res) => {
+  const full_name = str(req.body.full_name, 80);
+  const errors = {};
+  if (full_name.length < 2) errors.full_name = 'Enter your full name.';
+  profanity.checkFields({ full_name }, ['full_name'], errors);
+  if (Object.keys(errors).length) return renderSettings(req, res, { status: 400, errors, values: { full_name } });
+  const { error } = await db.from('sellers').update({ full_name }).eq('id', req.seller.id);
+  if (error) throw error;
+  flash(req, 'ok', 'Name saved.');
+  res.redirect('/seller/settings');
+});
+
+router.post('/settings/password', settingsLimiter, async (req, res) => {
+  const password = String(req.body.new_password || '');
+  const errors = {};
+  if (!(await passwordMatches(req, req.body.current_password))) errors.current_password = 'That isn’t your current password.';
+  if (password.length < 8) errors.new_password = 'Use at least 8 characters.';
+  else if (Buffer.byteLength(password) > 72) errors.new_password = 'Use 72 characters or fewer.'; // bcrypt ignores anything longer
+  else if (password !== String(req.body.confirm_password || '')) errors.confirm_password = 'The two passwords don’t match.';
+  if (Object.keys(errors).length) return renderSettings(req, res, { status: 400, errors });
+  const { error } = await db.from('users').update({ password_hash: await bcrypt.hash(password, 12) }).eq('id', req.user.id);
+  if (error) throw error;
+  flash(req, 'ok', 'Password changed.');
+  res.redirect('/seller/settings');
+});
+
+router.post('/settings/email', settingsLimiter, async (req, res) => {
+  const newEmail = str(req.body.new_email, 200).toLowerCase();
+  const errors = {};
+  if (!EMAIL_RE.test(newEmail)) errors.new_email = 'Enter a valid email address.';
+  else if (newEmail === req.user.email) errors.new_email = 'That’s already your login email.';
+  else {
+    const { data: taken } = await db.from('users').select('id').eq('email', newEmail).maybeSingle();
+    if (taken) errors.new_email = 'Another account already uses this email.';
+  }
+  if (!(await passwordMatches(req, req.body.email_password))) errors.email_password = 'That password isn’t right.';
+  if (Object.keys(errors).length) return renderSettings(req, res, { status: 400, errors, values: { new_email: newEmail } });
+  if (!config.resendApiKey) {
+    flash(req, 'error', `Email changes need emails switched on. Write to ${config.supportEmail} and we’ll change it for you.`);
+    return res.redirect('/seller/settings');
+  }
+  await emails.sendEmailChangeLink(req.user, newEmail, req.seller.full_name || req.seller.display_name);
+  flash(req, 'ok', `Check ${newEmail} for a link to confirm the change. Until then you keep logging in with ${req.user.email}.`);
+  res.redirect('/seller/settings');
+});
+
+router.post('/settings/notifications', async (req, res) => {
+  const { error } = await db.from('sellers').update({ notify_sales: req.body.notify_sales === 'on', notify_reviews: req.body.notify_reviews === 'on' }).eq('id', req.seller.id);
+  if (error) {
+    console.error('[settings] notifications not saved', error.message); // the notify_* columns may not exist yet (supabase/schema.sql)
+    flash(req, 'error', 'We couldn’t save that just now. Try again later.');
+  } else {
+    flash(req, 'ok', 'Email settings saved.');
+  }
+  res.redirect('/seller/settings');
 });
 
 /* ---------- Delete account ---------- */

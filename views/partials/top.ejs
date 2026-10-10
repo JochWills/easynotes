@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="/css/style.css?v=100">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
 <body>
@@ -45,7 +45,7 @@
           <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? (me.full_name || me.display_name) : (isAdmin ? 'Admin' : user.email); var sub = me && me.display_name !== who ? me.display_name : user.email; /* store name under the person's name */ %>
           <% var accountLinks = isAdmin
                ? [['/admin', 'Admin dashboard', cp === '/admin'], ['/admin/sellers', 'Sellers', cp.startsWith('/admin/sellers')], ['/admin/orders', 'Orders', cp === '/admin/orders']]
-               : [['/seller', 'Seller dashboard', cp === '/seller']].concat(me ? [[storeUrl(me), 'View my storefront', false]] : []).concat([['/seller/notes', 'Your notes', cp === '/seller/notes'], ['/seller/payouts', 'Payouts', cp === '/seller/payouts']]); %>
+               : [['/seller', 'Seller dashboard', cp === '/seller']].concat(me ? [[storeUrl(me), 'View my storefront', false]] : []).concat([['/seller/notes', 'Your notes', cp === '/seller/notes'], ['/seller/payouts', 'Payouts', cp === '/seller/payouts'], ['/seller/settings', 'Settings', cp === '/seller/settings']]); %>
           <% var avatarEl = me && me.avatar_path ? '<img class="profile-avatar" src="' + avatarUrl(me) + '" alt="" width="36" height="36">' : '<span class="profile-avatar" aria-hidden="true">' + initials(me ? (me.full_name || me.display_name) : user.email) + '</span>'; %>
           <%# Desktop: avatar drop-down %>
           <details class="profile">

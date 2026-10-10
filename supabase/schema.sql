@@ -215,3 +215,7 @@ create table if not exists reviews (
 );
 create index if not exists reviews_seller_idx on reviews(seller_id, status);
 alter table reviews enable row level security;
+
+-- Sellers' email notification switches (Settings)
+alter table sellers add column if not exists notify_sales boolean not null default true;
+alter table sellers add column if not exists notify_reviews boolean not null default true;

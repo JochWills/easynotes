@@ -92,6 +92,30 @@ router.post('/login', limiter, async (req, res) => {
   res.redirect(next || (user.role === 'admin' ? '/admin' : '/seller'));
 });
 
+/* ---------- Confirming a new login email (Settings) ---------- */
+
+router.get('/confirm-email', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const t = emails.readEmailChangeToken(req.query.t);
+  const fail = (msg) => res.status(400).render('error', { title: 'Link not valid', message: msg });
+  if (!t) return fail(`This link has expired or isn’t valid. Request a new one from Settings (links work for ${emails.EMAIL_CHANGE_HOURS} hours).`);
+  const { data: user } = await db.from('users').select('id,email,sellers(full_name,display_name)').eq('id', t.u).maybeSingle();
+  if (!user) return fail('This account no longer exists.');
+  if (user.email === t.to) {
+    flash(req, 'ok', `You already log in with ${t.to}.`);
+    return res.redirect(req.user ? '/seller/settings' : '/login');
+  }
+  if (user.email !== t.from) return fail('Your login email has changed since this link was sent. Request a new one from Settings.');
+  const { data: taken } = await db.from('users').select('id').eq('email', t.to).maybeSingle();
+  if (taken) return fail('Another account now uses this email, so we couldn’t switch to it.');
+  const { error } = await db.from('users').update({ email: t.to }).eq('id', user.id);
+  if (error) throw error;
+  const s = Array.isArray(user.sellers) ? user.sellers[0] : user.sellers;
+  emails.sendEmailChangedNotice(t.from, t.to, s && (s.full_name || s.display_name)).catch((err) => console.error('[auth] email-changed notice not sent', err.message));
+  flash(req, 'ok', `Done. You now log in with ${t.to}.`);
+  res.redirect(req.user && req.user.id === user.id ? '/seller/settings' : '/login');
+});
+
 /* ---------- Password reset ---------- */
 
 router.get('/forgot', (req, res) => {
