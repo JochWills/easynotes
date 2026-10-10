@@ -21,7 +21,7 @@ async function afterPdfSaved(req, noteId, title, buffer) {
   if (flags.length) events.log('note.flagged', { note_id: noteId, title, seller_id: req.seller.id, flags }, 'scanner');
 }
 const flash = require('../lib/flash');
-const { requireSeller } = require('../lib/auth');
+const { requireSeller, logIn } = require('../lib/auth');
 const { verifyCsrf } = require('../lib/csrf');
 const avatar = require('../lib/avatar');
 const { slugify, str, isUuid } = require('../lib/helpers');
@@ -154,6 +154,8 @@ router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }]), afterU
     throw error;
   }
   if ('avatar_path' in update && oldPicture) await avatar.removeAvatar(oldPicture);
+  // Links already shared with the old address keep working (see routes/storefront.js)
+  if (values.slug !== req.seller.slug) events.log('seller.slug_changed', { seller_id: req.seller.id, from: req.seller.slug, to: values.slug }, req.user.email);
   flash(req, 'ok', 'Storefront saved.');
   res.redirect('/seller/profile');
 });
@@ -379,7 +381,10 @@ async function renderPayouts(res, req, values, errors, status = 200, changeOpen 
 
 router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}, 200, req.query.change === '1'));
 
-router.post('/payouts', async (req, res) => {
+// It checks the password, so it's rate limited like the other password forms.
+const payoutsLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+
+router.post('/payouts', payoutsLimiter, async (req, res) => {
   const s = req.seller;
   const values = {
     business_name: str(req.body.business_name, 100),
@@ -395,6 +400,7 @@ router.post('/payouts', async (req, res) => {
   if (values.business_name.length < 2) errors.business_name = 'Enter the account holder’s name.';
   if (!bank) errors.bank_code = 'Choose your bank.';
   if (!/^\d{6,16}$/.test(values.account_number)) errors.account_number = 'Enter your account number using digits only.';
+  if (!(await passwordMatches(req, req.body.password))) errors.password = 'That password isn’t right.';
   if (Object.keys(errors).length) return renderPayouts(res, req, values, errors, 400, true);
 
   const payload = {
@@ -427,6 +433,8 @@ router.post('/payouts', async (req, res) => {
     })
     .eq('id', s.id);
   if (error) throw error;
+  events.log('seller.payouts_changed', { seller_id: s.id, seller: s.display_name, bank: bank.name, last4: values.account_number.slice(-4), first: !s.paystack_subaccount_code }, req.user.email);
+  emails.sendPayoutDetailsChanged(req.user.email, s.full_name || s.display_name, bank.name, values.account_number.slice(-4)).catch((err) => console.error('[payouts] notice not sent', err.message));
   flash(req, 'ok', `Payout account saved. Your share of each sale will be paid into ${bank.name} ••••${values.account_number.slice(-4)}.`);
   res.redirect(s.paystack_subaccount_code ? '/seller/payouts' : '/seller'); // first setup goes back to the checklist
 });
@@ -712,9 +720,11 @@ router.post('/settings/password', settingsLimiter, async (req, res) => {
   else if (Buffer.byteLength(password) > 72) errors.new_password = 'Use 72 characters or fewer.'; // bcrypt ignores anything longer
   else if (password !== String(req.body.confirm_password || '')) errors.confirm_password = 'The two passwords don’t match.';
   if (Object.keys(errors).length) return renderSettings(req, res, { status: 400, errors });
-  const { error } = await db.from('users').update({ password_hash: await bcrypt.hash(password, 12) }).eq('id', req.user.id);
+  const password_hash = await bcrypt.hash(password, 12);
+  const { error } = await db.from('users').update({ password_hash }).eq('id', req.user.id);
   if (error) throw error;
-  flash(req, 'ok', 'Password changed.');
+  logIn(req, { id: req.user.id, password_hash }); // stay logged in here; other devices are logged out
+  flash(req, 'ok', 'Password changed. Any other devices you were logged in on are now logged out.');
   res.redirect('/seller/settings');
 });
 

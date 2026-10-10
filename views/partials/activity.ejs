@@ -24,6 +24,10 @@
     case 'note.flagged': return 'Automatic check flagged “' + (d.title || '') + '”: ' + (d.flags || []).join(', ');
     case 'note.reported': return (d.reason === 'copyright_mine' ? 'Takedown request for “' : 'Report about “') + (d.title || '') + '”';
     case 'note.deleted': return 'Seller deleted notes “' + (d.title || '') + '”';
+    case 'seller.payouts_changed': return (d.seller || 'A seller') + (d.first ? ' set up payouts to ' : ' changed payouts to ') + (d.bank || 'a bank') + ' ••••' + (d.last4 || '');
+    case 'seller.slug_changed': return (d.from ? '/' + d.from : 'A storefront') + ' moved to /' + (d.to || '');
+    case 'payment.unmatched': return 'Payment ' + d.reference + ' came in with no orders (see Reports)';
+    case 'payment.mismatch': return 'Payment ' + d.reference + ' didn’t match its orders’ total (see Reports)';
     case 'report.resolved': return 'Marked a report as resolved' + (d.title ? ' (“' + d.title + '”)' : '');
     default: return e.kind;
   }

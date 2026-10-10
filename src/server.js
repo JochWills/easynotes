@@ -108,9 +108,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Every urlencoded POST must carry the CSRF token. Multipart routes verify after multer parses the body.
+// Every POST must carry the CSRF token. The upload routes below verify it themselves after multer parses
+// the body; a multipart post anywhere else has no parsed body, so it fails here instead of skipping the check.
+const UPLOAD_ROUTES = /^\/seller\/(profile|verification|verification\/education|notes|notes\/[0-9a-f-]{36})$/i;
 app.use((req, res, next) => {
-  if (req.method !== 'POST' || req.is('multipart/form-data')) return next();
+  if (req.method !== 'POST') return next();
+  if (req.is('multipart/form-data') && UPLOAD_ROUTES.test(req.path)) return next();
   if (req.path === '/logout') return next(); // checks its own way (routes/auth.js)
   return verifyCsrf(req, res, next);
 });

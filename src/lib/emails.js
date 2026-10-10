@@ -150,6 +150,18 @@ async function sendEmailChangedNotice(oldEmail, newEmail, name) {
   return mail.send({ to: oldEmail, subject: 'Your EasyNotes login email changed', html, text });
 }
 
+// Bank details for payouts were set or changed: tells the seller, so a change they didn't make is caught quickly.
+async function sendPayoutDetailsChanged(email, name, bankName, last4) {
+  const first = String(name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Your payout account changed',
+    paragraphs: [`Hi ${esc(first)}, your share of each sale will now be paid into <strong>${esc(bankName)} ••••${esc(last4)}</strong>.`],
+    button: { url: `${config.baseUrl}/seller/payouts`, label: 'See your payouts' },
+    small: ['Didn’t do this? Reply to this email straight away and change your password.'],
+  });
+  return mail.send({ to: email, subject: 'Your EasyNotes payout account changed', html, text });
+}
+
 /* ---------- Sellers and admins: password reset ---------- */
 
 const RESET_MINUTES = 60;
@@ -331,7 +343,7 @@ module.exports = {
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
-  sendAccountDeleted, EMAIL_CHANGE_HOURS, sendEmailChangeLink, readEmailChangeToken, sendEmailChangedNotice,
+  sendAccountDeleted, sendPayoutDetailsChanged, EMAIL_CHANGE_HOURS, sendEmailChangeLink, readEmailChangeToken, sendEmailChangedNotice,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail, sendSaleEmails,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,

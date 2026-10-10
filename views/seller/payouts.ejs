@@ -29,6 +29,12 @@
         <input id="b-acc" type="text" name="account_number" maxlength="20" inputmode="numeric" autocomplete="off" value="" required>
         <%- include('../partials/field-error', { name: 'account_number' }) %>
       </div>
+      <div class="field <%= errors.password ? 'has-error' : '' %>">
+        <label for="b-pass">Your EasyNotes password</label>
+        <input id="b-pass" type="password" name="password" required autocomplete="current-password">
+        <span class="hint">So nobody else can change where your money goes.</span>
+        <%- include('../partials/field-error', { name: 'password' }) %>
+      </div>
       <p class="fineprint" style="margin:0">EasyNotes stores only your bank name and the last four digits of your account number. The full details are held securely by Paystack.</p>
       <div class="form-actions">
         <button class="btn btn-hi" type="submit"><%= hasAccount ? 'Save new bank details' : 'Set up payouts' %></button>

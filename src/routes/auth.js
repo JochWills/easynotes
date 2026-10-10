@@ -10,6 +10,7 @@ const emails = require('../lib/emails');
 const profanity = require('../lib/profanity');
 const config = require('../lib/config');
 const { verifyCsrf } = require('../lib/csrf');
+const { logIn } = require('../lib/auth');
 const router = express.Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -69,7 +70,7 @@ router.post('/signup', limiter, async (req, res) => {
     throw sErr;
   }
 
-  req.session.userId = user.id;
+  logIn(req, user);
   flash(req, 'ok', 'Account created. Next step: verify your degree.');
   res.redirect('/seller');
 });
@@ -88,7 +89,7 @@ router.post('/login', limiter, async (req, res) => {
   if (!user || !ok) {
     return res.status(401).render('login', { title: 'Log in', email, error: 'That email and password don’t match an account.', next: next || '' });
   }
-  req.session.userId = user.id;
+  logIn(req, user);
   res.redirect(next || (user.role === 'admin' ? '/admin' : '/seller'));
 });
 
@@ -156,9 +157,10 @@ router.post('/reset', limiter, async (req, res) => {
   else if (password !== String(req.body.confirm || '')) errors.confirm = 'The two passwords don’t match.';
   if (Object.keys(errors).length) return res.status(400).render('reset', { title: 'Choose a new password', token, errors });
 
-  const { error } = await db.from('users').update({ password_hash: await bcrypt.hash(password, 12) }).eq('id', user.id);
+  const password_hash = await bcrypt.hash(password, 12);
+  const { error } = await db.from('users').update({ password_hash }).eq('id', user.id);
   if (error) throw error;
-  req.session.userId = user.id;
+  logIn(req, { id: user.id, password_hash }); // and every other device is logged out
   flash(req, 'ok', 'Password changed. You’re logged in.');
   res.redirect(user.role === 'admin' ? '/admin' : '/seller');
 });

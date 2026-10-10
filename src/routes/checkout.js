@@ -76,6 +76,14 @@ async function startCheckout(req, res, notes, back) {
   });
   const { error } = await db.from('orders').insert(rows);
   if (error) throw error;
+  // Clicking Pay again (say after closing Paystack's pop-up) starts a new payment, so the last unpaid one from
+  // this browser is closed off: it stops piling up and stops blocking the seller from deleting the notes.
+  // If it does get paid after all, markPaid still accepts it.
+  const lastRef = req.session.checkoutRef;
+  if (typeof lastRef === 'string' && lastRef !== paymentRef) {
+    await db.from('orders').update({ status: 'failed' }).eq('payment_ref', lastRef).eq('status', 'pending');
+  }
+  req.session.checkoutRef = paymentRef;
 
   const total = rows.reduce((s, r) => s + r.amount_cents, 0);
   const sellers = {};
@@ -284,10 +292,15 @@ router.post('/download', downloadLimiter, async (req, res) => {
   }
 
   const url = await storage.signedUrl('notes', order.notes.file_path, 60, fileName(order.notes.title));
-  await db
+  // Only counts if nobody else used this download in the meantime, so requests sent at once can't pass the limit.
+  const { data: claimed, error: claimErr } = await db
     .from('orders')
     .update({ download_count: order.download_count + 1, last_download_at: new Date().toISOString() })
-    .eq('id', order.id);
+    .eq('id', order.id)
+    .eq('download_count', order.download_count)
+    .select('id');
+  if (claimErr) throw claimErr;
+  if (!claimed || !claimed.length) return fail('Another download of this purchase started at the same moment. Wait a few seconds, then try again.');
   res.set('Cache-Control', 'no-store');
   res.redirect(303, url);
 });

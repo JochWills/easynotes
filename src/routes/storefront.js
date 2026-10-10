@@ -34,6 +34,17 @@ async function loadStore(req) {
   return { slug, author, live };
 }
 
+// A storefront link from before the seller changed their link: where that seller's storefront is now, or null.
+async function movedStore(req) {
+  const slug = String(req.params.slug).toLowerCase();
+  if (!SLUG_RE.test(slug) || slug.length > 40 || RESERVED_SLUGS.has(slug)) return null;
+  const { data: moves } = await db.from('events').select('detail').eq('kind', 'seller.slug_changed').eq('detail->>from', slug).order('created_at', { ascending: false }).limit(1);
+  const sellerId = moves && moves[0] && moves[0].detail.seller_id;
+  if (!sellerId) return null;
+  const { data: s } = await db.from('sellers').select('slug,verification_status').eq('id', sellerId).maybeSingle();
+  return s && s.verification_status === 'approved' && s.slug !== slug ? s.slug : null;
+}
+
 async function renderStore(req, res, { author, live }, extra = {}) {
   const [{ data: notes }, quals, rev] = await Promise.all([
     publicNotes().eq('seller_id', author.id).order('sales_count', { ascending: false }),
@@ -69,14 +80,21 @@ router.get('/:slug', async (req, res, next) => {
     return res.redirect(301, '/' + String(req.params.slug).toLowerCase());
   }
   const store = await loadStore(req);
-  if (!store) return next();
+  if (!store) {
+    // 302, not 301: another seller may take the old link later
+    const moved = await movedStore(req);
+    return moved ? res.redirect(302, '/' + moved) : next();
+  }
   await renderStore(req, res, store);
 });
 
 // Review link sellers share with their buyers: the storefront opens on Reviews with the form ready.
 router.get('/:slug/review', async (req, res, next) => {
   const store = await loadStore(req);
-  if (!store) return next();
+  if (!store) {
+    const moved = await movedStore(req);
+    return moved ? res.redirect(302, '/' + moved + '/review') : next();
+  }
   await renderStore(req, res, store, { tab: 'reviews', review: { open: store.live } });
 });
 

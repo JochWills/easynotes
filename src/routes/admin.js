@@ -19,10 +19,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const cleanSearch = (q) => String(q || '').replace(/["%,()*\\:]/g, ' ').trim().slice(0, 80);
 const backTo = (req, fallback) => (typeof req.body.back === 'string' && /^\/admin(\/|$)/.test(req.body.back) ? req.body.back : fallback);
 
-// Reports and automatic upload flags stay open until an admin marks them resolved.
+// Reports, automatic upload flags and payments that didn't match an order stay open until an admin marks them resolved.
+const REPORT_KINDS = ['note.reported', 'note.flagged', 'payment.unmatched', 'payment.mismatch'];
 async function openReports() {
   const [items, resolved] = await Promise.all([
-    events.recent({ limit: 300, kinds: ['note.reported', 'note.flagged'] }),
+    events.recent({ limit: 300, kinds: REPORT_KINDS }),
     events.recent({ limit: 1000, kinds: ['report.resolved'] }),
   ]);
   if (items === null) return null;
@@ -82,8 +83,8 @@ router.post('/reports/:id/resolve', async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isInteger(id) && id > 0) {
     const { data: item } = await db.from('events').select('id,kind,detail').eq('id', id).maybeSingle();
-    if (item && ['note.reported', 'note.flagged'].includes(item.kind)) {
-      await events.log('report.resolved', { report_id: item.id, kind: item.kind, title: item.detail?.title }, req.user.email);
+    if (item && REPORT_KINDS.includes(item.kind)) {
+      await events.log('report.resolved', { report_id: item.id, kind: item.kind, title: item.detail?.title || item.detail?.reference }, req.user.email);
       flash(req, 'ok', 'Marked as resolved.');
     }
   }
@@ -271,7 +272,12 @@ router.post('/notes/:id/status', async (req, res, next) => {
   const map = { remove: 'removed', unpublish: 'unpublished', restore: 'unpublished' };
   const status = map[req.body.action];
   if (status) {
-    const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).select('title').maybeSingle();
+    // Notes the seller deleted stay deleted: changing them would put them back in the seller's list.
+    const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).neq('status', 'deleted').select('title').maybeSingle();
+    if (!n) {
+      flash(req, 'error', 'The seller deleted these notes, so they can’t be changed. Past buyers can still download them.');
+      return res.redirect(req.get('referer')?.includes('/admin/') ? req.get('referer') : '/admin/notes');
+    }
     flash(req, 'ok', req.body.action === 'remove' ? 'Notes removed. The seller can’t republish them.' : 'Notes updated.');
     events.log(`note.${req.body.action === 'remove' ? 'removed' : req.body.action === 'restore' ? 'restored' : 'hidden'}`, { note_id: req.params.id, title: n?.title }, req.user.email);
   }

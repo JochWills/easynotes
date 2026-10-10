@@ -1,14 +1,32 @@
 <%- include('../partials/top', { noindex: true }) %>
 <div class="wrap dash">
   <%- include('../partials/admin-nav') %>
-  <p class="muted">Reports from students and rights holders, and uploads the automatic check flagged. Copyright takedown requests should be handled within 2 working days (see the <a href="/copyright">copyright page</a>).</p>
+  <p class="muted">Reports from students and rights holders, uploads the automatic check flagged, and payments that didn’t match an order. Copyright takedown requests should be handled within 2 working days (see the <a href="/copyright">copyright page</a>).</p>
   <% if (items === null) { %>
     <div class="alert alert-info">The activity log table isn’t set up, so reports can’t be listed. Run the <strong>events</strong> snippet from <code>supabase/schema.sql</code>.</div>
   <% } else if (!items.length) { %>
-    <div class="empty"><h3>Nothing to check</h3><p>New reports and flagged uploads will appear here.</p></div>
+    <div class="empty"><h3>Nothing to check</h3><p>New reports, flagged uploads and payment problems will appear here.</p></div>
   <% } else { %>
     <ul class="report-list">
       <% items.forEach(function (e) { var d = e.detail || {}; var n = notesById[d.note_id]; var takedown = d.reason === 'copyright_mine'; %>
+        <% if (e.kind === 'payment.unmatched' || e.kind === 'payment.mismatch') { %>
+        <li class="report-item card is-urgent">
+          <div class="report-head">
+            <span class="pill pill-bad">Payment problem</span>
+            <time class="small muted" datetime="<%= new Date(e.created_at).toISOString() %>"><%= date(e.created_at) %></time>
+          </div>
+          <h3>Payment <%= d.reference %></h3>
+          <% if (e.kind === 'payment.unmatched') { %>
+            <p>Paystack took <strong><%= rand(d.amount_cents) %></strong><%= d.email ? ' from ' + d.email : '' %>, but there are no orders for this reference (they were deleted, probably with the notes, before the payment came through). The buyer has nothing to download: refund them in Paystack or sort it out by email.</p>
+          <% } else { %>
+            <p>Paystack took <strong><%= rand(d.paid_cents) %> <%= d.currency || '' %></strong>, but the orders add up to <strong><%= rand(d.expected_cents) %></strong>, so they weren’t marked paid. Check the payment in Paystack.</p>
+          <% } %>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/orders?reference=<%= encodeURIComponent(d.reference || '') %>">Look up orders</a>
+            <form method="post" action="/admin/reports/<%= e.id %>/resolve"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Mark resolved</button></form>
+          </div>
+        </li>
+        <% return; } %>
         <li class="report-item card<%= takedown ? ' is-urgent' : '' %>">
           <div class="report-head">
             <% if (e.kind === 'note.flagged') { %>
