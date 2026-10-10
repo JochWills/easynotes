@@ -935,6 +935,9 @@ dialog .lib-list { max-height: 50vh; overflow-y: auto; }
 .site-footer a { color: var(--ink-soft); text-decoration: none; }
 .site-footer a:hover { color: var(--blue); text-decoration: underline; }
 .site-footer p { margin: 6px 0 0; }
+.footer-social { display: flex; gap: 16px; margin-top: 14px; }
+.footer-social a { display: inline-flex; align-items: center; gap: 7px; }
+.footer-social svg { flex: none; }
 
 /* ---------- Page transitions & loading ---------- */
 @view-transition { navigation: auto; }
