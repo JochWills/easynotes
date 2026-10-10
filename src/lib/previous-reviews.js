@@ -1,6 +1,6 @@
 // Reviews a seller's buyers left on their own site before EasyNotes (shared with the reviewers' permission), keyed by
 // storefront slug. They show in the normal reviews list tagged "Bought directly", not "Verified purchase",
-// since those purchases weren't made on EasyNotes. Add a rating (1-5) only if the reviewer gave one.
+// since those purchases weren't made on EasyNotes. Their star ratings count towards the seller's rating.
 module.exports = {
   'pgda-notes-by-courts': {
     source: 'pgdanotes.co.za',
@@ -8,10 +8,12 @@ module.exports = {
     reviews: [
       {
         name: 'Raquel P.',
+        rating: 5,
         body: 'I loved these PGDA notes! They broke down the content into bite-sized, easy to understand sections and included practical examples that made applying the theory much easier. I especially found the Auditing notes helpful when the class material felt a bit disorientated. Everything was explained so simply, which helped me feel confident that I had mastered the content and made a big difference when attempting past test questions.',
       },
       {
         name: 'Anonymous student',
+        rating: 5,
         body: [
           'Hey Courts! I really like your notes, especially because of how practical they are. They don’t just teach the principles — they also focus on exam technique and, importantly, how to structure an answer, using simple practical examples to make the concepts easier to apply.',
           'I also really like how I feel after working through them. I feel more confident and have a much better mindset going into practice questions because I feel like I’m not only learning the content, but also preparing myself for how I’m actually going to answer the questions in the exam.',

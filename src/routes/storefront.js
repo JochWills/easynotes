@@ -40,6 +40,14 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     education.forSeller(author.id, { verifiedOnly: true }),
     reviews.forSeller(author.id),
   ]);
+  // Star rating across EasyNotes reviews and any the seller's buyers left on their own site
+  const previous = previousReviews[author.slug] || null;
+  const rated = [...rev.list, ...(previous ? previous.reviews.filter((r) => r.rating) : [])];
+  const rating = {
+    count: rated.length,
+    avg: rated.length ? Math.round((rated.reduce((t, r) => t + r.rating, 0) / rated.length) * 10) / 10 : 0,
+    breakdown: [5, 4, 3, 2, 1].map((stars) => ({ stars, count: rated.filter((r) => r.rating === stars).length })),
+  };
   res.status(extra.status || 200).render('storefront', {
     title: `${author.display_name}'s notes`,
     noindex: !live,
@@ -49,7 +57,8 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     quals,
     notes: notes || [],
     reviews: rev,
-    previous: previousReviews[author.slug] || null,
+    previous,
+    rating,
     reviewUrl: `${config.baseUrl}/${author.slug}/review`,
     isOwner: !!(req.seller && req.seller.id === author.id),
     review: { values: {}, errors: {}, ...extra.review },

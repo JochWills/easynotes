@@ -1,5 +1,5 @@
 <%- include('partials/top', { noindex: locals.noindex }) %>
-<% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var prev = locals.previous; var prevCount = prev ? prev.reviews.length : 0; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
+<% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var prev = locals.previous; var prevCount = prev ? prev.reviews.length : 0; var rt = locals.rating || rv; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
 <% var stars = function (n, cls) { var out = '<span class="stars ' + (cls || '') + '" aria-hidden="true">'; for (var i = 1; i <= 5; i++) out += '<span class="' + (n >= i - 0.25 ? 'on' : n >= i - 0.75 ? 'half' : '') + '">★</span>'; return out + '</span>'; }; %>
 <% if (locals.live === false) { %>
   <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until the degree is verified.</div></div>
@@ -12,8 +12,8 @@
         <h1><%= author.display_name %></h1>
         <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
         <% if (author.degree) { %><p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p><% } %>
-        <% if (rv.count) { %>
-          <a class="store-rating" href="#reviews" data-tab-link="reviews"><%- stars(rv.avg) %><strong><%= rv.avg.toFixed(1) %></strong><span class="store-rating-count"><%= rv.count %> <%= rv.count === 1 ? 'review' : 'reviews' %></span></a>
+        <% if (rt.count) { %>
+          <a class="store-rating" href="#reviews" data-tab-link="reviews"><%- stars(rt.avg) %><strong><%= rt.avg.toFixed(1) %></strong><span class="store-rating-count"><%= rt.count %> <%= rt.count === 1 ? 'review' : 'reviews' %></span></a>
         <% } %>
         <% if (locals.isOwner && locals.live !== false) { %>
           <div class="store-owner-actions"><%- include('partials/share-store', { seller: author, btnClass: 'btn-sm' }) %><a class="btn btn-ghost btn-sm" href="/seller/profile">Edit storefront</a></div>
@@ -44,13 +44,13 @@
     <div class="reviews-layout">
       <aside class="reviews-side">
         <div class="card review-summary">
-          <% if (rv.count) { %>
-            <p class="review-avg"><strong><%= rv.avg.toFixed(1) %></strong><span>out of 5</span></p>
-            <%- stars(rv.avg, 'stars-lg') %>
-            <p class="muted small">From <%= rv.count %> verified <%= rv.count === 1 ? 'buyer' : 'buyers' %></p>
+          <% if (rt.count) { %>
+            <p class="review-avg"><strong><%= rt.avg.toFixed(1) %></strong><span>out of 5</span></p>
+            <%- stars(rt.avg, 'stars-lg') %>
+            <p class="muted small">From <%= rt.count %> <%= rt.count === 1 ? 'buyer' : 'buyers' %></p>
             <ul class="review-bars" aria-label="Ratings breakdown">
-              <% (rv.breakdown || []).forEach(function (b) { %>
-                <li><span><%= b.stars %>★</span><span class="review-bar"><i style="width:<%= Math.round(b.count / rv.count * 100) %>%"></i></span><span class="review-bar-n"><%= b.count %><span class="sr-only"> <%= b.count === 1 ? 'review' : 'reviews' %> with <%= b.stars %> <%= b.stars === 1 ? 'star' : 'stars' %></span></span></li>
+              <% (rt.breakdown || []).forEach(function (b) { %>
+                <li><span><%= b.stars %>★</span><span class="review-bar"><i style="width:<%= Math.round(b.count / rt.count * 100) %>%"></i></span><span class="review-bar-n"><%= b.count %><span class="sr-only"> <%= b.count === 1 ? 'review' : 'reviews' %> with <%= b.stars %> <%= b.stars === 1 ? 'star' : 'stars' %></span></span></li>
               <% }) %>
             </ul>
           <% } else if (locals.isOwner) { %>
