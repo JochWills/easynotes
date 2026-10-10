@@ -219,3 +219,84 @@ alter table reviews enable row level security;
 -- Sellers' email notification switches (Settings)
 alter table sellers add column if not exists notify_sales boolean not null default true;
 alter table sellers add column if not exists notify_reviews boolean not null default true;
+
+-- Deleting a note or a whole seller account happens in one transaction, so a failure part-way leaves nothing
+-- half deleted. The app removes the files from storage afterwards, using the paths these return.
+-- Raises 'checkout_in_progress' when someone started paying in the last 2 hours (the payment may still go through).
+
+-- Notes nobody bought are erased (with their unpaid checkouts). Sold notes are marked deleted so buyers can still download them.
+create or replace function delete_note(p_note_id uuid, p_seller_id uuid)
+returns jsonb language plpgsql as $$
+declare
+  n notes%rowtype;
+  sold boolean;
+begin
+  select * into n from notes where id = p_note_id and seller_id = p_seller_id and status <> 'deleted' for update;
+  if not found then return null; end if;
+  sold := exists (select 1 from orders where note_id = n.id and status = 'paid');
+  if not sold and exists (select 1 from orders where note_id = n.id and status = 'pending' and created_at > now() - interval '2 hours') then
+    raise exception 'checkout_in_progress';
+  end if;
+  if sold then
+    update notes set status = 'deleted' where id = n.id;
+  else
+    delete from orders where note_id = n.id and status <> 'paid';
+    delete from notes where id = n.id;
+  end if;
+  return jsonb_build_object('sold', sold, 'title', n.title, 'file_path', n.file_path, 'page_count', n.page_count);
+end $$;
+
+-- Sellers with no sales are removed completely (education and reviews go with them). Sellers with sales keep an
+-- anonymous "Deleted seller" record because orders point to it; their login stops working (p_dead_hash matches no password).
+create or replace function delete_seller_account(p_seller_id uuid, p_dead_hash text)
+returns jsonb language plpgsql as $$
+declare
+  s sellers%rowtype;
+  login_email text;
+  sold_ids uuid[];
+  result jsonb;
+begin
+  select * into s from sellers where id = p_seller_id for update;
+  if not found then return null; end if;
+  if exists (select 1 from orders where seller_id = s.id and status = 'pending' and created_at > now() - interval '2 hours') then
+    raise exception 'checkout_in_progress';
+  end if;
+  select email into login_email from users where id = s.user_id;
+  select coalesce(array_agg(distinct note_id), '{}') into sold_ids from orders where seller_id = s.id and status = 'paid';
+
+  result := jsonb_build_object(
+    'email', login_email,
+    'sold_notes', (select count(*) from notes where seller_id = s.id and id = any(sold_ids)),
+    'erased_notes', (select count(*) from notes where seller_id = s.id and not (id = any(sold_ids))),
+    'unsold_files', coalesce((select jsonb_agg(file_path) from notes where seller_id = s.id and not (id = any(sold_ids))), '[]'::jsonb),
+    'previews', coalesce((select jsonb_agg(jsonb_build_object('file_path', file_path, 'page_count', page_count)) from notes where seller_id = s.id), '[]'::jsonb),
+    'documents', to_jsonb(array_remove(array[s.id_doc_path, s.degree_doc_path]
+      || coalesce((select array_agg(doc_path) from qualifications where seller_id = s.id), '{}')
+      || coalesce((select array_agg(record_path) from qualifications where seller_id = s.id), '{}'), null)),
+    'avatar', s.avatar_path
+  );
+
+  delete from orders where seller_id = s.id and status <> 'paid';
+  delete from notes where seller_id = s.id and not (id = any(sold_ids));
+  update notes set status = 'deleted' where seller_id = s.id and id = any(sold_ids);
+
+  if cardinality(sold_ids) = 0 then
+    delete from users where id = s.user_id;
+  else
+    delete from qualifications where seller_id = s.id;
+    delete from reviews where seller_id = s.id;
+    update sellers set
+      display_name = 'Deleted seller', full_name = null, avatar_path = null, slug = 'deleted-' || s.id,
+      headline = null, bio = null, degree = null, university = null, graduation_year = null,
+      degree_doc_path = null, id_doc_path = null, verification_status = 'unsubmitted', verification_note = null,
+      submitted_at = null, verified_at = null, business_name = null, bank_code = null, bank_name = null, account_number_last4 = null
+    where id = s.id;
+    update users set email = 'deleted-' || s.user_id || '@deleted.invalid', password_hash = p_dead_hash where id = s.user_id;
+  end if;
+  return result;
+end $$;
+
+revoke execute on function delete_note(uuid, uuid) from public, anon, authenticated;
+revoke execute on function delete_seller_account(uuid, text) from public, anon, authenticated;
+grant execute on function delete_note(uuid, uuid) to service_role;
+grant execute on function delete_seller_account(uuid, text) to service_role;
