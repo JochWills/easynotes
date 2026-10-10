@@ -16,7 +16,7 @@
     <% } else { %>
       <form method="post" action="/cart/add/<%= n.id %>" data-cart-add data-note="<%= n.id %>">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <button class="card-cart" type="submit" aria-label="Add <%= n.title %> to cart"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>Add to cart</button>
+        <button class="card-cart" type="submit" data-umami-event="Add to cart" data-umami-event-from="note card" aria-label="Add <%= n.title %> to cart"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>Add to cart</button>
       </form>
     <% } %>
   </div>

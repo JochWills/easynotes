@@ -40,7 +40,7 @@
         <input type="checkbox" name="accept" required>
         <span>I understand these are digital downloads and <a href="/terms">all sales are final</a>.</span>
       </label>
-      <button class="btn btn-hi btn-block" type="submit">Pay <%= rand(total) %></button>
+      <button class="btn btn-hi btn-block" type="submit" data-umami-event="Checkout" data-umami-event-from="cart panel">Pay <%= rand(total) %></button>
     </form>
     <p class="fineprint">Secure checkout with card, EFT and more. EasyNotes never sees your card details.</p>
   </div>

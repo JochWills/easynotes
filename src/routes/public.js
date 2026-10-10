@@ -7,7 +7,7 @@ const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
 
 // The "Popular at" links on the home page, in this order
 const HOME_UNIS = ['UCT', 'Stellenbosch', 'NMU', 'Milpark', 'Emeris', 'UP', 'UJ', 'UNISA'];
-const { isUuid, noteUrl, storeUrl, str } = require('../lib/helpers');
+const { isUuid, noteUrl, storeUrl, str, rand } = require('../lib/helpers');
 const rateLimit = require('express-rate-limit');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
@@ -166,6 +166,8 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
   res.render('note', {
     title: note.module_code ? `${note.module_code}: ${note.title}` : note.title,
     description: note.description.slice(0, 155),
+    ogTitle: `${note.module_code ? note.module_code + ': ' : ''}${note.title} · ${rand(note.price_cents)}`,
+    ogImage: live ? `/og/note/${note.id}.png?v=${new Date(note.updated_at).getTime().toString(36)}` : null,
     note,
     author: note.sellers,
     live,

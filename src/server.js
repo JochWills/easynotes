@@ -22,12 +22,12 @@ app.use(
       useDefaults: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'", 'https://js.paystack.co'], // Paystack's pop-up checkout
+        'script-src': ["'self'", 'https://js.paystack.co', 'https://cloud.umami.is'], // Paystack's pop-up checkout, Umami visitor stats
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // inline: Paystack's pop-up styles itself
         'style-src-attr': ["'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
         'img-src': ["'self'", 'data:', 'blob:', supabaseOrigin], // blob: previews a picture before it's uploaded
-        'connect-src': ["'self'", 'https://*.paystack.co', 'https://*.paystack.com'],
+        'connect-src': ["'self'", 'https://*.paystack.co', 'https://*.paystack.com', 'https://cloud.umami.is', 'https://api-gateway.umami.dev'],
         'frame-src': ['https://checkout.paystack.com', 'https://*.paystack.co', 'https://*.paystack.com'],
         // Form posts redirect to Paystack checkout and to signed Supabase download links
         'form-action': ["'self'", 'https://checkout.paystack.com', supabaseOrigin],
@@ -51,6 +51,7 @@ app.use(
 app.use('/.well-known', express.static(path.join(__dirname, '..', 'public', '.well-known')));
 
 app.get('/healthz', (req, res) => res.send('ok'));
+app.use(require('./routes/og')); // link-preview images: no session needed
 
 // Webhooks need the raw body for signature checks, so they mount before body parsing and sessions.
 app.use('/webhooks', require('./routes/webhooks'));
@@ -95,6 +96,15 @@ app.use(loadUser);
 // Logged-in pages are never kept by the browser, so Back after logging out can't show them again.
 app.use((req, res, next) => {
   if (req.user) res.set('Cache-Control', 'private, no-store');
+  next();
+});
+
+// Visitor stats (Umami): anonymous, no cookies. Left off for logged-in sellers and admins (their own clicks would
+// skew the numbers) and for private pages. Query strings are never sent, so download links and tokens stay private.
+const NO_STATS = /^\/(seller|admin|library|download|reset|confirm-email|forgot|login|signup)(\/|$)/;
+app.use((req, res, next) => {
+  res.locals.statsId = config.umamiWebsiteId && !req.user && !NO_STATS.test(req.path) ? config.umamiWebsiteId : null;
+  res.locals.statsDomain = new URL(config.baseUrl).hostname;
   next();
 });
 

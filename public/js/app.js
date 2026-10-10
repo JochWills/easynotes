@@ -632,6 +632,19 @@
     });
   });
 
+  // Visitor stats: count a completed purchase once per payment (refreshing the page doesn't count it again)
+  var bought = document.querySelector('[data-track-purchase]');
+  if (bought) {
+    var ref = bought.getAttribute('data-track-purchase');
+    var tries = 0;
+    var track = function () {
+      if (!window.umami) { if (++tries < 20) setTimeout(track, 500); return; } // stats script still loading (or blocked)
+      try { if (localStorage.getItem('en-tracked-' + ref)) return; localStorage.setItem('en-tracked-' + ref, '1'); } catch (e) {}
+      window.umami.track('Purchase', { revenue: Number(bought.getAttribute('data-revenue')), currency: 'ZAR', items: Number(bought.getAttribute('data-items')) });
+    };
+    track();
+  }
+
   // One share pop-up for a list of items: the clicked button's data-share-* details are filled in before it opens
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-share-url][data-dialog-open]');

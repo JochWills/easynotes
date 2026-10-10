@@ -22,7 +22,7 @@
         <a href="<%= storeUrl(author) %>"><%= author.display_name %></a>
       </nav>
       <% if (live) { %>
-        <button class="btn btn-ghost btn-sm note-share" type="button" data-dialog-open="share-note">
+        <button class="btn btn-ghost btn-sm note-share" type="button" data-dialog-open="share-note" data-umami-event="Open share" data-umami-event-what="note">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="2"/></svg>
           Share
         </button>
@@ -158,7 +158,7 @@
               <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
             </label>
           </div>
-          <button class="btn btn-hi btn-block btn-lg" type="submit" data-buy-btn data-pay-label="Pay <%= rand(note.price_cents) %>">
+          <button class="btn btn-hi btn-block btn-lg" type="submit" data-umami-event="Buy now" data-buy-btn data-pay-label="Pay <%= rand(note.price_cents) %>">
             <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
             <span data-buy-label>Buy now – <%= rand(note.price_cents) %></span>
           </button>
@@ -168,7 +168,7 @@
         <% } else { %>
           <form method="post" action="/cart/add/<%= note.id %>" class="buy-cart">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <button class="btn btn-ghost btn-block btn-lg" type="submit">
+            <button class="btn btn-ghost btn-block btn-lg" type="submit" data-umami-event="Add to cart" data-umami-event-from="note page">
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
               Add to cart
             </button>

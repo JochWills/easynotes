@@ -26,5 +26,7 @@ module.exports = {
   supportEmail: process.env.SUPPORT_EMAIL || 'support@easynotes.co.za',
   // Optional: without a Resend key the site works but sends no emails
   resendApiKey: process.env.RESEND_API_KEY || '',
+  // Optional: Umami Cloud website ID for visitor stats (umami.is). Without it no stats script loads.
+  umamiWebsiteId: process.env.UMAMI_WEBSITE_ID || '',
   mailFrom: process.env.MAIL_FROM || 'EasyNotes <noreply@easynotes.co.za>',
 };

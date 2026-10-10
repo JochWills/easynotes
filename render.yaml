@@ -34,3 +34,5 @@ services:
         sync: false
       - key: SUPPORT_EMAIL
         sync: false
+      - key: UMAMI_WEBSITE_ID
+        sync: false

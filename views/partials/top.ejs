@@ -6,8 +6,22 @@
   <title><%= locals.title ? title + ' | EasyNotes' : 'EasyNotes: study notes from verified academics' %></title>
   <meta name="description" content="<%= locals.description || 'PDF study notes for South African university modules and professional exams, written by verified academics. Pay once, download instantly.' %>">
   <% if (locals.noindex) { %><meta name="robots" content="noindex"><% } %>
+  <% var site = locals.baseUrl || 'https://easynotes.co.za'; var ogT = locals.ogTitle || locals.title || 'EasyNotes: study notes from students who already passed'; var ogD = locals.description || 'Study notes from verified South African graduates. Free preview, instant PDF download.'; var ogI = site + (locals.ogImage || '/og/site.png?v=1'); %>
+  <%# Link previews on WhatsApp, Instagram, LinkedIn, Facebook and X %>
   <meta property="og:site_name" content="EasyNotes">
-  <meta property="og:title" content="<%= locals.title || 'EasyNotes' %>">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= ogT %>">
+  <meta property="og:description" content="<%= ogD %>">
+  <meta property="og:url" content="<%= site + (locals.currentPath || '/') %>">
+  <meta property="og:image" content="<%= ogI %>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="<%= ogT %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= ogT %>">
+  <meta name="twitter:description" content="<%= ogD %>">
+  <meta name="twitter:image" content="<%= ogI %>">
+  <% if (locals.statsId) { %><script defer src="https://cloud.umami.is/script.js" data-website-id="<%= statsId %>" data-domains="<%= statsDomain %>" data-exclude-search="true" data-exclude-hash="true"></script><% } %>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
@@ -73,7 +87,7 @@
           </div>
         <% } else { %>
           <a class="nav-login" href="/login" <%- cp === '/login' ? 'aria-current="page"' : '' %>>Log in</a>
-          <a class="btn btn-hi btn-sm" href="/sell">Start selling</a>
+          <a class="btn btn-hi btn-sm" href="/sell" data-umami-event="Start selling" data-umami-event-from="header">Start selling</a>
         <% } %>
       </div>
     </nav>

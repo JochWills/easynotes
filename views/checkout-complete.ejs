@@ -2,6 +2,7 @@
 <% var many = orders.length > 1; %>
 <div class="wrap narrow doc">
   <% if (status === 'paid') { %>
+    <span hidden data-track-purchase="<%= paymentRef %>" data-revenue="<%= (total / 100).toFixed(2) %>" data-items="<%= orders.length %>"></span>
     <dialog class="download" data-autoshow aria-labelledby="dl-title">
       <button class="dialog-close" type="button" data-close aria-label="Close">×</button>
       <div class="dialog-body">

@@ -93,7 +93,7 @@
         <p>Set up a storefront, upload your PDFs and keep <%= 100 - feePercent %>% of every sale, paid straight to your bank account.</p>
       <% } %>
     </div>
-    <a class="btn btn-light" href="<%= cta.href %>"><%= cta.label %></a>
+    <a class="btn btn-light" href="<%= cta.href %>" data-umami-event="Start selling" data-umami-event-from="home"><%= cta.label %></a>
   </div>
 </section>
 <% } %>

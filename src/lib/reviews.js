@@ -21,6 +21,17 @@ async function forSeller(sellerId) {
   return { list, count: list.length, avg: Math.round(avg * 10) / 10, breakdown };
 }
 
+// Star rating across EasyNotes reviews and any the seller's buyers left on their own site (previous-reviews.js)
+function combinedRating(list, slug) {
+  const previous = require('./previous-reviews')[slug] || null;
+  const rated = [...list, ...(previous ? previous.reviews.filter((r) => r.rating) : [])];
+  return {
+    count: rated.length,
+    avg: rated.length ? Math.round((rated.reduce((t, r) => t + r.rating, 0) / rated.length) * 10) / 10 : 0,
+    breakdown: [5, 4, 3, 2, 1].map((stars) => ({ stars, count: rated.filter((r) => r.rating === stars).length })),
+  };
+}
+
 // "Thabo Mokoena" -> "Thabo M."
 function shortName(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -80,4 +91,4 @@ async function prepare(seller, body) {
   };
 }
 
-module.exports = { forSeller, prepare, shortName };
+module.exports = { combinedRating, forSeller, prepare, shortName };
