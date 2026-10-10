@@ -63,6 +63,43 @@ async function sendPurchaseEmail(orders) {
   return sendLibraryLink(orders[0].email, note?.title || 'Your notes', 1, name);
 }
 
+/* ---------- Sellers: you made a sale ---------- */
+
+const rands = (cents) => 'R' + (cents / 100).toFixed(2);
+
+// One email per seller per payment (a cart can hold notes from several sellers).
+async function sendSaleEmails(orders) {
+  const bySeller = new Map();
+  for (const o of [].concat(orders)) bySeller.set(o.seller_id, [...(bySeller.get(o.seller_id) || []), o]);
+  for (const [sellerId, list] of bySeller) {
+    try {
+      const [{ data: s }, { data: notes }] = await Promise.all([
+        db.from('sellers').select('display_name,full_name,users(email)').eq('id', sellerId).maybeSingle(),
+        db.from('notes').select('id,title').in('id', list.map((o) => o.note_id)),
+      ]);
+      if (!s || !s.users) continue;
+      const title = (id) => (notes || []).find((n) => n.id === id)?.title || 'Your notes';
+      const first = String(s.full_name || s.display_name || '').trim().split(' ')[0];
+      const earned = list.reduce((sum, o) => sum + o.seller_earnings_cents, 0);
+      const items = list.map((o) => `<strong>${esc(title(o.note_id))}</strong> · you earn ${rands(o.seller_earnings_cents)}`);
+      const { html, text } = compose({
+        heading: list.length > 1 ? `You sold ${list.length} sets of notes` : 'You made a sale',
+        paragraphs: [
+          `Hi ${esc(first)}, a student just bought ${list.length > 1 ? 'these notes' : 'your notes'}:`,
+          items.join('<br>\n'),
+          `Your share of <strong>${rands(earned)}</strong> is paid straight to your bank account, usually the next working day.`,
+        ],
+        button: { url: `${config.baseUrl}/seller`, label: 'See your sales' },
+        small: ['Tip: buyers who loved your notes are your best advertising. Share your review link from your storefront’s Reviews tab.'],
+      });
+      const subject = list.length > 1 ? `You sold ${list.length} sets of notes (${rands(earned)})` : `You made a sale: ${title(list[0].note_id)} (${rands(earned)})`;
+      await mail.send({ to: s.users.email, subject, html, text });
+    } catch (err) {
+      console.error('[emails] sale email not sent', err.message);
+    }
+  }
+}
+
 /* ---------- Sellers and admins: password reset ---------- */
 
 const RESET_MINUTES = 60;
@@ -244,7 +281,7 @@ module.exports = {
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
-  LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail,
+  LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail, sendSaleEmails,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,
 };

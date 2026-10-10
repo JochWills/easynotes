@@ -1,5 +1,5 @@
 const db = require('./supabase');
-const { sendPurchaseEmail } = require('./emails');
+const { sendPurchaseEmail, sendSaleEmails } = require('./emails');
 
 // Every order bought in one payment shares payment_ref (the Paystack reference).
 async function ordersFor(paymentRef) {
@@ -37,8 +37,9 @@ async function markPaid(paymentRef, tx) {
       const { error: rpcErr } = await db.rpc('increment_note_sales', { p_note_id: o.note_id });
       if (rpcErr) console.error('[orders] sales count not incremented', rpcErr.message);
     }
-    // Only the call that flips the orders to paid sends the email, so the callback and webhook don't both send one.
+    // Only the call that flips the orders to paid sends the emails (buyer's download link, seller's sale notice), so the callback and webhook don't both send them.
     sendPurchaseEmail(updated).catch((err) => console.error('[orders] purchase email not sent', err.message));
+    sendSaleEmails(updated).catch((err) => console.error('[orders] sale email not sent', err.message));
   }
   return ordersFor(paymentRef);
 }
