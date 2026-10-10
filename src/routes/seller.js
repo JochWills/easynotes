@@ -29,6 +29,15 @@ const education = require('../lib/education');
 const router = express.Router();
 router.use(requireSeller);
 
+// The note form sends uploads in the background so it can show progress. It needs to know where to go next
+// rather than follow the redirect itself, so the "saved" message is still waiting on the next page.
+router.use((req, res, next) => {
+  if (req.method === 'POST' && req.get('X-Upload') === 'progress') {
+    res.redirect = (a, b) => res.json({ redirect: typeof a === 'number' ? b : a });
+  }
+  next();
+});
+
 const MB = upload.MB;
 
 // Upload errors are handled before CSRF so an oversize file gives a useful message.

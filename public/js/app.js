@@ -542,7 +542,7 @@
     // A form sent back with errors holds what the seller typed, none of it saved yet
     var saved = unsavedForm.querySelector('.has-error, .error-text') ? null : snapshot();
     var leaving = false;
-    var isDirty = function () { return !leaving && (saved === null || snapshot() !== saved); };
+    var isDirty = function () { return !leaving && !unsavedForm.hasAttribute('data-sending') && (saved === null || snapshot() !== saved); };
     unsavedForm.addEventListener('submit', function (e) {
       // Only stop warning once the form is really on its way (not blocked by the checks above)
       setTimeout(function () { if (!e.defaultPrevented) leaving = true; }, 0);
@@ -1185,6 +1185,119 @@
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       first.focus({ preventScroll: true });
     });
+  });
+
+  // Note uploads: send in the background and show a pop-up with real upload progress, then each step the server
+  // takes (pages, storage, previews, checks). Errors come back as the normal page; success goes to the next page.
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches('form[data-note-form]') || e.defaultPrevented || !window.FormData || !window.XMLHttpRequest || typeof HTMLDialogElement !== 'function') return;
+    e.preventDefault();
+    var fileInput = f.querySelector('input[type="file"][name="pdf"]') || f.querySelector('input[type="file"]');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    var data = new FormData(f);
+    if (e.submitter && e.submitter.name) data.set(e.submitter.name, e.submitter.value);
+    var publishing = e.submitter && e.submitter.name === 'publish' && e.submitter.value === '1';
+    var editing = /\/seller\/notes\/[^/]+$/.test(f.getAttribute('action'));
+
+    var steps = file
+      ? [['Uploading your PDF', 'Sending ' + file.name], ['Counting the pages', 'Reading your PDF'], ['Storing it safely', 'Saving your file somewhere only buyers can reach'], ['Making the preview', 'Turning the first pages into preview images'], ['Final checks', publishing ? 'Getting your listing ready to go live' : 'Saving your listing']]
+      : [['Saving your changes', 'Updating your listing']];
+    var dlg = document.createElement('dialog');
+    dlg.className = 'modal upload-modal';
+    dlg.setAttribute('aria-labelledby', 'upload-title');
+    dlg.innerHTML =
+      '<div class="upload-spin" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+      '<h2 id="upload-title">' + (file ? (editing ? 'Updating your notes' : 'Uploading your notes') : 'Saving your changes') + '</h2>' +
+      '<p class="upload-now" aria-live="polite"></p>' +
+      '<div class="upload-bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100"><i></i></div>' +
+      '<p class="upload-pct"></p>' +
+      '<ol class="upload-steps"></ol>' +
+      '<p class="upload-note">Please keep this page open. Big PDFs can take a minute.</p>';
+    document.body.appendChild(dlg);
+    var list = dlg.querySelector('.upload-steps');
+    steps.forEach(function (st) { var li = document.createElement('li'); li.textContent = st[0]; list.appendChild(li); });
+    var barEl = dlg.querySelector('.upload-bar'), fill = barEl.querySelector('i'), pctEl = dlg.querySelector('.upload-pct'), nowEl = dlg.querySelector('.upload-now');
+    var pct = 0, stepAt = -1, timer = null;
+    var setPct = function (p) { pct = Math.max(pct, Math.min(100, p)); fill.style.width = pct + '%'; barEl.setAttribute('aria-valuenow', Math.round(pct)); pctEl.textContent = Math.round(pct) + '%'; };
+    var setStep = function (i) {
+      if (i <= stepAt || i >= steps.length) return;
+      stepAt = i;
+      Array.prototype.forEach.call(list.children, function (li, j) { li.className = j < i ? 'is-done' : j === i ? 'is-now' : ''; });
+      nowEl.textContent = steps[i][1] + '…';
+    };
+    dlg.addEventListener('cancel', function (ev) { ev.preventDefault(); }); // Esc mustn't hide it mid-upload
+    dlg.showModal();
+    setStep(0); setPct(2);
+    f.setAttribute('data-sending', '');
+    var stay = function (ev) { ev.preventDefault(); ev.returnValue = ''; };
+    window.addEventListener('beforeunload', stay);
+
+    // After the file is sent, walk through the server's steps while it works, creeping towards 95%
+    var processing = function () {
+      if (timer) return;
+      var share = file ? 60 : 0;
+      setPct(share);
+      var i = 1;
+      setStep(Math.min(1, steps.length - 1));
+      timer = setInterval(function () {
+        setPct(pct + (95 - pct) * 0.12);
+        if (i < steps.length - 1 && pct > share + (95 - share) * (i / steps.length)) setStep(++i);
+      }, 400);
+    };
+    var finish = function () {
+      clearInterval(timer);
+      window.removeEventListener('beforeunload', stay);
+      f.removeAttribute('data-sending');
+    };
+    var fail = function (msg) {
+      finish();
+      dlg.classList.add('is-failed');
+      nowEl.textContent = msg;
+      dlg.querySelector('h2').textContent = 'That didn’t go through';
+      dlg.querySelector('.upload-note').innerHTML = '';
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn btn-block'; btn.textContent = 'Back to the form';
+      btn.addEventListener('click', function () { dlg.close(); dlg.remove(); });
+      dlg.querySelector('.upload-note').appendChild(btn);
+    };
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', f.action);
+    xhr.setRequestHeader('X-Upload', 'progress');
+    var gotProgress = false;
+    setTimeout(function () { if (!gotProgress) processing(); }, 1500); // some browsers skip progress for small files
+    xhr.upload.onprogress = function (ev) {
+      if (!ev.lengthComputable || !file) return;
+      gotProgress = true;
+      setPct(2 + (ev.loaded / ev.total) * 58);
+      if (ev.loaded >= ev.total) processing();
+    };
+    xhr.upload.onload = processing;
+    xhr.onerror = function () { fail('The connection dropped. Check your internet and try again. Nothing was saved.'); };
+    xhr.onload = function () {
+      var type = xhr.getResponseHeader('Content-Type') || '';
+      if (/json/.test(type)) {
+        var next = null;
+        try { next = JSON.parse(xhr.responseText).redirect; } catch (err) {}
+        finish();
+        Array.prototype.forEach.call(list.children, function (li) { li.className = 'is-done'; });
+        setPct(100);
+        dlg.classList.add('is-done');
+        dlg.querySelector('h2').textContent = 'All done!';
+        nowEl.textContent = 'Taking you to your notes…';
+        setTimeout(function () { location.href = next || '/seller/notes'; }, 700);
+        return;
+      }
+      if (/html/.test(type) && xhr.responseText) {
+        // The form came back with something to fix (or another message): show that page as normal
+        finish();
+        document.open(); document.write(xhr.responseText); document.close();
+        return;
+      }
+      fail('Something went wrong on our side. Try again in a minute.');
+    };
+    xhr.send(data);
   });
 
   // Disable submit buttons on upload forms so big PDFs aren't sent twice
