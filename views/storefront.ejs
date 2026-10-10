@@ -142,7 +142,7 @@
           <article class="review">
             <% if (r.rating) { %><div class="review-head"><%- stars(r.rating) %><span class="sr-only"><%= r.rating %> out of 5 stars</span></div><% } %>
             <p class="review-body<%= r.rating ? '' : ' review-body-first' %>"><%= r.body %></p>
-            <p class="review-by"><strong><%= r.name %></strong> <span class="verified-buy">Bought via <%= prev.source %></span></p>
+            <p class="review-by"><strong><%= r.name %></strong> <span class="verified-buy">Bought directly</span></p>
           </article>
         <% }); } %>
       </div>
