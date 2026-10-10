@@ -92,10 +92,11 @@ small, .small { font-size: .9rem; }
 .profile-chevron { transition: transform .2s; }
 .nav-ico, .nav-chev, .nav-account, .menu-backdrop { display: none; }
 .profile[open] .profile-chevron { transform: rotate(180deg); }
-.profile-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 230px; padding: 6px; background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg), var(--shadow); }
+.profile-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 230px; width: max-content; max-width: min(340px, calc(100vw - 32px)); padding: 6px; background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg), var(--shadow); }
 .profile-head { padding: 10px 12px 12px; margin-bottom: 4px; border-bottom: 1px solid var(--rule); display: grid; gap: 1px; }
 .profile-head strong { font-family: var(--display); font-size: .98rem; }
-.profile-head span { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.profile-head strong, .profile-head span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-head span { font-size: .85rem; color: var(--muted); }
 .nav .profile-menu a, .profile-menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; font: inherit; font-size: .95rem; font-weight: 500; color: var(--ink); background: none; border: 0; cursor: pointer; text-decoration: none; }
 .nav .profile-menu a:hover, .profile-menu button:hover { background: var(--page); color: var(--ink); }
 .nav .profile-menu a[aria-current="page"] { color: var(--blue); background: var(--blue-soft); }

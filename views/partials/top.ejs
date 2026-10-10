@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=96">
+  <link rel="stylesheet" href="/css/style.css?v=97">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
 <body>
@@ -55,8 +55,8 @@
             </summary>
             <div class="profile-menu">
               <div class="profile-head">
-                <strong><%= who %></strong>
-                <span><%= user.email %></span>
+                <strong title="<%= who %>"><%= who %></strong>
+                <span title="<%= user.email %>"><%= user.email %></span>
               </div>
               <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %></a><% }) %>
               <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button type="submit">Log out</button></form>
