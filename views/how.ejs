@@ -1,62 +1,78 @@
 <%- include('partials/top') %>
 <% var keep = 100 - feePercent; var cta = sellCta(locals.user, locals.me); %>
-<section class="page-head hw-head">
+<section class="hw-hero">
   <div class="wrap">
-    <p class="eyebrow">Buying and selling notes</p>
-    <h1>How EasyNotes works</h1>
-    <p class="hw-lede">Students buy verified notes in minutes. Graduates earn from the notes that got them through.</p>
-    <nav class="hw-jump" aria-label="Jump to">
-      <a class="btn btn-sm" href="#students">I’m buying</a>
-      <a class="btn btn-ghost btn-sm" href="#sellers">I’m selling</a>
-    </nav>
+    <p class="eyebrow">How EasyNotes works</p>
+    <h1>Notes from people who passed, made simple</h1>
+    <p class="hw-lede">Students get verified notes in minutes. Graduates earn from the notes that got them through.</p>
+    <div class="hw-toggle" role="tablist" aria-label="Show how it works for" data-tabs>
+      <button type="button" role="tab" id="tab-buying" aria-controls="buying" aria-selected="true" data-hash="buying">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4.5 9 4.5 12 6.5v13c-3-2-5.5-2-8-1zM20 5.5c-2.5-1-5-1-8 1v13c3-2 5.5-2 8-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        I’m buying
+      </button>
+      <button type="button" role="tab" id="tab-selling" aria-controls="selling" aria-selected="false" tabindex="-1" data-hash="selling">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.5" fill="currentColor"/></svg>
+        I’m selling
+      </button>
+    </div>
   </div>
 </section>
 
-<section class="wrap section" id="students" aria-labelledby="students-h">
-  <p class="eyebrow">For students</p>
-  <h2 id="students-h">Find it, pay, download</h2>
+<%# ---------- Buying ---------- %>
+<section class="wrap hw-panel" id="buying" role="tabpanel" aria-labelledby="tab-buying">
+  <div class="hw-panel-head">
+    <h2>Find it, pay, download</h2>
+    <p>No account and no waiting. Three steps and the notes are yours.</p>
+  </div>
   <ol class="hw-steps">
     <li>
       <span class="hw-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="hw-num">Step 1</span>
       <h3>Find your module</h3>
       <p>Search by module code, subject or institution. Every listing shows who wrote it, their degree and a preview of the first pages.</p>
     </li>
     <li>
       <span class="hw-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M7 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="hw-num">Step 2</span>
       <h3>Pay securely</h3>
-      <p>Just your name and email, no account needed. Pay by card, EFT and more through Paystack.</p>
+      <p>Just your name and email. Pay by card, EFT and more through Paystack. We never see your card details.</p>
     </li>
     <li>
       <span class="hw-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span class="hw-num">Step 3</span>
       <h3>Download straight away</h3>
-      <p>Your PDF is ready the moment you pay<% if (locals.emailEnabled) { %>, and we email you a link too<% } %>. Download it again any time from <a href="/download">Re-download</a>.</p>
+      <p>Your PDF is ready the moment you pay<% if (locals.emailEnabled) { %>, and we email you a link too<% } %>. Lost it? Get it again from <a href="/download">Re-download</a>.</p>
     </li>
   </ol>
-  <p class="hw-note">All sales are final, so check the preview before you buy. If a file is broken or isn’t what the listing says, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
-</section>
+  <div class="hw-cta">
+    <a class="btn btn-hi" href="/notes">Browse notes <span aria-hidden="true">→</span></a>
+    <p>All sales are final, so check the preview first. Problem with a file? Email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
+  </div>
 
-<section class="trust" aria-labelledby="verify-h">
-  <div class="wrap">
-    <div>
-      <p class="eyebrow" style="color:#9FB4E8">Why you can trust the notes</p>
-      <h2 id="verify-h">A person checks every seller</h2>
-      <p>No one can sell on EasyNotes until our team has checked their documents.</p>
-    </div>
-    <ul class="checklist">
-      <li>A completed degree, checked against their certificate or transcript</li>
-      <li>Their ID, matched to the name on the degree</li>
-      <li>Original notes only: no copied textbooks, past papers or lecturer slides</li>
-      <li>Reviewed by a real person, not an automated check</li>
-    </ul>
+  <h3 class="hw-faq-title">Questions from students</h3>
+  <div class="faq hw-faq">
+    <details>
+      <summary>Do I need an account?</summary>
+      <p>No. You only need an email address. Your receipt and download link go there.</p>
+    </details>
+    <details>
+      <summary>What if I lose my download?</summary>
+      <p>Go to <a href="/download">Re-download</a>. <% if (locals.emailEnabled) { %>Enter your email and we’ll send you a link to everything you’ve bought, or use the payment reference on your receipt (it starts with EN).<% } else { %>Enter your email and the payment reference on your receipt (it starts with EN).<% } %> Each purchase can be downloaded up to <%= maxDownloads %> times.</p>
+    </details>
+    <details>
+      <summary>Can I get a refund?</summary>
+      <p>Notes are digital downloads, so all sales are final. If a file is broken or doesn’t match its listing, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll sort it out.</p>
+    </details>
+    <details>
+      <summary>Who writes the notes?</summary>
+      <p>Graduates who passed the module. We check every seller’s degree and ID before they can sell, and their degree is shown on their storefront.</p>
+    </details>
   </div>
 </section>
 
-<section class="wrap section" id="sellers" aria-labelledby="sellers-h">
-  <p class="eyebrow">For sellers</p>
-  <h2 id="sellers-h">Turn your notes into income</h2>
+<%# ---------- Selling ---------- %>
+<section class="wrap hw-panel" id="selling" role="tabpanel" aria-labelledby="tab-selling">
+  <div class="hw-panel-head">
+    <h2>Turn your notes into income</h2>
+    <p>Keep <%= keep %>% of every sale, paid straight into your bank account.</p>
+  </div>
   <div class="hw-sell">
     <ol class="hw-list">
       <li><h3>Create your storefront</h3><p>Pick your name and link. It takes a minute.</p></li>
@@ -77,28 +93,41 @@
       <% if (cta) { %><a class="btn btn-hi btn-block" href="<%= cta.href %>"><%= cta.label %></a><% } %>
     </div>
   </div>
-</section>
 
-<section class="wrap section hw-faq" aria-labelledby="faq-h">
-  <p class="eyebrow">Questions</p>
-  <h2 id="faq-h">Good to know</h2>
-  <div class="faq">
-    <details>
-      <summary>What if I lose my download?</summary>
-      <p>Go to <a href="/download">Re-download</a>. <% if (locals.emailEnabled) { %>Enter your email and we’ll send you a link to everything you’ve bought, or use the payment reference on your receipt (it starts with EN).<% } else { %>Enter your email and the payment reference on your receipt (it starts with EN).<% } %> Each purchase can be downloaded up to <%= maxDownloads %> times.</p>
-    </details>
-    <details>
-      <summary>Can I get a refund?</summary>
-      <p>Notes are digital downloads, so all sales are final. If a file is broken or doesn’t match its listing, email <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a> and we’ll sort it out.</p>
-    </details>
+  <h3 class="hw-faq-title">Questions from sellers</h3>
+  <div class="faq hw-faq">
     <details>
       <summary>Who can sell on EasyNotes?</summary>
       <p>Graduates with a completed degree, a South African bank account and notes they wrote themselves. See the <a href="/seller-terms">seller terms</a>.</p>
     </details>
     <details>
-      <summary>When do sellers get paid?</summary>
+      <summary>How long does verification take?</summary>
+      <p>Usually within two working days. <% if (locals.emailEnabled) { %>We email you as soon as you’re approved, or tell you what to fix.<% } else { %>Your seller dashboard shows when you’re approved, or what to fix.<% } %></p>
+    </details>
+    <details>
+      <summary>When do I get paid?</summary>
       <p>Each payment is split automatically and your share goes to your bank account, usually the next working day. Every sale shows in your seller dashboard.</p>
     </details>
+    <details>
+      <summary>What can’t I sell?</summary>
+      <p>Anything you didn’t write yourself: copied textbooks, past papers or lecturer slides. Your own summaries and notes are perfect.</p>
+    </details>
+  </div>
+</section>
+
+<section class="trust" aria-labelledby="verify-h">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow" style="color:#9FB4E8">Why you can trust the notes</p>
+      <h2 id="verify-h">A person checks every seller</h2>
+      <p>No one can sell on EasyNotes until our team has checked their documents.</p>
+    </div>
+    <ul class="checklist">
+      <li>A completed degree, checked against their certificate or transcript</li>
+      <li>Their ID, matched to the name on the degree</li>
+      <li>Original notes only: no copied textbooks, past papers or lecturer slides</li>
+      <li>Reviewed by a real person, not an automated check</li>
+    </ul>
   </div>
 </section>
 <%- include('partials/bottom') %>
