@@ -691,6 +691,9 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .note-page h1 { font-size: clamp(1.9rem, 3.5vw, 2.7rem); margin: 12px 0 0; }
 .note-head { grid-area: head; padding-bottom: 24px; }
 .note-head .crumbs span[aria-current] { color: var(--ink-soft); }
+.note-head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.note-head-top .crumbs { margin-bottom: 0; padding-top: 6px; min-width: 0; }
+.note-share { flex: none; }
 .note-lede { margin: 10px 0 0; font-size: 1.08rem; color: var(--ink-soft); max-width: 62ch; }
 .note-view { grid-area: view; min-width: 0; }
 .note-main { grid-area: main; min-width: 0; }
@@ -1388,6 +1391,7 @@ dialog.modal > p { margin: 0 0 18px; }
 .share-modal > p { margin: 0 0 16px; }
 .share-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--page); }
 .share-card .avatar-sm { width: 42px; height: 42px; font-size: .95rem; }
+.share-doc { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: var(--blue-soft); color: var(--blue); }
 .share-card div { min-width: 0; }
 .share-card strong { display: block; font-family: var(--display); }
 .share-card span { display: block; color: var(--muted); font-size: .86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -31,7 +31,10 @@
                   <details class="row-menu">
                     <summary aria-label="More actions for <%= n.title %>"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></summary>
                     <div class="row-menu-pop" role="menu">
-                      <% if (n.status === 'published') { %><a role="menuitem" href="<%= noteUrl(n) %>" target="_blank" rel="noopener">View listing</a><% } %>
+                      <% if (n.status === 'published') { %>
+                        <a role="menuitem" href="<%= noteUrl(n) %>" target="_blank" rel="noopener">View listing</a>
+                        <button role="menuitem" type="button" data-dialog-open="share-note" data-share-url="<%= (locals.baseUrl || 'https://easynotes.co.za') + noteUrl(n) %>" data-share-text="Check out my notes on EasyNotes: <%= n.module_code ? n.module_code + ' ' : '' %><%= n.title %>" data-share-title="<%= n.title %>" data-share-sub="<%= rand(n.price_cents) %>">Share</button>
+                      <% } %>
                       <% if (n.status !== 'removed') { %>
                         <a role="menuitem" href="/seller/notes/<%= n.id %>/edit">Edit</a>
                         <form method="post" action="/seller/notes/<%= n.id %>/status">
@@ -53,6 +56,7 @@
         </tbody>
       </table>
     </div>
+    <%- include('../partials/share-dialog', { id: 'share-note', heading: 'Share your notes', intro: 'Post the link in study groups, class chats and on your socials. Anyone with it can preview and buy these notes.' }) %>
   <% } else { %>
     <div class="empty">
       <h3>No notes yet</h3>

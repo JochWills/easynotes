@@ -632,6 +632,27 @@
     });
   });
 
+  // One share pop-up for a list of items: the clicked button's data-share-* details are filled in before it opens
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-share-url][data-dialog-open]');
+    if (!b) return;
+    var d = document.getElementById(b.getAttribute('data-dialog-open'));
+    if (!d || !d.hasAttribute('data-share-dialog')) return;
+    var url = b.getAttribute('data-share-url'), text = b.getAttribute('data-share-text') || '', title = b.getAttribute('data-share-title') || '';
+    var fill = { url: encodeURIComponent(url), text: encodeURIComponent(text), msg: encodeURIComponent(text + '\n' + url) };
+    d.querySelector('[data-share-card-title]').textContent = title;
+    d.querySelector('[data-share-card-sub]').textContent = b.getAttribute('data-share-sub') || url.replace(/^https?:\/\//, '');
+    d.querySelector('[data-share-input]').value = url;
+    d.querySelector('[data-share-copy]').setAttribute('data-copy', url);
+    d.querySelectorAll('[data-share-href]').forEach(function (a) {
+      a.href = a.getAttribute('data-share-href').replace(/\{(url|text|msg)\}/g, function (m, k) { return fill[k]; });
+    });
+    var n = d.querySelector('[data-native-share]');
+    if (n) { n.setAttribute('data-share-url', url); n.setAttribute('data-share-text', text); n.setAttribute('data-share-title', title + ' on EasyNotes'); }
+    var menu = b.closest('details[open]');
+    if (menu) menu.open = false;
+  }, true);
+
   // Share pop-up: phones get a "More" option that opens their own share sheet
   document.querySelectorAll('[data-native-share]').forEach(function (b) {
     if (!navigator.share) return;

@@ -16,10 +16,18 @@
 <% } %>
 <div class="wrap note-page">
   <header class="note-head">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/notes">Notes</a> <span aria-hidden="true">/</span>
-      <a href="<%= storeUrl(author) %>"><%= author.display_name %></a>
-    </nav>
+    <div class="note-head-top">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/notes">Notes</a> <span aria-hidden="true">/</span>
+        <a href="<%= storeUrl(author) %>"><%= author.display_name %></a>
+      </nav>
+      <% if (live) { %>
+        <button class="btn btn-ghost btn-sm note-share" type="button" data-dialog-open="share-note">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="2"/></svg>
+          Share
+        </button>
+      <% } %>
+    </div>
     <% if (note.module_code) { %><span class="tab"><%= note.module_code %></span><% } %>
     <h1><%= note.title %></h1>
     <% if (lede) { %><p class="note-lede"><%= lede %></p><% } %>
@@ -130,6 +138,7 @@
           <strong>These are your notes</strong>
           <span><%= live ? 'Students see the buy buttons here.' : 'Students will see the buy buttons here once they’re live.' %> You can’t buy your own notes.</span>
           <a class="btn btn-ghost btn-block" href="/seller/notes/<%= note.id %>/edit">Edit these notes</a>
+          <% if (live) { %><button class="btn btn-ghost btn-block" type="button" data-dialog-open="share-note">Share these notes</button><% } %>
         </div>
       <% } else if (live) { %>
         <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form data-checkout>
@@ -189,4 +198,13 @@
     </section>
   <% } %>
 </div>
+<% if (live) { %><%- include('partials/share-dialog', {
+  id: 'share-note',
+  heading: isOwner ? 'Share your notes' : 'Share these notes',
+  intro: isOwner ? 'Post the link in study groups, class chats and on your socials. Anyone with it can preview and buy these notes.' : 'Know someone writing this module? Send them the link.',
+  link: (locals.baseUrl || 'https://easynotes.co.za') + noteUrl(note),
+  text: (isOwner ? 'Check out my notes on EasyNotes: ' : 'Check out these notes on EasyNotes: ') + (note.module_code ? note.module_code + ' ' : '') + note.title,
+  cardTitle: note.title,
+  cardSub: author.display_name + ' · ' + rand(note.price_cents)
+}) %><% } %>
 <%- include('partials/bottom') %>
