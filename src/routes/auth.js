@@ -145,8 +145,8 @@ router.post('/reset', limiter, async (req, res) => {
 function logOut(req, res) {
   for (const key of Object.keys(req.session)) delete req.session[key];
   flash(req, 'ok', 'You’re logged out.');
-  // Throw away pages the browser saved or loaded ahead while logged in, so none of them shows up afterwards.
-  res.set('Clear-Site-Data', '"cache", "prefetchCache", "prerenderCache"');
+  // Throw away pages loaded ahead while logged in (logged-in pages are never cached: see server.js).
+  res.set('Clear-Site-Data', '"prefetchCache", "prerenderCache"'); // not "cache": Chrome can take ages clearing it
   res.set('Cache-Control', 'no-store');
   res.redirect(303, '/');
 }
