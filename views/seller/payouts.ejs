@@ -50,7 +50,7 @@
         <h2>How you get paid</h2>
         <ul class="steps-mini">
           <li><span>1</span><p>A student buys your notes.</p></li>
-          <li><span>2</span><p>Paystack splits the payment automatically: <strong><%= 100 - feePercent %>%</strong> to you, <%= feePercent %>% to EasyNotes.</p></li>
+          <li><span>2</span><p>Paystack splits the payment automatically: <strong><%= 100 - feePercent %>%</strong> to you, <%= feePercent %>% to EasyNotes<%= feeCoversProcessing ? " (this covers Paystack’s processing fees)" : "" %>.</p></li>
           <li><span>3</span><p>Your share is paid into your bank account, usually the next working day.</p></li>
         </ul>
       </aside>

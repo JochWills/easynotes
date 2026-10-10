@@ -62,7 +62,7 @@
         </tbody>
       </table>
     </div>
-    <p class="fineprint"><%= orders.length === 200 ? 'Showing your latest 200 sales. ' : '' %>Earnings are after the <%= feePercent %>% EasyNotes fee<%= feeBearer === 'subaccount' ? ' and before the card processing fee' : '' %>. They’re paid into your bank account.</p>
+    <p class="fineprint"><%= orders.length === 200 ? 'Showing your latest 200 sales. ' : '' %>Earnings are after the <%= feePercent %>% EasyNotes fee<%= feeBearer === 'subaccount' ? ' and before the card processing fee' : ', which already includes payment processing' %>. They’re paid into your bank account.</p>
   <% } else if (period !== 'all' && sales === 0) { %>
     <div class="empty empty-sm"><h3>No sales in this period</h3><p>Try a longer period, or share your storefront link with study groups to get more sales.</p><a class="btn btn-ghost" href="/seller">Show all time</a></div>
   <% } else { %>

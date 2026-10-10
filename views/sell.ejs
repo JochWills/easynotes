@@ -17,7 +17,7 @@
         <dt>EasyNotes keeps (<%= feePercent %>%)</dt><dd>R<%= (120 * feePercent / 100).toFixed(2) %></dd>
         <dt>You receive</dt><dd>R<%= (120 * (100 - feePercent) / 100).toFixed(2) %></dd>
       </dl>
-      <p class="fineprint">No listing fees or monthly costs. You set your own prices.</p>
+      <p class="fineprint">No listing fees or monthly costs. You set your own prices.<%= feeCoversProcessing ? " Our " + feePercent + "% includes payment processing charges." : "" %></p>
     </div>
   </div>
 </section>

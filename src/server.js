@@ -79,6 +79,7 @@ app.use((req, res, next) => {
   res.set('Speculation-Rules', '"/speculation-rules.json"');
   res.locals.currentPath = req.path;
   res.locals.feePercent = config.platformFeePercent;
+  res.locals.feeCoversProcessing = config.feeBearer === 'account'; // EasyNotes pays Paystack's fee out of its share
   res.locals.minPrice = config.minPrice;
   res.locals.maxPrice = config.maxPrice;
   res.locals.supportEmail = config.supportEmail;

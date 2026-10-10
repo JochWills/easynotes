@@ -22,7 +22,7 @@ const quals = [
   { id: 'q4', level: 'Honours degree or Postgraduate Diploma', name: 'BCom Honours in Accounting', institution: 'University of Cape Town', status: 'completed', year_completed: 2026, honours: 'merit', review_status: 'pending', replaces_id: 'q1' },
 ];
 const eduL = { universities: C.DEGREE_UNIVERSITIES, otherLabel: C.OTHER_UNIVERSITY, levels: C.QUAL_LEVELS, studyYears: C.STUDY_YEARS, honours: C.HONOURS, months: education.MONTHS };
-const base = { ...helpers, edu, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, minPrice: 2, maxPrice: 500, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
+const base = { ...helpers, edu, emailEnabled: true, csrf: 'tok', currentPath: '/', feePercent: 20, feeCoversProcessing: true, minPrice: 2, maxPrice: 500, supportEmail: 'support@easynotes.co.za', maxDownloads: 10, flash: null, user: null, me: seller };
 const sellerBase = { ...base, user: { role: 'seller', email: 'a@b.c' } };
 const adminBase = { ...base, user: { role: 'admin', email: 'a@b.c' } };
 

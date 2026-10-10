@@ -39,7 +39,7 @@
 
   <h2>Fees and payouts</h2>
   <ul>
-    <li>EasyNotes keeps <%= feePercent %>% of each sale price as its platform fee. You receive the rest.</li>
+    <li>EasyNotes keeps <%= feePercent %>% of each sale price as its platform fee<%= feeCoversProcessing ? ". This includes Paystack’s payment processing charges, so nothing else is taken off" : "" %>. You receive the rest.</li>
     <li>Payments are split by Paystack at the time of sale. Your share is settled to the bank account you provide, on Paystack’s settlement schedule.</li>
     <li>You are responsible for declaring your earnings to SARS.</li>
     <li>Sales are final for buyers. If we refund a buyer because a file was defective or misdescribed, the refunded amount may be recovered from future payouts.</li>
