@@ -214,4 +214,10 @@ create table if not exists reviews (
   unique (seller_id, payment_ref)
 );
 create index if not exists reviews_seller_idx on reviews(seller_id, status);
+-- Imported reviews: ones a seller earned on another store, added by an admin. Shown labelled with the source and
+-- not counted in the EasyNotes rating. They have no star rating or date if the original didn't.
+alter table reviews add column if not exists source text;
+alter table reviews add column if not exists source_url text;
+alter table reviews add column if not exists original_date date;
+alter table reviews alter column rating drop not null;
 alter table reviews enable row level security;

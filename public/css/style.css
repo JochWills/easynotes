@@ -551,7 +551,7 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .hint { display: block; color: var(--muted); font-size: .88rem; font-weight: 400; margin-top: 6px; }
 .error-text { display: block; color: var(--bad); font-size: .9rem; font-weight: 600; margin-top: 6px; }
 .field input[type="text"], .field input[type="email"], .field input[type="password"], .field input[type="number"],
-.field input[type="search"], .field select, .field textarea {
+.field input[type="search"], .field input[type="date"], .field select, .field textarea {
   width: 100%; font: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--rule-strong); border-radius: 10px; padding: .7em .9em;
   transition: border-color .15s, box-shadow .15s;
@@ -1461,3 +1461,16 @@ button.is-loading { cursor: progress; opacity: .75; }
   .hw-toggle button { padding: 10px 16px; }
   .hw-panel { padding-top: 60px; padding-bottom: 56px; }
 }
+
+/* Admin: add a review from a seller's previous store */
+.import-review { margin-top: 18px; padding: 18px 22px; }
+.import-review summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.import-review .form { margin-top: 16px; }
+.reviews-imported { margin-top: 10px; padding-top: 6px; }
+.reviews-imported h3 { margin: 0; font-size: 1.05rem; }
+.reviews-imported p { margin: 4px 0 0; }
+.review-imported { background: var(--page); box-shadow: none; }
+.review-imported .review-body { margin-top: 0; }
+.review-imported .review-head + .review-body { margin-top: 12px; }
+.from-source { display: inline-flex; align-items: center; padding: .1em .55em; border-radius: 999px; background: var(--rule); color: var(--ink-soft); font-size: .76rem; font-weight: 700; text-decoration: none; }
+a.from-source:hover { background: var(--blue-soft); color: var(--blue); }
