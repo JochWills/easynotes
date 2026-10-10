@@ -451,7 +451,7 @@ function validateNote(body) {
     price_cents: Number.isFinite(priceRand) ? Math.round(priceRand * 100) : NaN,
   };
   const errors = {};
-  if (values.title.length < 5) errors.title = 'Give your notes a clear title (at least 5 characters).';
+  if (values.title.length < 3) errors.title = 'Give your notes a clear title (at least 3 characters).';
   if (values.description.length < 40) errors.description = 'Describe what’s covered in at least 40 characters. Students buy on this.';
   if (values.subject.length < 2) errors.subject = 'Enter the subject, e.g. Financial Accounting.';
   values.university = NOTE_INSTITUTIONS.find((u) => u.toLowerCase() === values.university.toLowerCase()) || values.university;

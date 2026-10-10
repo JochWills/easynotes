@@ -14,7 +14,7 @@
         <div class="form">
           <div class="field <%= errors.title ? 'has-error' : '' %>">
             <label for="n-title">Title</label>
-            <input id="n-title" type="text" name="title" value="<%= values.title || '' %>" maxlength="120" required data-min="5" data-msg="Give your notes a clear title (at least 5 characters)." placeholder="e.g. Financial Accounting I: complete exam summary">
+            <input id="n-title" type="text" name="title" value="<%= values.title || '' %>" maxlength="120" required data-min="3" data-msg="Give your notes a clear title (at least 3 characters)." placeholder="e.g. Financial Accounting I: complete exam summary">
             <%- include('../partials/field-error', { name: 'title' }) %>
           </div>
           <div class="row-2">
