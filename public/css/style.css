@@ -1410,3 +1410,34 @@ dialog.modal > p { margin: 0 0 18px; }
 /* Checkout: message shown above the pay button when the pop-up can't start */
 .checkout-error { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--bad-bg); color: var(--bad); font-size: .9rem; font-weight: 600; }
 button.is-loading { cursor: progress; opacity: .75; }
+
+/* ---------- How it works ---------- */
+.hw-head { padding-bottom: 44px; }
+.hw-head h1 { max-width: 20ch; }
+.hw-lede { max-width: 56ch; margin: 14px 0 0; color: var(--ink-soft); font-size: 1.08rem; }
+.hw-jump { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+#students, #sellers { scroll-margin-top: 80px; }
+.hw-steps { list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.hw-steps li { padding: 26px 24px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.hw-ico { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--blue-soft); color: var(--blue); }
+.hw-num { display: block; margin-top: 18px; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.hw-steps h3 { margin: 4px 0 8px; font-size: 1.15rem; }
+.hw-steps p { margin: 0; color: var(--ink-soft); }
+.hw-note { margin: 20px 0 0; color: var(--muted); font-size: .92rem; }
+.hw-sell { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; margin-top: 26px; }
+.hw-list { list-style: none; margin: 0; padding: 0; counter-reset: hw; display: grid; gap: 0; }
+.hw-list li { position: relative; counter-increment: hw; padding: 0 0 26px 56px; }
+.hw-list li::before { content: counter(hw); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: #fff; font-family: var(--display); font-weight: 700; }
+.hw-list li:not(:last-child)::after { content: ""; position: absolute; left: 17px; top: 42px; bottom: 6px; width: 2px; background: var(--rule); }
+.hw-list h3 { margin: 6px 0 4px; font-size: 1.1rem; }
+.hw-list p { margin: 0; color: var(--ink-soft); }
+.hw-faq { padding-top: 0; }
+.hw-faq .faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; align-items: start; max-width: none; margin-top: 22px; }
+@media (max-width: 920px) {
+  .hw-steps { grid-template-columns: 1fr; gap: 12px; }
+  .hw-steps li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 16px; padding: 20px; }
+  .hw-steps .hw-ico { grid-row: span 3; }
+  .hw-num { margin-top: 0; }
+  .hw-sell { grid-template-columns: 1fr; gap: 24px; }
+  .hw-faq .faq { grid-template-columns: 1fr; }
+}
