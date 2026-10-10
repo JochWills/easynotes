@@ -167,7 +167,8 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     title: note.module_code ? `${note.module_code}: ${note.title}` : note.title,
     description: note.description.slice(0, 155),
     ogTitle: `${note.module_code ? note.module_code + ': ' : ''}${note.title} · ${rand(note.price_cents)}`,
-    ogImage: live ? `/og/note/${note.id}.png?v=${new Date(note.updated_at).getTime().toString(36)}` : null,
+    // the version changes when the note is edited or the seller renames their storefront, so apps fetch a fresh picture
+    ogImage: live ? `/og/note/${note.id}.png?v=${require('crypto').createHash('sha1').update(note.updated_at + '|' + note.sellers.display_name).digest('hex').slice(0, 8)}` : null,
     note,
     author: note.sellers,
     live,

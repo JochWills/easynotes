@@ -40,7 +40,7 @@ router.get('/og/note/:id.png', async (req, res, next) => {
     .eq('id', req.params.id)
     .maybeSingle();
   if (!note || !isPublic(note)) return next();
-  const buf = await cached(`note:${note.id}:${note.updated_at}`, () =>
+  const buf = await cached(`note:${note.id}:${note.updated_at}:${note.sellers.display_name}`, () =>
     og.noteCard({
       title: note.title,
       module_code: note.module_code,
