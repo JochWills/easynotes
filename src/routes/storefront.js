@@ -1,5 +1,5 @@
 const express = require('express');
-const rateLimit = require('express-rate-limit');
+const { limit } = require('../lib/limits');
 const education = require('../lib/education');
 const reviews = require('../lib/reviews');
 const previousReviews = require('../lib/previous-reviews');
@@ -98,7 +98,7 @@ router.get('/:slug/review', async (req, res, next) => {
   await renderStore(req, res, store, { tab: 'reviews', review: { open: store.live } });
 });
 
-const reviewLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-7', legacyHeaders: false });
+const reviewLimiter = limit(15, 20);
 
 router.post('/:slug/reviews', reviewLimiter, async (req, res, next) => {
   const store = await loadStore(req);

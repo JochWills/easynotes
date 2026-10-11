@@ -12,6 +12,16 @@ const db = require('../src/lib/supabase');
     console.error('Usage: npm run create-admin -- email ["password (10+ characters)"]');
     process.exit(1);
   }
+  // Running it again for an admin resets their password; a seller's account is never turned into an admin.
+  const { data: existing, error: lookupErr } = await db.from('users').select('role').eq('email', email.toLowerCase()).maybeSingle();
+  if (lookupErr) {
+    console.error(lookupErr.message);
+    process.exit(1);
+  }
+  if (existing && existing.role !== 'admin') {
+    console.error(`${email.toLowerCase()} has a seller account. Use a different email for admin access.`);
+    process.exit(1);
+  }
   const password_hash = await bcrypt.hash(password, 12);
   const { error } = await db
     .from('users')

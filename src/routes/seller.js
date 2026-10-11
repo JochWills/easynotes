@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const rateLimit = require('express-rate-limit');
+const { limit } = require('../lib/limits');
 const config = require('../lib/config');
 const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
@@ -383,7 +383,7 @@ async function renderPayouts(res, req, values, errors, status = 200, changeOpen 
 router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}, 200, req.query.change === '1'));
 
 // It checks the password, so it's rate limited like the other password forms.
-const payoutsLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+const payoutsLimiter = limit(15, 20);
 
 router.post('/payouts', payoutsLimiter, async (req, res) => {
   const s = req.seller;
@@ -680,7 +680,7 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
 /* ---------- Settings ---------- */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const settingsLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+const settingsLimiter = limit(15, 20);
 
 // errors are keyed by field; each form posts on its own, so only the one that was sent shows errors.
 function renderSettings(req, res, { status = 200, errors = {}, values = {} } = {}) {
@@ -760,7 +760,7 @@ router.post('/settings/notifications', async (req, res) => {
 
 /* ---------- Delete account ---------- */
 
-const deleteLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-7', legacyHeaders: false });
+const deleteLimiter = limit(15, 10);
 
 async function paidSales(sellerId) {
   const { count } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('seller_id', sellerId).eq('status', 'paid');

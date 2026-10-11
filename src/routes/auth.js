@@ -1,6 +1,5 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const rateLimit = require('express-rate-limit');
 const db = require('../lib/supabase');
 const flash = require('../lib/flash');
 const { slugify, str } = require('../lib/helpers');
@@ -11,8 +10,9 @@ const profanity = require('../lib/profanity');
 const config = require('../lib/config');
 const { verifyCsrf } = require('../lib/csrf');
 const { logIn } = require('../lib/auth');
+const { limit } = require('../lib/limits');
 const router = express.Router();
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+const limiter = limit(15, 20);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser', 12); // compared when the email doesn't exist
 
@@ -63,6 +63,10 @@ router.post('/signup', limiter, async (req, res) => {
 
   const password_hash = await bcrypt.hash(password, 12);
   const { data: user, error } = await db.from('users').insert({ email: values.email, password_hash, role: 'seller' }).select().single();
+  if (error && error.code === '23505') {
+    // Someone signed up with this email a moment earlier (e.g. the form was sent twice)
+    return res.status(400).render('signup', { title: 'Create a seller account', values, errors: { email: 'An account with this email already exists. Log in instead.' } });
+  }
   if (error) throw error;
 
   const slug = await uniqueSlug(values.display_name);

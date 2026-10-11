@@ -223,6 +223,7 @@ alter table sellers add column if not exists notify_reviews boolean not null def
 -- Deleting a note or a whole seller account happens in one transaction, so a failure part-way leaves nothing
 -- half deleted. The app removes the files from storage afterwards, using the paths these return.
 -- Raises 'checkout_in_progress' when someone started paying in the last 2 hours (the payment may still go through).
+-- That includes attempts marked failed: clicking Pay again marks the last one failed, but it can still be paid (e.g. EFT).
 
 -- Notes nobody bought are erased (with their unpaid checkouts). Sold notes are marked deleted so buyers can still download them.
 create or replace function delete_note(p_note_id uuid, p_seller_id uuid)
@@ -234,7 +235,7 @@ begin
   select * into n from notes where id = p_note_id and seller_id = p_seller_id and status <> 'deleted' for update;
   if not found then return null; end if;
   sold := exists (select 1 from orders where note_id = n.id and status = 'paid');
-  if not sold and exists (select 1 from orders where note_id = n.id and status = 'pending' and created_at > now() - interval '2 hours') then
+  if not sold and exists (select 1 from orders where note_id = n.id and status <> 'paid' and created_at > now() - interval '2 hours') then
     raise exception 'checkout_in_progress';
   end if;
   if sold then
@@ -258,7 +259,7 @@ declare
 begin
   select * into s from sellers where id = p_seller_id for update;
   if not found then return null; end if;
-  if exists (select 1 from orders where seller_id = s.id and status = 'pending' and created_at > now() - interval '2 hours') then
+  if exists (select 1 from orders where seller_id = s.id and status <> 'paid' and created_at > now() - interval '2 hours') then
     raise exception 'checkout_in_progress';
   end if;
   select email into login_email from users where id = s.user_id;

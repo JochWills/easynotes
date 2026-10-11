@@ -8,7 +8,7 @@ const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
 // The "Popular at" links on the home page, in this order
 const HOME_UNIS = ['UCT', 'Stellenbosch', 'NMU', 'Milpark', 'Emeris', 'UP', 'UJ', 'UNISA'];
 const { isUuid, noteUrl, storeUrl, str, rand } = require('../lib/helpers');
-const rateLimit = require('express-rate-limit');
+const { limit } = require('../lib/limits');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
 const flash = require('../lib/flash');
@@ -91,7 +91,7 @@ router.get('/notes', async (req, res) => {
 
 /* ---------- Reporting notes (and copyright takedown requests) ---------- */
 
-const reportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: 'draft-7', legacyHeaders: false });
+const reportLimiter = limit(15, 15);
 const REPORT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 async function reportableNote(id) {

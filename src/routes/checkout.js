@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const config = require('../lib/config');
 const db = require('../lib/supabase');
 const paystack = require('../lib/paystack');
@@ -12,12 +11,13 @@ const { isPublic, publicNotes } = require('../lib/queries');
 const { isUuid, feeFor, fileName, noteUrl, str } = require('../lib/helpers');
 const flash = require('../lib/flash');
 const profanity = require('../lib/profanity');
+const { limit } = require('../lib/limits');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const checkoutLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false });
-const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: 'draft-7', legacyHeaders: false });
-const linkLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false });
+const checkoutLimiter = limit(10, 100);
+const downloadLimiter = limit(15, 60);
+const linkLimiter = limit(15, 15);
 
 const newReference = () => `EN${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 const backTo = (req, fallback) => {
