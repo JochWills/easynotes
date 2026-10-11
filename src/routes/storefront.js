@@ -2,7 +2,6 @@ const express = require('express');
 const { limit } = require('../lib/limits');
 const education = require('../lib/education');
 const reviews = require('../lib/reviews');
-const previousReviews = require('../lib/previous-reviews');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
 const flash = require('../lib/flash');
@@ -51,12 +50,12 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     education.forSeller(author.id, { verifiedOnly: true }),
     reviews.forSeller(author.id),
   ]);
-  const previous = previousReviews[author.slug] || null;
+  const previous = reviews.previousFor(author.slug);
   const rating = reviews.combinedRating(rev.list, author.slug);
   // Link-preview image; the version changes when anything on it changes, so apps fetch the new one
   const ogVersion = require('crypto').createHash('sha1').update(JSON.stringify([author.display_name, author.avatar_path, author.degree, author.university, (notes || []).length, rating.avg, rating.count])).digest('hex').slice(0, 8);
   res.status(extra.status || 200).render('storefront', {
-    title: `${author.display_name}'s notes`,
+    title: /\bnotes?\b/i.test(author.display_name) ? author.display_name : `${author.display_name}’s notes`, // not "Josh’s Notes’s notes"
     noindex: !live,
     live,
     description: author.headline || `Study notes by ${author.display_name}, a verified academic on EasyNotes.`,

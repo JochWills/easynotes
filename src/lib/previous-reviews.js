@@ -1,6 +1,8 @@
 // Reviews a seller's buyers left on their own site before EasyNotes (shared with the reviewers' permission), keyed by
 // storefront slug. They show in the normal reviews list tagged "Bought directly", not "Verified purchase",
 // since those purchases weren't made on EasyNotes. Their star ratings count towards the seller's rating.
+// The seller can't change a link listed here, and nobody else can take it (routes/seller.js), so to move a seller to a
+// new link, change their slug in Supabase and rename the key here in the same deploy.
 module.exports = {
   'pgda-notes-by-courts': {
     source: 'pgdanotes.co.za',

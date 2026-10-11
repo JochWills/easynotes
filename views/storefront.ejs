@@ -125,7 +125,7 @@
           <% if (locals.isOwner) { %>
             <div class="empty empty-sm"><h3>Your first review is one message away</h3><p>Reviews appear here as soon as buyers post them. Students are much more likely to buy from a seller with reviews, so share your review link with people who’ve bought your notes.</p></div>
           <% } else { %>
-            <div class="empty empty-sm"><h3>No reviews yet</h3><p>Reviews come only from students who bought <%= author.display_name %>’s notes, confirmed with their order reference.</p></div>
+            <div class="empty empty-sm"><h3>No reviews yet</h3><p>Reviews come only from students who bought notes from <%= author.display_name %>, confirmed with their order reference.</p></div>
           <% } %>
         <% } %>
         <% rv.list.forEach(function (r) { %>

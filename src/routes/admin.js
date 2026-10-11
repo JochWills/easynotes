@@ -30,10 +30,11 @@ const backToReferer = (req, fallback) => {
 
 // Reports, automatic upload flags and payments that didn't match an order stay open until an admin marks them resolved.
 const REPORT_KINDS = ['note.reported', 'note.flagged', 'payment.unmatched', 'payment.mismatch'];
+// All of them, however old: an unresolved report must never drop off the list.
 async function openReports() {
   const [items, resolved] = await Promise.all([
-    events.recent({ limit: 300, kinds: REPORT_KINDS }),
-    events.recent({ limit: 1000, kinds: ['report.resolved'] }),
+    events.all({ kinds: REPORT_KINDS }),
+    events.all({ kinds: ['report.resolved'], columns: 'id,detail' }),
   ]);
   if (items === null) return null;
   const done = new Set((resolved || []).map((e) => String(e.detail?.report_id)));
@@ -279,7 +280,7 @@ router.get('/notes', async (req, res) => {
 router.post('/notes/:id/status', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
   const map = { remove: 'removed', unpublish: 'unpublished', restore: 'unpublished' };
-  const status = map[req.body.action];
+  const status = Object.hasOwn(map, String(req.body.action)) ? map[req.body.action] : null;
   if (status) {
     // Notes the seller deleted stay deleted: changing them would put them back in the seller's list.
     const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).neq('status', 'deleted').select('title').maybeSingle();

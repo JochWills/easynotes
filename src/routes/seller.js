@@ -28,6 +28,7 @@ const { slugify, str, isUuid } = require('../lib/helpers');
 const { isReservedSlug } = require('../lib/constants');
 const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, SUBJECTS, QUAL_LEVELS, STUDY_YEARS, HONOURS } = require('../lib/constants');
 const education = require('../lib/education');
+const { previousFor } = require('../lib/reviews');
 
 const router = express.Router();
 router.use(requireSeller);
@@ -138,6 +139,12 @@ router.post('/profile', upload.fields([{ name: 'avatar', maxCount: 1 }], { maxMb
   if (values.slug.length < 3) errors.slug = 'Use at least 3 letters or numbers.';
   else if (isReservedSlug(values.slug) && values.slug !== req.seller.slug) errors.slug = 'That link is reserved by EasyNotes. Try another.';
   profanity.checkFields(values, ['display_name', 'headline', 'bio', 'slug'], errors);
+  // Reviews from a seller's own site (lib/previous-reviews.js) are listed under their link: it can't move here, and nobody else can take it.
+  if (!errors.slug && values.slug !== req.seller.slug) {
+    const own = previousFor(req.seller.slug);
+    if (own) errors.slug = `Your link can’t be changed here because your reviews from ${own.source} are tied to it. Email ${config.supportEmail} and we’ll change it for you.`;
+    else if (previousFor(values.slug)) errors.slug = 'That link is taken. Try another.';
+  }
   if (!errors.slug) {
     const { data: taken } = await db.from('sellers').select('id').eq('slug', values.slug).neq('id', req.seller.id).maybeSingle();
     if (taken) errors.slug = 'That link is taken. Try another.';

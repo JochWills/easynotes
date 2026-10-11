@@ -4,6 +4,10 @@ const db = require('./supabase');
 const profanity = require('./profanity');
 const { str } = require('./helpers');
 
+const PREVIOUS = require('./previous-reviews');
+// A seller's reviews from their own site, or null. Not a plain lookup: a link like "constructor" mustn't find built-ins.
+const previousFor = (slug) => (Object.hasOwn(PREVIOUS, String(slug)) ? PREVIOUS[slug] : null);
+
 const REF_RE = /^EN[A-Z0-9]+(-\d+)?$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -23,7 +27,7 @@ async function forSeller(sellerId) {
 
 // Star rating across EasyNotes reviews and any the seller's buyers left on their own site (previous-reviews.js)
 function combinedRating(list, slug) {
-  const previous = require('./previous-reviews')[slug] || null;
+  const previous = previousFor(slug);
   const rated = [...list, ...(previous ? previous.reviews.filter((r) => r.rating) : [])];
   return {
     count: rated.length,
@@ -91,4 +95,4 @@ async function prepare(seller, body) {
   };
 }
 
-module.exports = { combinedRating, forSeller, prepare, shortName };
+module.exports = { combinedRating, forSeller, prepare, previousFor, shortName };

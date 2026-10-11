@@ -4,6 +4,7 @@ const db = require('../lib/supabase');
 const flash = require('../lib/flash');
 const { slugify, str } = require('../lib/helpers');
 const { isReservedSlug } = require('../lib/constants');
+const { previousFor } = require('../lib/reviews');
 const emails = require('../lib/emails');
 
 const profanity = require('../lib/profanity');
@@ -24,7 +25,7 @@ async function uniqueSlug(base) {
   let slug = root.slice(0, 40);
   for (let i = 0; i < 5; i++) {
     const { data } = await db.from('sellers').select('id').eq('slug', slug).maybeSingle();
-    if (!data && slug.length >= 3 && !isReservedSlug(slug)) return slug;
+    if (!data && slug.length >= 3 && !isReservedSlug(slug) && !previousFor(slug)) return slug; // a link with old reviews stays with its seller
     slug = `${root.slice(0, 34)}-${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${slug}-${Date.now().toString(36)}`;
