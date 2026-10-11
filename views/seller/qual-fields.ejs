@@ -86,13 +86,16 @@
     </label>
     <% var ex = locals.existing; var fileDate = function (path) { var m = /-(\d{13})\.\w+$/.exec(path || ''); return m ? 'Uploaded ' + date(new Date(Number(m[1]))) : null; }; %>
     <% if (ex && ex.doc_path) { %><%- include('../partials/current-file', { href: '/seller/verification/education/' + ex.id + '/file/doc', label: 'View current document', meta: fileDate(ex.doc_path) }) %><% } %>
-    <input id="q-doc" type="file" name="doc" accept="application/pdf,image/jpeg,image/png" <%= locals.keepDocs ? '' : 'required' %>>
-    <span class="hint"><%= locals.keepDocs ? 'Optional. Leave empty to keep the document we already have, or upload one that shows the change. ' : '' %>PDF, JPG or PNG, up to 10 MB. Your name and the qualification must be readable.</span>
+    <%- include('../partials/file-pick', { id: 'q-doc', name: 'doc', accept: 'application/pdf,image/jpeg,image/png', required: !locals.keepDocs, title: locals.keepDocs ? 'Choose a new document' : 'Choose your document', small: 'PDF, JPG or PNG, up to 10 MB' }) %>
+    <span class="hint"><%= locals.keepDocs ? 'Optional. Leave empty to keep the document we already have, or upload one that shows the change. ' : '' %>Your name and the qualification must be readable.</span>
     <%- include('../partials/field-error', { name: 'doc' }) %>
   </div>
 
+  <%# Optional, so folded away unless there's something in it already (or something to fix) %>
+  <% var resultsOpen = (q.honours && q.honours !== 'none') || q.average_mark || q.distinctions || errors.honours || errors.average_mark || errors.distinctions || errors.record || (ex && ex.record_path); %>
+  <details class="results-fold" <%= resultsOpen ? 'open' : '' %>>
+  <summary><span id="q-results-title">Add your results <span class="muted">(optional)</span></span><span class="small muted">Average, distinctions or cum laude</span></summary>
   <div class="results-box" role="group" aria-labelledby="q-results-title">
-    <h3 id="q-results-title">Your results <span class="muted">(optional)</span></h3>
     <p class="small">Did well? Show it. Students are more likely to buy notes from someone with strong marks, and we show these on your storefront once checked.</p>
     <div class="field <%= errors.honours ? 'has-error' : '' %>">
       <span class="label" id="q-honours-label">Academic award</span>
@@ -118,9 +121,10 @@
     <div class="field <%= errors.record ? 'has-error' : '' %>">
       <label for="q-record">Academic record</label>
       <% if (ex && ex.record_path) { %><%- include('../partials/current-file', { href: '/seller/verification/education/' + ex.id + '/file/record', label: 'View current academic record', meta: fileDate(ex.record_path) }) %><% } %>
-      <input id="q-record" type="file" name="record" accept="application/pdf,image/jpeg,image/png">
+      <%- include('../partials/file-pick', { id: 'q-record', name: 'record', accept: 'application/pdf,image/jpeg,image/png', title: ex && ex.record_path ? 'Choose a new academic record' : 'Choose your academic record', small: 'PDF, JPG or PNG, up to 10 MB' }) %>
       <span class="hint">Needed to show an average, distinctions or cum laude, unless the document above already shows them.</span>
       <%- include('../partials/field-error', { name: 'record' }) %>
     </div>
   </div>
+  </details>
 </div>

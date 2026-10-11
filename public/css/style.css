@@ -775,6 +775,10 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .tab-panel h2 { font-size: 1.2rem; margin: 0 0 8px; }
 .tab-panel .prose { margin: 0; color: var(--ink-soft); }
 .tab-panel .author { margin: 0; padding: 0; border: 0; box-shadow: none; background: none; }
+/* The seller's star rating on a note page (buy box and author card) */
+.note-rating { display: flex; align-items: center; gap: 5px; margin-top: 4px; color: var(--ink); text-decoration: none; font-size: .92rem; font-weight: 400; }
+.note-rating:hover strong { text-decoration: underline; }
+.note-stars { color: #F5A623; letter-spacing: 1px; }
 .tabs-on .tab-panel[hidden] { display: none; }
 
 /* Buy box on the note page */
@@ -1107,8 +1111,16 @@ main > :nth-child(n+4) { animation-delay: .12s; }
 .qual-when[hidden], [data-when][hidden] { display: none !important; }
 .month-year { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .results-box { display: grid; gap: 16px; padding: 20px; border: 1px solid #C9DAFB; border-radius: 14px; background: var(--blue-soft); }
-.results-box > h3 { margin: 0; font-size: 1.05rem; }
-.results-box > p { margin: -8px 0 0; color: var(--ink-soft); }
+.results-box > p { margin: 0; color: var(--ink-soft); }
+/* "Add your results (optional)": folded away until opened */
+.results-fold { border: 1px solid #C9DAFB; border-radius: 14px; background: var(--blue-soft); }
+.results-fold > summary { display: grid; gap: 2px; padding: 16px 48px 16px 20px; cursor: pointer; list-style: none; position: relative; font-weight: 700; font-size: 1.05rem; }
+.results-fold > summary::-webkit-details-marker { display: none; }
+.results-fold > summary::after { content: ''; position: absolute; right: 22px; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--blue); border-bottom: 2px solid var(--blue); transform: translateY(-70%) rotate(45deg); transition: transform .15s; }
+.results-fold[open] > summary::after { transform: translateY(-30%) rotate(-135deg); }
+.results-fold > summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 14px; }
+.results-fold > summary .small { font-weight: 400; }
+.results-fold > .results-box { border: 0; border-radius: 0 0 14px 14px; padding-top: 0; background: transparent; }
 .results-box .choice { background: var(--paper); }
 .edu-grid { align-items: start; }
 .section-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }

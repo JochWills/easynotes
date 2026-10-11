@@ -1,0 +1,8 @@
+<%# Styled file picker (the same drop box as the notes upload; public/js/app.js shows the chosen file).
+    Pass id, name, accept, required, title ("Choose your ID") and small (the allowed types and size). %>
+<label class="dropzone" for="<%= id %>" data-dropzone>
+  <input id="<%= id %>" class="dropzone-input" type="file" name="<%= name %>" accept="<%= accept %>" <%= locals.required ? 'required' : '' %>>
+  <span class="dropzone-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  <span class="dropzone-empty"><span><strong><%= title %></strong><span class="dz-drag"> or drag it here</span></span><small><%= small %></small></span>
+  <span class="dropzone-chosen" hidden><strong data-file-name></strong><small data-file-meta></small></span>
+</label>

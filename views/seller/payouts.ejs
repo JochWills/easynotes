@@ -48,7 +48,7 @@
       <div class="card payout-setup-card">
         <header class="form-section-head">
           <h2>Set up payouts</h2>
-          <p class="muted">Add the bank account you want to be paid into. Your notes go on sale once this is done.</p>
+          <p class="muted">Add the bank account you want to be paid into. <%= me.verification_status === 'approved' ? 'Your notes go on sale once this is done.' : 'Your notes go on sale once this is done and your degree is verified.' %></p>
         </header>
         <% bankForm(); %>
       </div>

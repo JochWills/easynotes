@@ -2,8 +2,14 @@
 <%
   var inCart = (locals.cartIds || []).indexOf(note.id) > -1;
   var size = note.file_size ? (note.file_size < 1048576 ? Math.max(1, Math.round(note.file_size / 1024)) + ' KB' : (note.file_size / 1048576).toFixed(1) + ' MB') : '';
-  var lede = (note.description || '').split('\n')[0].trim();
-  if (lede.length > 180) lede = lede.slice(0, 177).replace(/\s+\S*$/, '') + '…';
+  // The first paragraph shows under the title; "About these notes" then shows the rest, so nothing is said twice.
+  // A long first paragraph is cut short up top, so then the description shows in full.
+  var desc = String(note.description || '').trim();
+  var lede = desc.split('\n')[0].trim();
+  var body = desc.slice(lede.length).trim();
+  if (lede.length > 180) { lede = lede.slice(0, 177).replace(/\s+\S*$/, '') + '…'; body = desc; }
+  var rt = locals.rating || { count: 0 };
+  var starsText = function (n) { var s = ''; for (var i = 1; i <= 5; i++) s += n >= i - 0.25 ? '★' : '☆'; return s; };
   var shown = previewPlan.full + (previewPlan.half ? 0.5 : 0);
   var shownLabel = shown === 0.5 ? 'half a page' : (shown % 1 ? Math.floor(shown) + '½' : shown) + ' pages';
   var morePages = note.page_count ? Math.max(0, note.page_count - previewPlan.full) : 0;
@@ -92,21 +98,24 @@
   </div>
 
   <div class="note-main">
+    <% if (body) { %>
     <div class="note-tabs" role="tablist" aria-label="About these notes" data-tabs>
       <button type="button" role="tab" id="tab-desc" aria-controls="panel-desc" aria-selected="true">Description</button>
       <button type="button" role="tab" id="tab-author" aria-controls="panel-author" aria-selected="false" tabindex="-1">About the author</button>
     </div>
     <section class="tab-panel" id="panel-desc" role="tabpanel" aria-labelledby="tab-desc">
       <h2>About these notes</h2>
-      <div class="prose"><%= note.description %></div>
+      <div class="prose"><%= body %></div>
     </section>
-    <section class="tab-panel" id="panel-author" role="tabpanel" aria-labelledby="tab-author">
-      <h2 class="sr-only">About the author</h2>
+    <% } %>
+    <section class="tab-panel" id="panel-author" <%- body ? 'role="tabpanel" aria-labelledby="tab-author"' : '' %>>
+      <h2 class="<%= body ? 'sr-only' : '' %>">About the author</h2>
       <div class="author">
         <%- include('partials/avatar', { person: author }) %>
         <div>
           <h3><a href="<%= storeUrl(author) %>"><%= author.display_name %></a></h3>
           <% if (author.verification_status === 'approved') { %><%- include('partials/verified') %><% } %>
+          <% if (rt.count) { %><p><a class="note-rating" href="<%= storeUrl(author) %>#reviews"><span class="note-stars" aria-hidden="true"><%= starsText(rt.avg) %></span> <strong><%= rt.avg.toFixed(1) %></strong> <span class="muted">(<%= rt.count %> <%= rt.count === 1 ? 'review' : 'reviews' %>)</span></a></p><% } %>
           <p><%= author.degree %>, <%= author.university %><%= author.graduation_year ? ' (' + author.graduation_year + ')' : '' %></p>
           <% if (author.headline) { %><p class="muted"><%= author.headline %></p><% } %>
           <p><a href="<%= storeUrl(author) %>">See all notes by <%= author.display_name %> →</a></p>
@@ -125,7 +134,7 @@
       <p class="buy-sub">Once-off. Instant PDF download.</p>
 
       <dl class="note-facts">
-        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 20.5c1-3.8 4-5.8 7.5-5.8s6.5 2 7.5 5.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Seller</dt><% var sellerWords = String(author.display_name).trim().split(/\s+/), sellerLast = sellerWords.pop(); %><dd class="fact-seller"><a href="<%= storeUrl(author) %>"><%= sellerWords.join(' ') %><%= sellerWords.length ? ' ' : '' %><span class="nowrap"><%= sellerLast %><% if (author.verification_status === 'approved') { %><svg class="fact-tick" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Verified academic"><title>Verified academic</title><circle cx="8" cy="8" r="7.5" fill="currentColor"/><path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><% } %></span></a></dd></div>
+        <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 20.5c1-3.8 4-5.8 7.5-5.8s6.5 2 7.5 5.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Seller</dt><% var sellerWords = String(author.display_name).trim().split(/\s+/), sellerLast = sellerWords.pop(); %><dd class="fact-seller"><a href="<%= storeUrl(author) %>"><%= sellerWords.join(' ') %><%= sellerWords.length ? ' ' : '' %><span class="nowrap"><%= sellerLast %><% if (author.verification_status === 'approved') { %><svg class="fact-tick" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Verified academic"><title>Verified academic</title><circle cx="8" cy="8" r="7.5" fill="currentColor"/><path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><% } %></span></a><% if (rt.count) { %><a class="note-rating" href="<%= storeUrl(author) %>#reviews" aria-label="Rated <%= rt.avg.toFixed(1) %> out of 5 from <%= rt.count %> <%= rt.count === 1 ? 'review' : 'reviews' %>"><span class="note-stars" aria-hidden="true"><%= starsText(rt.avg) %></span> <strong><%= rt.avg.toFixed(1) %></strong> <span class="muted">(<%= rt.count %>)</span></a><% } %></dd></div>
         <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Subject</dt><dd><%= note.subject %></dd></div>
         <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 4l9 5.5 M5 10v8 M9.5 10v8 M14.5 10v8 M19 10v8 M3 20.5h18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Written for</dt><dd><%= note.university === 'Private institution' ? 'Private institution students' : note.university + ' students' %></dd></div>
         <div><dt><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z M6.5 11.5v4.2c1.4 1.4 3.4 2.3 5.5 2.3s4.1-.9 5.5-2.3v-4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg>Level</dt><dd><%= note.level %></dd></div>

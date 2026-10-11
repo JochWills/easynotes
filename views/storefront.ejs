@@ -35,6 +35,12 @@
       <div class="grid-notes">
         <% notes.forEach(function (n) { %><%- include('partials/note-card', { n: n }) %><% }) %>
       </div>
+    <% } else if (locals.isOwner) { %>
+      <%# The seller looking at their own storefront: what's still needed before notes show here %>
+      <% var next = author.verification_status !== 'approved' ? ['Once your degree is verified, the notes you publish show here for students.', '/seller', 'Go to your dashboard']
+           : !(locals.me && me.paystack_subaccount_code) ? ['Add your payout details and the notes you publish show here for students.', '/seller/payouts', 'Add payout details']
+           : ['Upload and publish your notes and they show here for students.', '/seller/notes/new', 'Upload notes']; %>
+      <div class="empty"><h3>Your notes will show here</h3><p><%= next[0] %></p><a class="btn" href="<%= next[1] %>"><%= next[2] %></a></div>
     <% } else { %>
       <div class="empty"><h3>No notes on sale yet</h3><p><%= author.display_name %> hasn’t published any notes. Check back soon.</p><a class="btn btn-ghost" href="/notes">Browse other notes</a></div>
     <% } %>

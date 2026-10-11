@@ -12,12 +12,23 @@ const { limit } = require('../lib/limits');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
 const flash = require('../lib/flash');
+const reviews = require('../lib/reviews');
 
 const router = express.Router();
 const PAGE_SIZE = 24;
 
 const cleanSearch = (q) =>
   String(q || '').replace(/["%,()*\\:]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+
+// Search looks for each word on its own, in any order, so "tax deferred" finds "Deferred Tax" and "FR EP" finds FREP.
+// A code typed without a space also matches it with one ("IAS12" finds "IAS 12").
+const SEARCH_COLUMNS = ['title', 'subject', 'module_code', 'description', 'university'];
+const FILLER_WORDS = new Set(['notes', 'note', 'the', 'and', 'for', 'of', 'in', 'on', 'a', 'an', 'to']);
+function searchWords(q) {
+  const words = [...new Set(q.toLowerCase().split(' ').filter(Boolean))];
+  return words.filter((w) => !FILLER_WORDS.has(w)).slice(0, 6); // just "notes": no filter, everything shows
+}
+const wordForms = (w) => [...new Set([w, w.replace(/([a-z])(\d)/g, '$1 $2')])];
 
 router.get('/', async (req, res) => {
   const { data: notes, count } = await publicNotes().order('created_at', { ascending: false }).limit(8);
@@ -60,7 +71,8 @@ router.get('/notes', async (req, res) => {
   const anyCase = (v) => v.replace(/[\\%_]/g, (c) => '\\' + c);
 
   let query = publicNotes();
-  if (q) query = query.or(['title', 'subject', 'module_code', 'description'].map((c) => `${c}.ilike."%${q}%"`).join(','));
+  // One condition per word (all must match), each true if the word is in any of the columns
+  for (const w of q ? searchWords(q) : []) query = query.or(SEARCH_COLUMNS.flatMap((c) => wordForms(w).map((f) => `${c}.ilike."%${f}%"`)).join(','));
   if (university) query = query.ilike('university', anyCase(university));
   if (level) query = query.eq('level', level);
   if (subject) query = query.ilike('subject', anyCase(subject)); // any capitals
@@ -157,11 +169,10 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
   if (!live && !isOwner && !isAdmin) return next();
   if (live && req.params.slug !== note.slug) return res.redirect(301, noteUrl(note));
 
-  const { data: more } = await publicNotes()
-    .eq('seller_id', note.seller_id)
-    .neq('id', note.id)
-    .order('sales_count', { ascending: false })
-    .limit(4);
+  const [{ data: more }, rev] = await Promise.all([
+    publicNotes().eq('seller_id', note.seller_id).neq('id', note.id).order('sales_count', { ascending: false }).limit(4),
+    reviews.forSeller(note.seller_id), // the seller's star rating, shown by their name
+  ]);
 
   res.render('note', {
     title: note.module_code ? `${note.module_code}: ${note.title}` : note.title,
@@ -174,6 +185,7 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     live,
     isOwner,
     more: more || [],
+    rating: reviews.combinedRating(rev.list, note.sellers.slug),
     previewImages: preview.previewUrls(note),
     previewPlan: preview.previewPlan(note.page_count),
   });
