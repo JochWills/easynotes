@@ -27,7 +27,8 @@ app.use(
         'style-src-attr': ["'unsafe-inline'"],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
         'img-src': ["'self'", 'data:', 'blob:', supabaseOrigin], // blob: previews a picture before it's uploaded
-        'connect-src': ["'self'", 'https://*.paystack.co', 'https://*.paystack.com', 'https://cloud.umami.is', 'https://api-gateway.umami.dev'],
+        // Umami's script sends visits to gateway.umami.is; without it every visit was blocked and nothing was counted
+        'connect-src': ["'self'", 'https://*.paystack.co', 'https://*.paystack.com', 'https://cloud.umami.is', 'https://gateway.umami.is', 'https://api-gateway.umami.dev'],
         'frame-src': ['https://checkout.paystack.com', 'https://*.paystack.co', 'https://*.paystack.com'],
         // Form posts redirect to Paystack checkout and to signed Supabase download links
         'form-action': ["'self'", 'https://checkout.paystack.com', supabaseOrigin],
