@@ -257,16 +257,42 @@
     });
   });
 
-  // Copy buttons
+  // Copy buttons. Some in-app browsers (WhatsApp, Instagram) block the clipboard: then try the older way, and if
+  // that fails too, say so and select the link so it can be copied by hand.
+  var copyOldWay = function (text, near) {
+    var t = document.createElement('textarea');
+    t.value = text;
+    t.setAttribute('readonly', '');
+    t.style.position = 'fixed';
+    t.style.opacity = '0';
+    (near.closest('dialog') || document.body).appendChild(t); // inside an open pop-up, the rest of the page can't be selected
+    t.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) {}
+    t.remove();
+    return ok ? Promise.resolve() : Promise.reject();
+  };
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
-        var target = b.querySelector('[data-copy-label]') || b;
-        var label = target.textContent;
-        target.textContent = 'Copied!';
+      var text = b.getAttribute('data-copy');
+      var copied = navigator.clipboard && window.isSecureContext
+        ? navigator.clipboard.writeText(text).catch(function () { return copyOldWay(text, b); })
+        : copyOldWay(text, b);
+      var target = b.querySelector('[data-copy-label]') || b;
+      var label = target.getAttribute('data-label') || target.textContent;
+      target.setAttribute('data-label', label);
+      var say = function (msg, ms) {
+        target.textContent = msg;
+        setTimeout(function () { target.textContent = label; b.classList.remove('is-copied'); }, ms);
+      };
+      copied.then(function () {
         b.classList.add('is-copied');
-        setTimeout(function () { target.textContent = label; b.classList.remove('is-copied'); }, 1800);
+        say('Copied!', 1800);
+      }, function () {
+        var area = b.closest('.card, dialog');
+        var box = b.parentNode.querySelector('[data-select-all]') || (area && area.querySelector('[data-select-all]'));
+        say(box ? 'Copy it from the box' : 'Couldn’t copy', 3000);
+        if (box) { box.focus(); box.select(); }
       });
     });
   });
@@ -1328,8 +1354,10 @@
     xhr.onload = function () {
       var type = xhr.getResponseHeader('Content-Type') || '';
       if (/json/.test(type)) {
-        var next = null;
-        try { next = JSON.parse(xhr.responseText).redirect; } catch (err) {}
+        var reply = {};
+        try { reply = JSON.parse(xhr.responseText) || {}; } catch (err) {}
+        if (reply.error) return fail(reply.error); // refused before anything was saved (too many uploads, etc.)
+        var next = reply.redirect || null;
         finish(true);
         Array.prototype.forEach.call(list.children, function (li) { li.className = 'is-done'; });
         setPct(100);

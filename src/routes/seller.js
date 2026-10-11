@@ -47,6 +47,8 @@ const MB = upload.MB;
 // Upload errors are handled before CSRF so an oversize file gives a useful message.
 const afterUpload = (back) => (req, res, next) => {
   if (req.uploadError) {
+    // The upload pop-up shows the message itself (a redirect would look like the upload worked)
+    if (req.get('X-Upload') === 'progress') return res.status(400).json({ error: req.uploadError });
     flash(req, 'error', req.uploadError);
     return res.redirect(back(req));
   }
