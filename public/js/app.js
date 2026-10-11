@@ -829,6 +829,16 @@
     if (location.hash === '#buy') open(false);
   });
 
+  // Note page (desktop): the price box and the report link under it follow the page down. When together they're taller
+  // than the window (a small laptop, or once the buy fields are open), they stick by their bottom edge instead, so the
+  // Pay button and Report link stay reachable.
+  document.querySelectorAll('[data-buy-stick]').forEach(function (el) {
+    var fit = function () { el.style.top = Math.min(88, window.innerHeight - el.offsetHeight - 16) + 'px'; };
+    fit();
+    window.addEventListener('resize', fit);
+    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(el);
+  });
+
   // Checkout opens Paystack's pop-up on the page (Apple Pay shows there on Safari). If anything about it fails,
   // the buyer goes to Paystack's own payment page instead, exactly as without JavaScript.
   var paystackLoaded = null;

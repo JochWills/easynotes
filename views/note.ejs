@@ -126,6 +126,7 @@
 
   <div class="note-side">
     <div class="buy-track">
+    <div class="buy-stick" data-buy-stick>
     <aside class="buy-box" id="buy" aria-label="Buy these notes">
       <div class="buy-top">
         <span class="price"><%= rand(note.price_cents) %></span>
@@ -193,9 +194,9 @@
       <% } %>
       <p class="buy-indie">Independent notes. Not affiliated with or endorsed by <%= note.university === 'Private institution' ? 'any institution' : note.university %>.</p>
     </aside>
-    </div>
-
     <% if (live) { %><p class="fineprint note-report"><a href="/note/<%= note.id %>/report">Report these notes</a></p><% } %>
+    </div>
+    </div>
   </div>
 
   <% if (more.length) { %>
