@@ -64,6 +64,8 @@ router.use(async (req, res, next) => {
     pendingUpdates({ head: true }),
     openReports(),
   ]);
+  res.locals.pendingSellers = count || 0;
+  res.locals.pendingUpdates = updates || 0;
   res.locals.pendingCount = (count || 0) + (updates || 0);
   res.locals.reportCount = open ? open.length : 0;
   next();
@@ -323,7 +325,11 @@ router.get('/orders', async (req, res) => {
 
 router.post('/orders/:reference/reset-downloads', async (req, res) => {
   const reference = str(req.params.reference, 40).toUpperCase();
-  await db.from('orders').update({ download_count: 0 }).eq('reference', reference);
+  const { data: done } = await db.from('orders').update({ download_count: 0 }).eq('reference', reference).eq('status', 'paid').select('reference');
+  if (!done || !done.length) {
+    flash(req, 'error', `No paid order with the reference ${reference}.`);
+    return res.redirect(`/admin/orders?reference=${encodeURIComponent(reference)}`);
+  }
   flash(req, 'ok', `Download limit reset for ${reference}.`);
   events.log('order.downloads_reset', { reference }, req.user.email);
   res.redirect(`/admin/orders?reference=${encodeURIComponent(reference)}`);
@@ -331,25 +337,38 @@ router.post('/orders/:reference/reset-downloads', async (req, res) => {
 
 /* ---------- Money ---------- */
 
+// "2026-10" for a sale, by the South African calendar (a sale at 00:30 on 1 November is November's)
+const saMonth = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Africa/Johannesburg' }).slice(0, 7);
+
+// Every paid order (Supabase sends at most 1000 rows a request, so it's fetched in pages)
+async function allPaidOrders() {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from('orders').select('amount_cents,platform_fee_cents,seller_earnings_cents,paid_at,seller_id,sellers(display_name,slug)').eq('status', 'paid').order('paid_at', { ascending: false }).order('id').range(from, from + 999);
+    if (error) throw error; // a partial list would show totals that are quietly too low
+    out.push(...data);
+    if (data.length < 1000) return out;
+  }
+}
+
 router.get('/money', async (req, res) => {
-  const [{ data: orders }, { data: noPayouts }] = await Promise.all([
-    db.from('orders').select('amount_cents,platform_fee_cents,seller_earnings_cents,paid_at,seller_id,sellers(display_name,slug)').eq('status', 'paid').order('paid_at', { ascending: false }).limit(10000),
+  const [paid, { data: noPayouts }] = await Promise.all([
+    allPaidOrders(),
     db.from('sellers').select('id,display_name,verified_at,users(email)').eq('verification_status', 'approved').is('paystack_subaccount_code', null).order('verified_at'),
   ]);
-  const paid = orders || [];
 
-  // Last 12 months, newest first, including months with no sales.
+  // Last 12 months (South African time), newest first, including months with no sales.
   const months = [];
-  const now = new Date();
+  const [year, month] = saMonth(new Date()).split('-').map(Number);
   for (let i = 0; i < 12; i++) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    const d = new Date(Date.UTC(year, month - 1 - i, 1));
     months.push({ key: d.toISOString().slice(0, 7), label: d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }), sales: 0, gross: 0, fees: 0, payouts: 0 });
   }
   const byMonth = Object.fromEntries(months.map((m) => [m.key, m]));
   const bySeller = {};
   const all = { sales: 0, gross: 0, fees: 0, payouts: 0 };
   for (const o of paid) {
-    for (const bucket of [byMonth[String(o.paid_at).slice(0, 7)], all]) {
+    for (const bucket of [byMonth[saMonth(o.paid_at)], all]) {
       if (!bucket) continue;
       bucket.sales += 1;
       bucket.gross += o.amount_cents;
@@ -369,7 +388,6 @@ router.get('/money', async (req, res) => {
     months,
     sellers: Object.values(bySeller).sort((a, b) => b.gross - a.gross),
     noPayouts: noPayouts || [],
-    capped: paid.length >= 10000,
     feeBearerText: config.feeBearer === 'account' ? 'paid by EasyNotes out of its share' : 'deducted from the seller’s share',
   });
 });

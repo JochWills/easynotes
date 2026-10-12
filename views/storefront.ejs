@@ -162,7 +162,7 @@
         <% if (author.headline) { %><p class="about-headline"><strong><%= author.headline %></strong></p><% } %>
         <% if (author.bio) { %><p class="prose"><%= author.bio %></p><% } %>
         <% if (!author.headline && !author.bio) { %><p class="muted"><%= author.display_name %> hasn’t written an introduction yet.</p><% } %>
-        <% if (author.created_at) { %><p class="muted small about-since">Selling on EasyNotes since <%= new Date(author.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) %></p><% } %>
+        <% if (author.created_at) { %><p class="muted small about-since">Selling on EasyNotes since <%= new Date(author.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Africa/Johannesburg' }) %></p><% } %>
       </div>
       <% if (locals.quals && quals.length) { %>
         <div class="card about-card">

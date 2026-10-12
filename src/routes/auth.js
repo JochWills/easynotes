@@ -83,7 +83,7 @@ router.post('/signup', limiter, async (req, res) => {
 });
 
 router.get('/login', (req, res) => {
-  if (req.user) return res.redirect(req.user.role === 'admin' ? '/admin' : '/seller');
+  if (req.user) return res.redirect(safeNext(req.query.next) || (req.user.role === 'admin' ? '/admin' : '/seller'));
   res.render('login', { title: 'Log in', email: '', error: null, next: safeNext(req.query.next) || '' });
 });
 

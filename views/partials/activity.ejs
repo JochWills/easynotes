@@ -24,6 +24,7 @@
     case 'note.flagged': return 'Automatic check flagged “' + (d.title || '') + '”: ' + (d.flags || []).join(', ');
     case 'note.reported': return (d.reason === 'copyright_mine' ? 'Takedown request for “' : 'Report about “') + (d.title || '') + '”';
     case 'note.deleted': return 'Seller deleted notes “' + (d.title || '') + '”';
+    case 'seller.account_deleted': return (d.display_name || 'A seller') + ' deleted their account' + (d.sold_notes ? ' (' + d.sold_notes + ' sold ' + (d.sold_notes === 1 ? 'set' : 'sets') + ' of notes kept for past buyers)' : '');
     case 'seller.payouts_changed': return (d.seller || 'A seller') + (d.first ? ' set up payouts to ' : ' changed payouts to ') + (d.bank || 'a bank') + ' ••••' + (d.last4 || '');
     case 'seller.slug_changed': return (d.from ? '/' + d.from : 'A storefront') + ' moved to /' + (d.to || '');
     case 'payment.unmatched': return 'Payment ' + d.reference + ' came in with no orders (see Reports)';
