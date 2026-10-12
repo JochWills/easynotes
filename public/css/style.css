@@ -1424,7 +1424,13 @@ dialog.modal > p { margin: 0 0 18px; }
 
 /* Share my storefront: button row and pop-up */
 .dash-title-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.store-owner-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.store-head > div:nth-child(2) { flex: 1 1 320px; min-width: 0; }
+.store-actions { display: flex; gap: 10px; align-self: flex-start; margin-top: 8px; }
+.store-actions .btn { display: inline-flex; align-items: center; gap: 7px; }
+@media (max-width: 700px) {
+  .store-actions { width: 100%; margin-top: 0; }
+  .store-actions .btn { flex: 1; justify-content: center; }
+}
 .share-modal .modal-x { border: 0; background: none; cursor: pointer; }
 .share-modal > p { margin: 0 0 16px; }
 .share-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--page); }

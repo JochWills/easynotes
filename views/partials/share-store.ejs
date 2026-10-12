@@ -1,9 +1,10 @@
-<%# "Share my storefront" button and its pop-up. Pass seller (the storefront owner) and optionally btnClass. %>
-<% var shareSeller = locals.seller; %>
+<%# Share button for a storefront and its pop-up. Pass seller (the storefront owner); optionally btnClass, label,
+    and visitor: true when someone else's storefront is being shared (different wording). %>
+<% var shareSeller = locals.seller; var visitor = !!locals.visitor; %>
 <% var shareLink = (locals.baseUrl || 'https://easynotes.co.za') + storeUrl(shareSeller); %>
-<% var shareText = 'Check out my study notes on EasyNotes'; %>
+<% var shareText = visitor ? 'Study notes by ' + shareSeller.display_name + ' on EasyNotes' : 'Check out my study notes on EasyNotes'; %>
 <button class="btn <%= locals.btnClass || 'btn-ghost btn-sm' %>" type="button" data-dialog-open="share-dialog">
   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="2"/></svg>
-  Share my storefront
+  <%= locals.label || 'Share my storefront' %>
 </button>
-<%- include('share-dialog', { id: 'share-dialog', heading: 'Share your storefront', intro: 'Post it in study groups, class chats and on your socials. Anyone with the link can see and buy your notes.', link: shareLink, text: shareText, cardTitle: shareSeller.display_name, cardIcon: include('avatar', { person: shareSeller, cls: 'avatar-sm' }) }) %>
+<%- include('share-dialog', { id: 'share-dialog', heading: visitor ? 'Share this storefront' : 'Share your storefront', intro: visitor ? 'Send it to classmates taking the same modules.' : 'Post it in study groups, class chats and on your socials. Anyone with the link can see and buy your notes.', link: shareLink, text: shareText, cardTitle: shareSeller.display_name, cardIcon: include('avatar', { person: shareSeller, cls: 'avatar-sm' }) }) %>
