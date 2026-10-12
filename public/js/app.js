@@ -1011,13 +1011,15 @@
         list.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
-    // The blue underline slides to the tab under the pointer, and back to the open tab when the pointer leaves
+    // The blue underline slides to the tab under the pointer, and back to the open tab when the pointer leaves.
+    // Only on underlined tab strips (.note-tabs), not on switches like How it works' "I'm buying / I'm selling".
     var ink = document.createElement('span');
+    var underlined = list.classList.contains('note-tabs');
     ink.className = 'tab-ink';
     ink.setAttribute('aria-hidden', 'true');
-    list.appendChild(ink);
+    if (underlined) list.appendChild(ink);
     var current = function () { return tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]; };
-    var inkTo = function (t) { ink.style.width = t.offsetWidth + 'px'; ink.style.transform = 'translateX(' + t.offsetLeft + 'px)'; };
+    var inkTo = function (t) { if (!underlined) return; ink.style.width = t.offsetWidth + 'px'; ink.style.transform = 'translateX(' + t.offsetLeft + 'px)'; };
     inkTo(current());
     ink.addEventListener('tab-change', function () { inkTo(current()); });
     requestAnimationFrame(function () { list.classList.add('ink-on'); });
