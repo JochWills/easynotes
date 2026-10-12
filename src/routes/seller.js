@@ -393,13 +393,18 @@ async function renderPayouts(res, req, values, errors, status = 200, changeOpen 
   });
 }
 
-router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}, 200, req.query.change === '1'));
+router.get('/payouts', (req, res) => renderPayouts(res, req, { business_name: req.seller.business_name || '', bank_code: req.seller.bank_code || '' }, {}, 200, req.query.change === '1' && !req.seller.payout_check_since));
 
 // It checks the password, so it's rate limited like the other password forms.
 const payoutsLimiter = limit(15, 20);
 
 router.post('/payouts', payoutsLimiter, async (req, res) => {
   const s = req.seller;
+  // While a new account is being verified it can't be swapped (that would restart the check)
+  if (s.paystack_subaccount_code && s.payout_check_since) {
+    flash(req, 'info', 'Your bank account is still being verified. You can change it once that’s done.');
+    return res.redirect('/seller/payouts');
+  }
   const values = {
     business_name: str(req.body.business_name, 100),
     bank_code: str(req.body.bank_code, 20),

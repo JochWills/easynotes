@@ -16,7 +16,7 @@
       <li class="<%= payouts ? 'done' : '' %>">
         <span class="num"><%= payouts ? '✓' : '2' %></span>
         <div><h3>Add your payout account</h3><p><%= payouts ? 'Paying into ' + me.bank_name + ' ••••' + me.account_number_last4 + (me.payout_check_since ? ' (being verified).' : '.') : me.payout_rejected_note ? 'Your last bank details weren’t accepted. Add new ones to put your notes back on sale.' : 'Tell us where to pay your share of each sale.' %></p></div>
-        <a class="btn btn-sm <%= payouts ? 'btn-ghost' : '' %>" href="/seller/payouts"><%= payouts ? 'Change' : 'Add' %></a>
+        <a class="btn btn-sm <%= payouts ? 'btn-ghost' : '' %>" href="/seller/payouts"><%= payouts ? (me.payout_check_since ? 'View' : 'Change') : 'Add' %></a>
       </li>
       <li class="<%= hasNotes ? 'done' : '' %>">
         <span class="num"><%= hasNotes ? '✓' : '3' %></span>

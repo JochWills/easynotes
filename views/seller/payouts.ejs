@@ -71,11 +71,11 @@
         <strong><%= me.bank_name %> ••••<%= me.account_number_last4 %> <% if (me.payout_check_since) { %><span class="pill pill-wait">Being verified</span><% } else { %><span class="pill pill-ok">Verified</span><% } %></strong>
         <span class="small muted"><%= me.business_name %></span>
       </div>
-      <a class="btn btn-ghost btn-sm" href="/seller/payouts?change=1" data-dialog-open="bank-dialog">Change bank details</a>
+      <% if (!me.payout_check_since) { %><a class="btn btn-ghost btn-sm" href="/seller/payouts?change=1" data-dialog-open="bank-dialog">Change bank details</a><% } %>
     </div>
 
     <% if (me.payout_check_since) { %>
-      <div class="alert alert-info" role="status">Paystack checks every new bank account before paying into it. This usually takes a working day or two. Sales you make in the meantime are safe: your share is paid out as soon as the check is done.</div>
+      <div class="alert alert-info" role="status">Paystack checks every new bank account before paying into it. This usually takes a working day or two. Sales you make in the meantime are safe: your share is paid out as soon as the check is done. You can change your bank details again once it’s verified.</div>
     <% } %>
 
     <div class="stats payout-stats">
@@ -113,6 +113,7 @@
       <% } %>
     </section>
 
+    <% if (!me.payout_check_since) { %>
     <dialog class="modal" id="bank-dialog" aria-labelledby="bank-dialog-title" <%= locals.changeOpen ? 'open data-open-on-load' : '' %>>
       <div class="modal-head">
         <h2 id="bank-dialog-title">Change bank details</h2>
@@ -121,6 +122,7 @@
       <p class="muted small">Currently paying into <%= me.bank_name %> ••••<%= me.account_number_last4 %>. Your next payouts go to the new account once you save.</p>
       <% bankForm(); %>
     </dialog>
+    <% } %>
   <% } %>
 </div>
 <%- include('../partials/bottom') %>
