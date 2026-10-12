@@ -64,6 +64,7 @@
           <header class="form-section-head">
             <h2 id="sec-file">Your PDF</h2>
             <p class="muted"><%= editing ? 'Leave this alone to keep the current file. A new file goes to past buyers too.' : 'This is what buyers download. They see a preview of the first 2½ pages first.' %></p>
+            <% if (!editing) { %><p class="small"><a href="/digital-notes" target="_blank" rel="noopener">Handwritten notes? Turn them into a PDF with AI</a><span class="sr-only"> (opens in a new tab)</span></p><% } %>
           </header>
           <div class="field <%= errors.pdf ? 'has-error' : '' %>">
             <% if (editing && note.file_path) { %>

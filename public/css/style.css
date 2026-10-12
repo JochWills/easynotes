@@ -1731,3 +1731,29 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
   .mini-list a { padding: 12px 14px; }
   .bar-cell { min-width: 0; }
 }
+
+/* Seller guide: handwritten notes to PDF with AI */
+.dn-hero { padding-bottom: 56px; }
+.dn-body { padding-top: 40px; padding-bottom: 80px; }
+.dn-tools { margin: 0 auto 28px; text-align: center; color: var(--ink-soft); }
+.dn-steps { list-style: none; margin: 0; padding: 0; counter-reset: dn; display: grid; gap: 16px; }
+.dn-steps > li { position: relative; counter-increment: dn; padding: 26px 28px 26px 84px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.dn-steps > li::before { content: counter(dn); position: absolute; left: 26px; top: 24px; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--blue); color: #fff; font-family: var(--display); font-weight: 700; box-shadow: 0 0 0 5px var(--blue-soft); }
+.dn-steps h2 { margin: 6px 0 8px; font-size: 1.25rem; }
+.dn-steps p { color: var(--ink-soft); }
+.dn-steps p:last-child { margin-bottom: 0; }
+.dn-steps .btn { margin-top: 4px; }
+.dn-tips { margin: 0; padding-left: 20px; color: var(--ink-soft); display: grid; gap: 4px; }
+.ai-prompt { margin: 0 0 12px; border: 1px solid #F6E3A1; border-radius: 12px; background: var(--hi-soft); overflow: hidden; }
+.ai-prompt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 10px 8px 16px; border-bottom: 1px solid #F6E3A1; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--wait); }
+.ai-prompt-head .btn { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; }
+.ai-prompt p { margin: 0; padding: 14px 16px; color: var(--ink) !important; font-size: .97rem; line-height: 1.55; }
+.dn-rules { margin-top: 36px; padding: 26px 28px; background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--blue); border-radius: var(--radius); }
+.dn-rules h2 { margin: 0 0 12px; font-size: 1.25rem; }
+.dn-rules .checklist { margin: 0 0 10px; }
+.dn-rules p { margin: 8px 0 0; }
+@media (max-width: 560px) {
+  .dn-steps > li { padding: 22px 18px 22px 18px; }
+  .dn-steps > li::before { position: static; margin-bottom: 10px; }
+  .dn-rules { padding: 22px 18px; }
+}

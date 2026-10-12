@@ -20,7 +20,7 @@
       </li>
       <li class="<%= hasNotes ? 'done' : '' %>">
         <span class="num"><%= hasNotes ? '✓' : '3' %></span>
-        <div><h3>Upload your first notes</h3><p><%= verified ? 'Add a PDF, price it and publish.' : 'Available once your degree is verified.' %></p></div>
+        <div><h3>Upload your first notes</h3><p><%= verified ? 'Add a PDF, price it and publish.' : 'Available once your degree is verified.' %> <a href="/digital-notes">Handwritten notes? Use our AI guide.</a></p></div>
         <% if (verified) { %><a class="btn btn-sm" href="/seller/notes/new">Upload</a><% } %>
       </li>
     </ol>

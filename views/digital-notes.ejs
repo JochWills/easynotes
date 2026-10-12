@@ -1,0 +1,74 @@
+<%- include('partials/top') %>
+<% var copyIco = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+   var prompt = function (id, text) { %>
+    <div class="ai-prompt">
+      <div class="ai-prompt-head"><span>Copy this into the AI</span><button class="btn btn-ghost btn-sm" type="button" data-copy="<%= text %>"><%- copyIco %><span data-copy-label>Copy</span></button></div>
+      <p id="<%= id %>"><%= text %></p>
+    </div>
+<% }; %>
+<section class="hw-hero dn-hero">
+  <div class="wrap">
+    <p class="eyebrow">Seller guide</p>
+    <h1>Turn your handwritten notes into a PDF that sells</h1>
+    <p class="hw-lede">A free AI tool can type up the notes you already have, add exam traps and hand you a finished PDF to upload. Plan on about 15 minutes per module.</p>
+  </div>
+</section>
+
+<section class="wrap narrow dn-body">
+  <p class="dn-tools">Works with the free versions of <strong>ChatGPT</strong>, <strong>Claude</strong> or <strong>Gemini</strong>, on your phone or computer.</p>
+
+  <ol class="dn-steps">
+    <li>
+      <h2>Photograph your pages</h2>
+      <p>Use your phone camera. Good photos mean fewer mistakes to fix later.</p>
+      <ul class="dn-tips">
+        <li>Daylight or a bright room, with no shadow from your phone</li>
+        <li>Page flat on a plain, dark surface, filling the screen</li>
+        <li>One page per photo, in order</li>
+        <li>Zoom in on one photo: if you can read it, the AI can too</li>
+      </ul>
+    </li>
+    <li>
+      <h2>Ask the AI to type them up</h2>
+      <p>Start a new chat, attach your photos (a few pages at a time works best) and paste this:</p>
+      <% prompt('p-type', 'Type out these handwritten notes exactly as written. Keep my headings, structure, examples and calculations. Format them neatly with headings, bullet points and tables where I used them, and write formulas properly. Don’t add anything that isn’t on the page. If you can’t read a word, write [unclear].'); %>
+      <p class="small muted">Send the next photos with “Carry on with these pages, same format” until you’re done.</p>
+    </li>
+    <li>
+      <h2>Check every page</h2>
+      <p>AI misreads handwriting, especially <strong>numbers, formulas and figures</strong>. Compare the typed version with your pages, fix every [unclear], and correct anything it got wrong. One wrong number in a worked example costs you a bad review.</p>
+    </li>
+    <li>
+      <h2>Add exam traps and tips</h2>
+      <p>This is what makes your notes worth paying for. Ask the AI to add extra help around what you wrote:</p>
+      <% prompt('p-traps', 'After each topic in my notes, add a short “Exam traps” box with the mistakes students commonly make on this topic and how to avoid them, and a “Remember” line with the key point to memorise. Then add a one-page summary at the end. Keep my own notes exactly as they are.'); %>
+      <p class="small muted">Read what it adds. Keep only what you know is right from writing the exam yourself, and add your own traps too: you know where marks were lost.</p>
+    </li>
+    <li>
+      <h2>Ask the AI for the PDF</h2>
+      <p>Get the AI to make the finished file, then download it:</p>
+      <% prompt('p-pdf', 'Turn the finished notes into a downloadable PDF file for A4. Start with a cover page showing the module code and name: [your module code and name]. Then a contents page, then the notes with clear headings, page numbers, and the Exam traps boxes highlighted. Make it clean and easy to read.'); %>
+      <p class="small muted">Replace the part in brackets first. If the AI shows the notes as text instead of a file, ask it to “create this as a PDF file I can download”.</p>
+    </li>
+    <li>
+      <h2>Upload it on EasyNotes</h2>
+      <p>Open the PDF and check it once more, then upload it, set your price and publish. Students see the first 2½ pages as a free preview, so your cover, contents and first topic are your shop window.</p>
+      <a class="btn btn-hi" href="<%= locals.me ? '/seller/notes/new' : '/sell' %>"><%= locals.me ? 'Upload your notes' : 'Start selling' %> <span aria-hidden="true">→</span></a>
+    </li>
+  </ol>
+
+  <aside class="dn-rules" aria-labelledby="dn-rules-h">
+    <h2 id="dn-rules-h">Using AI the right way</h2>
+    <ul class="checklist checklist-dark">
+      <li>Use AI to type up, format and add exam traps to <strong>your own notes</strong></li>
+      <li>Check everything it writes: you’re responsible for what you sell</li>
+      <li>Remove your name, student number and anyone else’s details</li>
+    </ul>
+    <ul class="checklist checklist-dark checklist-no">
+      <li>Don’t sell notes the AI wrote from scratch, or for modules you didn’t take</li>
+      <li>Don’t photograph textbook pages, lecture slides or past exam papers. Those aren’t allowed, even typed up</li>
+    </ul>
+    <p class="small muted">The full rules are in the <a href="/seller-terms">seller terms</a>.</p>
+  </aside>
+</section>
+<%- include('partials/bottom') %>

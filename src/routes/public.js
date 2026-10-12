@@ -254,7 +254,7 @@ router.get('/sitemap.xml', async (req, res) => {
   if (notesErr) throw notesErr;
   if (sellersErr) throw sellersErr;
   const urls = [
-    ...['/', '/notes', '/how-it-works', '/sell', '/terms', '/seller-terms', '/privacy'].map((p) => ({ loc: p })),
+    ...['/', '/notes', '/how-it-works', '/sell', '/digital-notes', '/terms', '/seller-terms', '/privacy'].map((p) => ({ loc: p })),
     ...(notes || []).map((n) => ({ loc: noteUrl(n), lastmod: n.updated_at })),
     ...(sellers || []).map((s) => ({ loc: storeUrl(s) })),
   ];
@@ -267,6 +267,7 @@ router.get('/sitemap.xml', async (req, res) => {
 
 router.get('/how-it-works', (req, res) => res.render('how', { title: 'How EasyNotes works', description: 'How buying study notes on EasyNotes works: preview pages for free, pay once by card, download the PDF straight away. Every seller is a verified academic.' }));
 router.get('/sell', (req, res) => res.render('sell', { title: 'Sell your notes' }));
+router.get('/digital-notes', (req, res) => res.render('digital-notes', { title: 'Turn handwritten notes into a PDF with AI', description: 'A step-by-step guide for EasyNotes sellers: use free AI to type up your handwritten notes, add exam traps and get a finished PDF to sell.' }));
 router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of sale' }));
 router.get('/seller-terms', (req, res) => res.render('seller-terms', { title: 'Seller terms' }));
 router.get('/privacy', (req, res) => res.render('privacy', { title: 'Privacy policy' }));
