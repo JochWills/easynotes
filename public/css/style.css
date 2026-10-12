@@ -1768,3 +1768,19 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
   .dn-steps > li::before { position: static; margin-bottom: 10px; }
   .dn-rules { padding: 22px 18px; }
 }
+
+/* Storefront: tabs on the left, sort and subject filter on the right of the same strip */
+.store-tabs-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 8px; box-shadow: inset 0 -1px var(--rule); }
+.store-tabs-bar .note-tabs { margin-top: 0; box-shadow: none; min-width: 0; }
+.store-tools { display: flex; align-items: center; gap: 10px; flex: none; }
+.store-tools[hidden] { display: none; }
+.store-tools .sort-by .dd, .store-tools .sort-by select { width: 190px; }
+.note-slot { display: grid; }
+.note-slot[hidden] { display: none; }
+@media (max-width: 700px) {
+  .store-tabs-bar { flex-wrap: wrap; box-shadow: none; }
+  .store-tabs-bar .note-tabs { width: 100%; box-shadow: inset 0 -1px var(--rule); }
+  .store-tools { width: 100%; padding-top: 6px; }
+  .store-tools .sort-by { flex: 1; }
+  .store-tools .sort-by .dd, .store-tools .sort-by select { width: 100%; }
+}
