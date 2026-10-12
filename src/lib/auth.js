@@ -18,7 +18,9 @@ async function loadUser(req, res, next) {
   const id = req.session && req.session.userId;
   if (!id) return next();
 
-  const { data: row } = await db.from('users').select('id,email,role,password_hash,sellers(*)').eq('id', id).maybeSingle();
+  const { data: row, error } = await db.from('users').select('id,email,role,password_hash,sellers(*)').eq('id', id).maybeSingle();
+  // The database didn't answer (a hiccup or a timeout): show an error, don't log the person out
+  if (error) return next(new Error(`Couldn't load the logged-in user: ${error.message}`));
   const tag = row && passwordTag(row.password_hash);
   // Sessions from before the tag existed adopt it now, so the change didn't log everyone out.
   if (row && !req.session.pw) req.session.pw = tag;

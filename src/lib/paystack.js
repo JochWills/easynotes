@@ -11,6 +11,7 @@ async function call(method, path, body) {
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(20000), // a stalled call fails instead of hanging the page
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.status === false) {

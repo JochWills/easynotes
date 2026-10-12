@@ -71,7 +71,7 @@ const checks = {
   async email() {
     if (!config.resendApiKey) return { status: 'warn', detail: 'RESEND_API_KEY not set, so no emails are sent.', fix: 'Add RESEND_API_KEY in Render → Environment.' };
     const fromDomain = (config.mailFrom.match(/@([^>\s]+)/) || [])[1];
-    const res = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${config.resendApiKey}` } });
+    const res = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${config.resendApiKey}` }, signal: AbortSignal.timeout(8000) });
     if (res.status === 401 || res.status === 403) {
       const body = await res.text();
       if (/restricted|sending/i.test(body)) return { status: 'ok', detail: `Sending key set. Sending from ${config.mailFrom}. Use “Send test email” to confirm delivery.` };

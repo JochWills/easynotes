@@ -13,6 +13,7 @@ async function send({ to, subject, html, text, replyTo }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${config.resendApiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: config.mailFrom, to, reply_to: replyTo || config.supportEmail, subject, html, text }),
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   return true;
