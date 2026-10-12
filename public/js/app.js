@@ -1021,11 +1021,15 @@
     inkTo(current());
     ink.addEventListener('tab-change', function () { inkTo(current()); });
     requestAnimationFrame(function () { list.classList.add('ink-on'); });
-    list.addEventListener('mouseleave', function () { inkTo(current()); });
+    // Off a tab (into the gap between tabs, or the empty strip past the last one) it goes back to the open tab.
+    // The short wait stops it twitching back while the pointer crosses the gap to the next tab.
+    var back;
+    var goBack = function () { clearTimeout(back); back = setTimeout(function () { inkTo(current()); }, 90); };
     window.addEventListener('resize', function () { inkTo(current()); });
     if (document.fonts) document.fonts.ready.then(function () { inkTo(current()); });
     tabs.forEach(function (t, i) {
-      t.addEventListener('mouseenter', function () { inkTo(t); });
+      t.addEventListener('mouseenter', function () { clearTimeout(back); inkTo(t); });
+      t.addEventListener('mouseleave', goBack);
       t.addEventListener('click', function () {
         select(t);
         inkTo(t);
