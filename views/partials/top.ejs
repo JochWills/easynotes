@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Caveat:wght@600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=103">
+  <link rel="stylesheet" href="/css/style.css?v=104">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
 <body>
@@ -46,8 +46,8 @@
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
       <% if (cartCount) { %><span class="cart-count" aria-hidden="true"><%= cartCount %></span><% } %>
     </a>
-    <% var unread = locals.unreadCount || 0; %>
-    <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only" aria-controls="site-menu" aria-label="Menu<%= unread ? ', ' + unread + ' new ' + (unread === 1 ? 'notification' : 'notifications') : '' %>">
+    <% var news = locals.unreadTabs || {}; var unread = Object.keys(news).length > 0; var dot = '<span class="tab-dot"><span class="sr-only"> (new)</span></span>'; %>
+    <input type="checkbox" id="menu-toggle" class="menu-toggle sr-only" aria-controls="site-menu" aria-label="Menu<%= unread ? ', something new' : '' %>">
     <label for="menu-toggle" class="menu-btn" aria-hidden="true"><span class="menu-bars"><i></i><i></i><i></i></span><% if (unread) { %><span class="notif-dot"></span><% } %></label>
     <% var chev = '<svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; %>
     <nav class="nav" id="site-menu" aria-label="Main">
@@ -60,11 +60,11 @@
           <% var isAdmin = user.role === 'admin'; var me = locals.me; var who = me ? (me.full_name || me.display_name) : (isAdmin ? 'Admin' : user.email); var sub = me && me.display_name !== who ? me.display_name : user.email; /* store name under the person's name */ %>
           <% var accountLinks = isAdmin
                ? [['/admin', 'Admin dashboard', cp === '/admin'], ['/admin/sellers', 'Sellers', cp.startsWith('/admin/sellers')], ['/admin/orders', 'Orders', cp === '/admin/orders']]
-               : [['/seller', 'Seller dashboard', cp === '/seller'], ['/seller/notifications', 'Notifications', cp === '/seller/notifications', unread]].concat(me ? [[storeUrl(me), 'View my storefront', false]] : []).concat([['/seller/notes', 'Your notes', cp === '/seller/notes'], ['/seller/payouts', 'Payouts', cp === '/seller/payouts'], ['/seller/settings', 'Settings', cp === '/seller/settings']]); %>
+               : [['/seller', 'Seller dashboard', cp === '/seller', news.overview || news.verification]].concat(me ? [[storeUrl(me), 'View my storefront', false, news.storefront]] : []).concat([['/seller/notes', 'Your notes', cp === '/seller/notes', news.notes], ['/seller/payouts', 'Payouts', cp === '/seller/payouts', news.payouts], ['/seller/settings', 'Settings', cp === '/seller/settings']]); %>
           <% var avatarEl = me && me.avatar_path ? '<img class="profile-avatar" src="' + escapeHtml(avatarUrl(me)) + '" alt="" width="36" height="36">' : '<span class="profile-avatar" aria-hidden="true">' + escapeHtml(initials(me ? (me.full_name || me.display_name) : user.email)) + '</span>'; %>
           <%# Desktop: avatar drop-down %>
           <details class="profile">
-            <summary aria-label="Account menu<%= unread ? ', ' + unread + ' new ' + (unread === 1 ? 'notification' : 'notifications') : '' %>">
+            <summary aria-label="Account menu<%= unread ? ', something new' : '' %>">
               <%- avatarEl %><% if (unread) { %><span class="notif-dot" aria-hidden="true"></span><% } %>
               <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
@@ -73,7 +73,7 @@
                 <strong title="<%= who %>"><%= who %></strong>
                 <span title="<%= sub %>"><%= sub %></span>
               </div>
-              <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %><% if (l[3]) { %><span class="notif-count"><%= l[3] > 99 ? '99+' : l[3] %><span class="sr-only"> new</span></span><% } %></a><% }) %>
+              <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %><% if (l[3]) { %><%- dot %><% } %></a><% }) %>
               <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button type="submit">Log out</button></form>
             </div>
           </details>
@@ -83,7 +83,7 @@
               <%- avatarEl %>
               <div><strong><%= who %></strong><span><%= sub %></span></div>
             </div>
-            <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %><% if (l[3]) { %><span class="notif-count"><%= l[3] > 99 ? '99+' : l[3] %><span class="sr-only"> new</span></span><% } %><%- chev %></a><% }) %>
+            <% accountLinks.forEach(function (l) { %><a href="<%= l[0] %>" <%- l[2] ? 'aria-current="page"' : '' %>><%= l[1] %><% if (l[3]) { %><%- dot %><% } %><%- chev %></a><% }) %>
             <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= locals.csrf %>"><button class="nav-logout" type="submit">Log out</button></form>
           </div>
         <% } else { %>

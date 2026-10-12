@@ -686,21 +686,6 @@ router.post('/notes/:id/delete', ownNote, async (req, res) => {
   res.redirect('/seller/notes');
 });
 
-/* ---------- Notifications ---------- */
-
-// The newest 50. The unread ones are highlighted this once, then marked as seen (only those shown, so one that
-// arrives meanwhile stays new; and not when the page is only being loaded ahead of a click).
-router.get('/notifications', async (req, res) => {
-  const { data, error } = await db.from('notifications').select('*').eq('seller_id', req.seller.id).order('created_at', { ascending: false }).limit(50);
-  const list = error ? [] : data || [];
-  const unread = list.filter((n) => !n.read_at).map((n) => n.id);
-  if (unread.length && !/prefetch/i.test(req.get('sec-purpose') || '')) {
-    await db.from('notifications').update({ read_at: new Date().toISOString() }).in('id', unread).eq('seller_id', req.seller.id);
-    res.locals.unreadCount = Math.max(0, res.locals.unreadCount - unread.length);
-  }
-  res.render('seller/notifications', { title: 'Notifications', tab: 'notifications', notifications: list, unavailable: !!error });
-});
-
 /* ---------- Settings ---------- */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

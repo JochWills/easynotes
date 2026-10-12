@@ -84,25 +84,12 @@ small, .small { font-size: .9rem; }
 .linklike { background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
 /* Account dropdown */
 .profile { position: relative; }
-/* Unread notifications: a red dot on the avatar (and the phone menu button) and a count in the menu */
+/* Unseen news: a red dot on the avatar (and the phone menu button), and on the menu item and dashboard tab it's about */
 .profile summary, .menu-btn { position: relative; }
 .notif-dot { position: absolute; top: 2px; left: 30px; width: 11px; height: 11px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 2px var(--paper); pointer-events: none; }
 .menu-btn .notif-dot { top: 7px; left: auto; right: 7px; }
-.notif-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: 999px; background: var(--bad); color: #fff; font-size: .74rem; font-weight: 700; line-height: 1; vertical-align: 1px; }
-/* Notifications page */
-.notif-list { list-style: none; margin: 0; padding: 0; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
-.notif { display: flex; gap: 14px; align-items: flex-start; padding: 16px 20px; border-top: 1px solid var(--rule); }
-.notif:first-child { border-top: 0; }
-.notif.is-new { background: var(--blue-soft); }
-.notif-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--page); color: var(--blue); border: 1px solid var(--rule); }
-.notif-sale .notif-icon { color: var(--ok); }
-.notif-review .notif-icon { color: #D48A00; }
-.notif-text { min-width: 0; display: grid; gap: 2px; }
-.notif-title { font-weight: 600; color: var(--ink); text-decoration: none; }
-a.notif-title:hover { text-decoration: underline; }
-.notif-text p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
-.notif-when { font-size: .84rem; color: var(--muted); }
-.notif-new { color: var(--blue); font-weight: 600; }
+.dash-nav-ext .tab-dot { margin-left: 0; }
+.tab-dot { display: inline-block; flex: none; width: 8px; height: 8px; margin-left: 7px; border-radius: 50%; background: var(--bad); vertical-align: 2px; }
 .profile summary { display: flex; align-items: center; gap: 4px; padding: 3px 6px 3px 3px; border-radius: 999px; cursor: pointer; list-style: none; color: var(--muted); transition: background .15s, color .15s; }
 .profile summary::-webkit-details-marker { display: none; }
 .profile summary:hover, .profile[open] summary { background: var(--page); color: var(--ink); }
@@ -1392,6 +1379,7 @@ dialog.modal > p { margin: 0 0 18px; }
 
   .nav-links { flex-direction: column; align-items: stretch; gap: 2px; margin: 0; }
   .nav a:not(.btn) { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 12px; border-radius: 12px; font-size: 1.02rem; font-weight: 600; }
+  .nav a .tab-dot { margin-left: -4px; }
   .nav a:not(.btn):hover, .nav a:not(.btn):active { background: var(--page); color: var(--ink); }
   .nav a[aria-current="page"]:not(.btn) { background: var(--blue-soft); color: var(--blue); }
   .nav-ico { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--page); color: var(--ink-soft); }

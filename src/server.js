@@ -97,11 +97,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(loadUser);
-// Sellers get a red dot in the account menu while they have notifications they haven't seen
-app.use(async (req, res, next) => {
-  res.locals.unreadCount = req.seller ? await notify.unreadCount(req.seller.id) : 0;
-  next();
-});
+app.use(notify.dots); // red dots for sellers on the menu items and dashboard tabs with unseen news
 // Logged-in pages are never kept by the browser, so Back after logging out can't show them again.
 app.use((req, res, next) => {
   if (req.user) res.set('Cache-Control', 'private, no-store');
