@@ -9,11 +9,12 @@
     <div class="stat"><b><%= noteCount %></b><span>Published notes</span></div>
   </div>
 
-  <% var ps = locals.pendingSellers || 0, pu = locals.pendingUpdates || 0; %>
-  <% if (ps || pu || noPayouts) { %>
+  <% var ps = locals.pendingSellers || 0, pu = locals.pendingUpdates || 0, toVerify = locals.toVerify || 0; %>
+  <% if (ps || pu || toVerify || noPayouts) { %>
     <ul class="setup">
       <% if (ps) { %><li><span class="num"><%= ps %></span><div><h3><%= ps === 1 ? 'Seller' : 'Sellers' %> waiting for verification</h3><p>Check their degree and ID documents.</p></div><a class="btn btn-hi btn-sm" href="/admin/verifications">Review</a></li><% } %>
       <% if (pu) { %><li><span class="num"><%= pu %></span><div><h3>Education <%= pu === 1 ? 'update' : 'updates' %> to check</h3><p>From sellers who are already verified.</p></div><a class="btn btn-hi btn-sm" href="/admin/verifications">Review</a></li><% } %>
+      <% if (toVerify) { %><li><span class="num"><%= toVerify %></span><div><h3>New payout <%= toVerify === 1 ? 'account' : 'accounts' %> to verify in Paystack</h3><p>Paystack holds the seller’s first payout until you click Verify.</p></div><a class="btn btn-hi btn-sm" href="/admin/money#verify-payouts">See who</a></li><% } %>
       <% if (noPayouts) { %><li><span class="num"><%= noPayouts %></span><div><h3>Verified <%= noPayouts === 1 ? 'seller hasn’t' : 'sellers haven’t' %> added payout details</h3><p>Their notes stay hidden until they do.</p></div><a class="btn btn-ghost btn-sm" href="/admin/money#no-payouts">See who</a></li><% } %>
     </ul>
   <% } %>

@@ -35,6 +35,21 @@
     <% } else { %><p class="muted">No sales yet.</p><% } %>
   </section>
 
+  <% if (toVerify.length) { %>
+    <section class="admin-section" id="verify-payouts">
+      <h2>Payout accounts to verify in Paystack (<%= toVerify.length %>)</h2>
+      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Each one leaves this list once Paystack shows it as verified, or when you tick it off here.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Seller</th><th>Bank</th><th>Subaccount</th><th>Since</th><th></th></tr></thead>
+          <tbody>
+            <% toVerify.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td><td><%= s.bank_name %> ••••<%= s.account_number_last4 %></td><td><code><%= s.paystack_subaccount_code %></code></td><td><%= date(s.payout_check_since) %></td><td><form method="post" action="/admin/sellers/<%= s.id %>/payout-checked"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm">I’ve verified it</button></form></td></tr><% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% } %>
+
   <section class="admin-section" id="no-payouts">
     <h2>Verified, but no payout details (<%= noPayouts.length %>)</h2>
     <% if (noPayouts.length) { %>

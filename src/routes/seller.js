@@ -444,6 +444,8 @@ router.post('/payouts', payoutsLimiter, async (req, res) => {
       bank_code: bank.code,
       bank_name: bank.name,
       account_number_last4: values.account_number.slice(-4),
+      // New bank account: Paystack holds the first payout until an admin verifies it
+      ...(!s.paystack_subaccount_code || s.bank_code !== bank.code || s.account_number_last4 !== values.account_number.slice(-4) ? { payout_check_since: new Date().toISOString() } : {}),
     })
     .eq('id', s.id);
   if (error) throw error;

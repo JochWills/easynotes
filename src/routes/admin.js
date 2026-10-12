@@ -12,6 +12,7 @@ const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
 const education = require('../lib/education');
 const notify = require('../lib/notify');
+const paystack = require('../lib/paystack');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -106,14 +107,31 @@ router.post('/reports/:id/resolve', async (req, res) => {
 
 /* ---------- Overview ---------- */
 
+// Sellers whose new bank account still needs Verify clicking in Paystack (it holds their first payout till then).
+// Asks Paystack about each one and clears any that are already verified, so the list empties by itself.
+async function payoutChecks() {
+  const { data } = await db.from('sellers').select('id,display_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since').not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null).order('payout_check_since').limit(50);
+  const left = await Promise.all(
+    (data || []).map(async (s) => {
+      const sub = await paystack.getSubaccount(s.paystack_subaccount_code).catch(() => null);
+      if (sub?.is_verified !== true) return s;
+      await db.from('sellers').update({ payout_check_since: null }).eq('id', s.id).eq('payout_check_since', s.payout_check_since);
+      return null;
+    })
+  );
+  return left.filter(Boolean);
+}
+
+
 router.get('/', async (req, res) => {
-  const [{ data: totals }, { data: recent }, { count: sellerCount }, { count: noteCount }, { count: noPayouts }, activity] = await Promise.all([
+  const [{ data: totals }, { data: recent }, { count: sellerCount }, { count: noteCount }, { count: noPayouts }, activity, toVerify] = await Promise.all([
     db.rpc('platform_totals'),
     db.from('orders').select('reference,email,amount_cents,platform_fee_cents,status,created_at,notes(title)').order('created_at', { ascending: false }).limit(8),
     db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'approved'),
     db.from('notes').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'approved').is('paystack_subaccount_code', null),
     events.recent({ limit: 12 }),
+    payoutChecks(),
   ]);
   const t = (totals && totals[0]) || { sales: 0, gross: 0, fees: 0 };
   res.render('admin/index', {
@@ -124,6 +142,7 @@ router.get('/', async (req, res) => {
     sellerCount: sellerCount || 0,
     noteCount: noteCount || 0,
     noPayouts: noPayouts || 0,
+    toVerify: toVerify.length,
     activity,
   });
 });
@@ -351,10 +370,22 @@ async function allPaidOrders() {
   }
 }
 
+// "I've verified it in Paystack": takes the seller off the list.
+router.post('/sellers/:id/payout-checked', async (req, res, next) => {
+  if (!isUuid(req.params.id)) return next();
+  const { data: s } = await db.from('sellers').update({ payout_check_since: null }).eq('id', req.params.id).not('payout_check_since', 'is', null).select('id,display_name').maybeSingle();
+  if (s) {
+    events.log('seller.payout_checked', { seller_id: s.id, seller: s.display_name }, req.user.email);
+    flash(req, 'ok', `${s.display_name} marked as verified in Paystack.`);
+  }
+  res.redirect('/admin/money#verify-payouts');
+});
+
 router.get('/money', async (req, res) => {
-  const [paid, { data: noPayouts }] = await Promise.all([
+  const [paid, { data: noPayouts }, toVerify] = await Promise.all([
     allPaidOrders(),
     db.from('sellers').select('id,display_name,verified_at,users(email)').eq('verification_status', 'approved').is('paystack_subaccount_code', null).order('verified_at'),
+    payoutChecks(),
   ]);
 
   // Last 12 months (South African time), newest first, including months with no sales.
@@ -388,6 +419,7 @@ router.get('/money', async (req, res) => {
     months,
     sellers: Object.values(bySeller).sort((a, b) => b.gross - a.gross),
     noPayouts: noPayouts || [],
+    toVerify,
     feeBearerText: config.feeBearer === 'account' ? 'paid by EasyNotes out of its share' : 'deducted from the seller’s share',
   });
 });
