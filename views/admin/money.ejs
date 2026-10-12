@@ -38,7 +38,7 @@
   <% if (toVerify.length) { %>
     <section class="admin-section" id="verify-payouts">
       <h2>Payout accounts to verify in Paystack (<%= toVerify.length %>)</h2>
-      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Each one leaves this list once Paystack shows it as verified, or when you tick it off here.</p>
+      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Then tick it off here: until you do, the seller sees their account as “being verified”.</p>
       <div class="table-wrap">
         <table class="data">
           <thead><tr><th>Seller</th><th>Bank</th><th>Subaccount</th><th>Since</th><th></th></tr></thead>

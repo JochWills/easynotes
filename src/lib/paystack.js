@@ -3,7 +3,7 @@ const config = require('./config');
 
 const BASE = 'https://api.paystack.co';
 
-async function call(method, path, body, timeout) {
+async function call(method, path, body) {
   const res = await fetch(BASE + path, {
     method,
     headers: {
@@ -11,7 +11,6 @@ async function call(method, path, body, timeout) {
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
-    signal: timeout ? AbortSignal.timeout(timeout) : undefined,
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.status === false) {
@@ -39,7 +38,6 @@ async function listBanks() {
 
 const createSubaccount = (payload) => call('POST', '/subaccount', payload);
 const updateSubaccount = (code, payload) => call('PUT', `/subaccount/${encodeURIComponent(code)}`, payload);
-const getSubaccount = (code) => call('GET', `/subaccount/${encodeURIComponent(code)}`, null, 8000);
 const initialize = (payload) => call('POST', '/transaction/initialize', payload);
 const verify = (reference) => call('GET', `/transaction/verify/${encodeURIComponent(reference)}`);
 
@@ -78,4 +76,4 @@ function validSignature(rawBody, signature) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-module.exports = { listBanks, createSubaccount, updateSubaccount, getSubaccount, initialize, verify, listSettlements, validSignature };
+module.exports = { listBanks, createSubaccount, updateSubaccount, initialize, verify, listSettlements, validSignature };

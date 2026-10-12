@@ -12,7 +12,12 @@
         <dt>Shown as</dt><dd><%= s.degree ? s.degree + ', ' + s.university : '—' %></dd>
         <dt>Submitted</dt><dd><%= s.submitted_at ? date(s.submitted_at) : '—' %></dd>
         <dt>Sales</dt><dd><%= totals.sales %> paid, <%= rand(totals.earnings) %> earned</dd>
-        <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %></dd>
+        <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %>
+          <% if (s.paystack_subaccount_code && s.payout_check_since) { %>
+            <br><span class="pill pill-wait">To verify in Paystack</span>
+            <form method="post" action="/admin/sellers/<%= s.id %>/payout-checked" style="display:inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="back" value="/admin/sellers/<%= s.id %>"><button class="btn btn-ghost btn-sm">I’ve verified it</button></form>
+          <% } %>
+        </dd>
       </dl>
       <h3>Education</h3>
       <% if (!quals.length) { %><p class="muted small">None submitted.</p><% } %>

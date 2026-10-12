@@ -67,11 +67,15 @@
       <span class="payout-bank-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <div class="payout-account-text">
         <span class="small muted">Paid into</span>
-        <strong><%= me.bank_name %> ••••<%= me.account_number_last4 %></strong>
+        <strong><%= me.bank_name %> ••••<%= me.account_number_last4 %> <% if (me.payout_check_since) { %><span class="pill pill-wait">Being verified</span><% } else { %><span class="pill pill-ok">Verified</span><% } %></strong>
         <span class="small muted"><%= me.business_name %></span>
       </div>
       <a class="btn btn-ghost btn-sm" href="/seller/payouts?change=1" data-dialog-open="bank-dialog">Change bank details</a>
     </div>
+
+    <% if (me.payout_check_since) { %>
+      <div class="alert alert-info" role="status">Paystack checks every new bank account before paying into it. This usually takes a working day or two. Sales you make in the meantime are safe: your share is paid out as soon as the check is done.</div>
+    <% } %>
 
     <div class="stats payout-stats">
       <div class="stat"><b><%= rand(earned) %></b><span>Earned from sales</span></div>
