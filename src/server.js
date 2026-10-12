@@ -82,6 +82,9 @@ app.use((req, res, next) => {
   }
   // Chrome/Edge load same-site pages on hover so clicks feel instant (rules in public/speculation-rules.json).
   res.set('Speculation-Rules', '"/speculation-rules.json"');
+  // Anything that changes data throws those preloaded pages away. Otherwise "Approve" redirected back to a copy of
+  // the page loaded on hover before the click: the request still listed, no message, until a refresh.
+  if (req.method !== 'GET' && req.method !== 'HEAD') res.set('Clear-Site-Data', '"prefetchCache", "prerenderCache"');
   res.locals.currentPath = req.path;
   res.locals.feePercent = config.platformFeePercent;
   res.locals.feeCoversProcessing = config.feeBearer === 'account'; // EasyNotes pays Paystack's fee out of its share
