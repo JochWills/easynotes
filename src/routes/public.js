@@ -3,10 +3,8 @@ const db = require('../lib/supabase');
 const config = require('../lib/config');
 const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
-const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
+const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS, PRIVATE_INSTITUTION } = require('../lib/constants');
 
-// The "Popular at" links on the home page, in this order
-const HOME_UNIS = ['UCT', 'Stellenbosch', 'NMU', 'Milpark', 'Emeris', 'UP', 'UJ', 'UNISA'];
 const { isUuid, noteUrl, storeUrl, str, rand, qs } = require('../lib/helpers');
 const { limit } = require('../lib/limits');
 const events = require('../lib/events');
@@ -30,8 +28,31 @@ function searchWords(q) {
 }
 const wordForms = (w) => [...new Set([w, w.replace(/([a-z])(\d)/g, '$1 $2')])];
 
+// "Popular at" on the home page: the institutions with the most notes on sale right now (then the most sales),
+// so every link leads to notes. Shown by their short name (UCT, UJ...).
+async function popularInstitutions(max = 8) {
+  const { data } = await publicNotes('university,sales_count,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
+  const byKey = new Map();
+  for (const n of data || []) {
+    const name = String(n.university || '').trim();
+    if (!name || name === PRIVATE_INSTITUTION) continue; // too vague to be a useful link
+    const key = name.toLowerCase();
+    const row = byKey.get(key) || { name, notes: 0, sales: 0 };
+    row.notes += 1;
+    row.sales += n.sales_count || 0;
+    byKey.set(key, row);
+  }
+  return [...byKey.values()]
+    .sort((a, b) => b.notes - a.notes || b.sales - a.sales || a.name.localeCompare(b.name))
+    .slice(0, max)
+    .map((r) => ({ name: r.name, short: (UNIVERSITIES.find((u) => u.name.toLowerCase() === r.name.toLowerCase()) || {}).short || r.name }));
+}
+
 router.get('/', async (req, res) => {
-  const { data: notes, count } = await publicNotes().order('created_at', { ascending: false }).limit(8);
+  const [{ data: notes, count }, popularUnis] = await Promise.all([
+    publicNotes().order('created_at', { ascending: false }).limit(8),
+    popularInstitutions(),
+  ]);
   res.render('home', {
     title: null,
     jsonLd: [
@@ -41,7 +62,7 @@ router.get('/', async (req, res) => {
     ],
     notes: notes || [],
     total: count || 0,
-    popularUnis: HOME_UNIS.map((short) => UNIVERSITIES.find((u) => u.short === short)).filter(Boolean),
+    popularUnis,
   });
 });
 

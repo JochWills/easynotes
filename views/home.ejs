@@ -14,13 +14,15 @@
         <input id="q" name="q" maxlength="80" type="search" placeholder="Search modules, e.g. ACC1006F" autocomplete="off">
         <button class="btn" type="submit">Search <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>
+      <% if (popularUnis.length) { %>
       <div class="chips">
         <span class="chips-label">Popular at</span>
-        <% popularUnis.slice(0, 8).forEach(function (u) { %>
+        <% popularUnis.forEach(function (u) { %>
           <a class="chip" href="/notes<%= qs({ university: u.name }) %>"><%= u.short %></a>
         <% }) %>
         <a class="chip chip-more" href="/notes">All universities <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
+      <% } %>
     </div>
     <div class="hero-art" aria-hidden="true">
       <span class="spark"></span>
