@@ -12,6 +12,7 @@ const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
 const education = require('../lib/education');
 const notify = require('../lib/notify');
+const { publicNotes } = require('../lib/queries');
 const paystack = require('../lib/paystack');
 
 const router = express.Router();
@@ -58,17 +59,32 @@ const docLinks = async (q) => ({
   recordUrl: q.record_path ? await storage.signedUrl('verification', q.record_path, 600).catch(() => null) : null,
 });
 
-// The Verifications and Reports tabs show how many things are waiting, on every admin page.
+// A report that can't wait: a copyright takedown, or money taken without a matching order.
+const isUrgent = (e) => e.kind.startsWith('payment.') || (e.kind === 'note.reported' && e.detail?.reason === 'copyright_mine');
+
+// Sellers whose new bank account still needs Verify clicking in Paystack (it holds their first payout till then).
+// They stay on the list, and the seller sees "being verified", until an admin ticks them off.
+async function payoutChecks() {
+  const { data } = await db.from('sellers').select('id,display_name,full_name,business_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since,users(email)').not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null).order('payout_check_since').limit(100);
+  return data || [];
+}
+const payoutCheckCount = () => db.from('sellers').select('id', { count: 'exact', head: true }).not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null);
+
+// The menu shows how many things are waiting (Review, Reports), on every admin page.
 router.use(async (req, res, next) => {
-  const [{ count }, { count: updates }, open] = await Promise.all([
+  const [{ count }, { count: updates }, { count: banks }, open] = await Promise.all([
     db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending'),
     pendingUpdates({ head: true }),
+    payoutCheckCount(),
     openReports(),
   ]);
   res.locals.pendingSellers = count || 0;
   res.locals.pendingUpdates = updates || 0;
-  res.locals.pendingCount = (count || 0) + (updates || 0);
+  res.locals.pendingBanks = banks || 0;
+  res.locals.pendingCount = (count || 0) + (updates || 0) + (banks || 0);
   res.locals.reportCount = open ? open.length : 0;
+  res.locals.urgentReports = open ? open.filter(isUrgent).length : 0;
+  res.locals.adminSearch = '';
   next();
 });
 
@@ -81,7 +97,8 @@ router.get('/reports', async (req, res) => {
     ? await db.from('notes').select('id,title,slug,status,sellers(id,display_name)').in('id', ids)
     : { data: [] };
   const byId = Object.fromEntries((notes || []).map((n) => [n.id, n]));
-  res.render('admin/reports', { title: 'Reports', tab: 'reports', items: open, notesById: byId, reasons: emails.REPORT_REASONS });
+  const items = open && [...open.filter(isUrgent), ...open.filter((e) => !isUrgent(e))];
+  res.render('admin/reports', { title: 'Reports', tab: 'reports', items, notesById: byId, reasons: emails.REPORT_REASONS });
 });
 
 // Admins can open any note's PDF (to check reports), through a short-lived signed link.
@@ -107,33 +124,65 @@ router.post('/reports/:id/resolve', async (req, res) => {
 
 /* ---------- Overview ---------- */
 
-// Sellers whose new bank account still needs Verify clicking in Paystack (it holds their first payout till then).
-// They stay on the list, and the seller sees "being verified", until an admin ticks them off.
-async function payoutChecks() {
-  const { data } = await db.from('sellers').select('id,display_name,full_name,business_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since').not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null).order('payout_check_since').limit(100);
-  return data || [];
-}
+// Paystack confirms every payment with a webhook; each is logged, but they'd bury everything else, so they
+// only show under Activity → Payments.
+const QUIET = ['webhook.received'];
+
+// South Africa is UTC+2 all year. The start of a South African calendar month, `back` months ago.
+const SA_OFFSET = 2 * 3600e3;
+const saMonthStart = (back = 0) => {
+  const now = new Date(Date.now() + SA_OFFSET);
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1) - SA_OFFSET);
+};
+const sumOrders = (list) => list.reduce((t, o) => ({ sales: t.sales + 1, gross: t.gross + o.amount_cents, fees: t.fees + o.platform_fee_cents, payouts: t.payouts + o.seller_earnings_cents }), { sales: 0, gross: 0, fees: 0, payouts: 0 });
 
 router.get('/', async (req, res) => {
-  const [{ data: totals }, { data: recent }, { count: sellerCount }, { count: noteCount }, { count: noPayouts }, activity, toVerify] = await Promise.all([
+  const [{ data: totals }, recentPaid, { data: recent }, { count: sellerCount }, { count: liveNotes }, { data: noPayouts }, { data: oldest }, activity, open] = await Promise.all([
     db.rpc('platform_totals'),
-    db.from('orders').select('reference,email,amount_cents,platform_fee_cents,status,created_at,notes(title)').order('created_at', { ascending: false }).limit(8),
+    paidOrders({ since: saMonthStart(1) }),
+    db.from('orders').select('reference,email,buyer_name,amount_cents,status,created_at,notes(title)').order('created_at', { ascending: false }).limit(6),
     db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'approved'),
-    db.from('notes').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-    db.from('sellers').select('id', { count: 'exact', head: true }).eq('verification_status', 'approved').is('paystack_subaccount_code', null),
-    events.recent({ limit: 12 }),
-    payoutChecks(),
+    publicNotes('id,sellers!inner(verification_status,paystack_subaccount_code)').limit(1),
+    db.from('sellers').select('id,display_name').eq('verification_status', 'approved').is('paystack_subaccount_code', null).order('verified_at').limit(50),
+    db.from('sellers').select('display_name,submitted_at').eq('verification_status', 'pending').order('submitted_at').limit(1),
+    events.page({ limit: 8, skip: QUIET }),
+    openReports(),
   ]);
   const t = (totals && totals[0]) || { sales: 0, gross: 0, fees: 0 };
+  const thisStart = saMonthStart(0);
+  const month = sumOrders(recentPaid.filter((o) => new Date(o.paid_at) >= thisStart));
+  const lastMonth = sumOrders(recentPaid.filter((o) => new Date(o.paid_at) < thisStart));
+
+  // Everything waiting for an admin, most urgent first
+  const L = res.locals;
+  const days = (d) => Math.max(0, Math.floor((Date.now() - new Date(d)) / 864e5));
+  const waited = (d) => (days(d) === 0 ? 'today' : days(d) === 1 ? 'yesterday' : `${days(d)} days ago`);
+  const reports = open || [];
+  const takedowns = reports.filter((e) => e.kind === 'note.reported' && e.detail?.reason === 'copyright_mine').length;
+  const payments = reports.filter((e) => e.kind.startsWith('payment.')).length;
+  const others = reports.length - takedowns - payments;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const todo = [
+    takedowns && { tone: 'urgent', count: takedowns, title: plural(takedowns, 'copyright takedown request', 'copyright takedown requests'), sub: 'Handle within 2 working days.', href: '/admin/reports', label: 'Open reports' },
+    payments && { tone: 'urgent', count: payments, title: plural(payments, 'payment problem', 'payment problems'), sub: 'Money was taken without a matching order. Refund or sort it out by email.', href: '/admin/reports', label: 'Open reports' },
+    L.pendingSellers && { tone: 'do', count: L.pendingSellers, title: plural(L.pendingSellers, 'new seller to verify', 'new sellers to verify'), sub: oldest?.[0]?.submitted_at ? `Oldest: ${oldest[0].display_name}, sent ${waited(oldest[0].submitted_at)}.` : 'Check their degree and ID documents.', href: '/admin/verifications#sellers', label: 'Review' },
+    L.pendingBanks && { tone: 'do', count: L.pendingBanks, title: plural(L.pendingBanks, 'bank account to verify in Paystack', 'bank accounts to verify in Paystack'), sub: 'Paystack holds the seller’s first payout until you do.', href: '/admin/verifications#bank-accounts', label: 'Review' },
+    L.pendingUpdates && { tone: 'do', count: L.pendingUpdates, title: plural(L.pendingUpdates, 'education update to check', 'education updates to check'), sub: 'From sellers who are already verified.', href: '/admin/verifications#education', label: 'Review' },
+    others && { tone: 'do', count: others, title: plural(others, 'report to check', 'reports to check'), sub: 'From students, or flagged by the automatic upload check.', href: '/admin/reports', label: 'Open reports' },
+    noPayouts?.length && { tone: 'later', count: noPayouts.length, title: `${plural(noPayouts.length, 'verified seller hasn’t', 'verified sellers haven’t')} added bank details`, sub: 'Their notes stay hidden until they do. You could email them a nudge.', href: '/admin/sellers?status=no-payouts', label: 'See who' },
+  ].filter(Boolean);
+
   res.render('admin/index', {
-    title: 'Admin',
+    title: 'Home',
     tab: 'overview',
+    todo,
     totals: { sales: Number(t.sales), gross: Number(t.gross), fees: Number(t.fees) },
+    month,
+    lastMonth,
+    monthLabel: new Date(thisStart.getTime() + SA_OFFSET).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' }),
     recent: recent || [],
     sellerCount: sellerCount || 0,
-    noteCount: noteCount || 0,
-    noPayouts: noPayouts || 0,
-    toVerify: toVerify.length,
+    liveNotes: liveNotes || 0,
     activity,
   });
 });
@@ -141,10 +190,11 @@ router.get('/', async (req, res) => {
 /* ---------- Verifications ---------- */
 
 router.get('/verifications', async (req, res) => {
-  const [{ data: pending }, { data: updates }, decided] = await Promise.all([
+  const [{ data: pending }, { data: updates }, banks, decided] = await Promise.all([
     db.from('sellers').select('id,display_name,full_name,id_doc_path,submitted_at,verification_note,users(email),qualifications(*)').eq('verification_status', 'pending').order('submitted_at'),
     pendingUpdates(),
-    events.recent({ limit: 15, kinds: ['seller.approved', 'seller.rejected', 'seller.revoked', 'qualification.approved', 'qualification.rejected'] }),
+    payoutChecks(),
+    events.recent({ limit: 15, kinds: ['seller.approved', 'seller.rejected', 'seller.revoked', 'qualification.approved', 'qualification.rejected', 'seller.payout_checked', 'seller.payout_denied'] }),
   ]);
   const queue = await Promise.all(
     (pending || []).map(async (s) => ({
@@ -163,7 +213,7 @@ router.get('/verifications', async (req, res) => {
       return { ...(await docLinks(q)), replaced, diff: replaced ? education.changes(replaced, q) : [], sameDocs: !!replaced && replaced.doc_path === q.doc_path };
     })
   );
-  res.render('admin/verifications', { title: 'Verifications', tab: 'verifications', queue, changes, decided });
+  res.render('admin/verifications', { title: 'Review', tab: 'verifications', queue, changes, banks, decided });
 });
 
 // Approve or reject one qualification from an already verified seller.
@@ -198,38 +248,60 @@ router.post('/qualifications/:id/review', async (req, res, next) => {
 /* ---------- Sellers ---------- */
 
 const STATUSES = ['pending', 'approved', 'rejected', 'unsubmitted'];
+// Filters on the Sellers page, in order: [value, label, narrows the query]
+const SELLER_VIEWS = [
+  ['pending', 'In review', (q) => q.eq('verification_status', 'pending')],
+  ['approved', 'Verified', (q) => q.eq('verification_status', 'approved')],
+  ['rejected', 'Not approved', (q) => q.eq('verification_status', 'rejected')],
+  ['unsubmitted', 'Not started', (q) => q.eq('verification_status', 'unsubmitted')],
+  ['no-payouts', 'No bank details', (q) => q.eq('verification_status', 'approved').is('paystack_subaccount_code', null)],
+  ['bank-check', 'Bank to verify', (q) => q.not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null)],
+];
 
 router.get('/sellers', async (req, res) => {
-  const status = STATUSES.includes(req.query.status) ? req.query.status : '';
+  const view = SELLER_VIEWS.find((v) => v[0] === req.query.status);
   const q = cleanSearch(req.query.q);
-  let query = db.from('sellers').select('id,display_name,slug,degree,university,verification_status,paystack_subaccount_code,created_at,users(email)').order('created_at', { ascending: false }).limit(200);
-  if (status) query = query.eq('verification_status', status);
+  let query = db.from('sellers').select('id,display_name,full_name,slug,degree,university,verification_status,paystack_subaccount_code,payout_check_since,payout_rejected_note,created_at,users(email),notes(count)').order('created_at', { ascending: false }).limit(200);
+  if (view) query = view[2](query);
   if (q.includes('@')) {
     const { data: users } = await db.from('users').select('id').ilike('email', `%${q}%`).limit(50);
     query = query.in('user_id', (users || []).map((u) => u.id));
   } else if (q) {
-    query = query.or(`display_name.ilike."%${q}%",slug.ilike."%${q}%"`);
+    query = query.or(`display_name.ilike."%${q}%",full_name.ilike."%${q}%",slug.ilike."%${q}%"`);
   }
-  const { data: sellers } = await query;
-  res.render('admin/sellers', { title: 'Sellers', tab: 'sellers', sellers: sellers || [], status, statuses: STATUSES, q });
+  const [{ data: sellers }, { count: total }, ...counts] = await Promise.all([
+    query,
+    db.from('sellers').select('id', { count: 'exact', head: true }),
+    ...SELLER_VIEWS.map((v) => v[2](db.from('sellers').select('id', { count: 'exact', head: true }))),
+  ]);
+  res.render('admin/sellers', {
+    title: 'Sellers',
+    tab: 'sellers',
+    sellers: sellers || [],
+    status: view ? view[0] : '',
+    views: SELLER_VIEWS.map((v, i) => ({ value: v[0], label: v[1], count: counts[i].count || 0 })),
+    total: total || 0,
+    q,
+  });
 });
 
 router.get('/sellers/:id', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
   const { data: s } = await db.from('sellers').select('*, users(email,created_at)').eq('id', req.params.id).maybeSingle();
   if (!s) return next();
-  const [{ data: notes }, { data: sales }, docs, quals] = await Promise.all([
-    db.from('notes').select('id,title,slug,status,price_cents,sales_count').eq('seller_id', s.id).order('created_at', { ascending: false }),
+  const [{ data: notes }, { data: sales }, docs, quals, history] = await Promise.all([
+    db.from('notes').select('id,title,slug,status,price_cents,sales_count,created_at').eq('seller_id', s.id).order('created_at', { ascending: false }),
     db.rpc('seller_totals', { p_seller_id: s.id }),
     Promise.all([
       s.degree_doc_path ? storage.signedUrl('verification', s.degree_doc_path, 600).catch(() => null) : null,
       s.id_doc_path ? storage.signedUrl('verification', s.id_doc_path, 600).catch(() => null) : null,
     ]),
     education.forSeller(s.id).then((list) => Promise.all(list.map(docLinks))),
+    events.page({ limit: 25, sellerId: s.id }),
   ]);
   const { data: sellerReviews } = await db.from('reviews').select('*').eq('seller_id', s.id).order('created_at', { ascending: false }).limit(100);
   const totals = (sales && sales[0]) || { sales: 0, earnings: 0 };
-  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, reviews: sellerReviews || [], jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
+  res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, reviews: sellerReviews || [], history, jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
 });
 
 router.post('/sellers/:id/verification', async (req, res, next) => {
@@ -288,12 +360,32 @@ router.post('/reviews/:id/status', async (req, res, next) => {
 
 /* ---------- Notes ---------- */
 
+const NOTE_VIEWS = [['published', 'Published'], ['unpublished', 'Hidden'], ['draft', 'Drafts'], ['removed', 'Removed'], ['deleted', 'Deleted by seller']];
+
 router.get('/notes', async (req, res) => {
   const q = cleanSearch(req.query.q);
-  let query = db.from('notes').select('id,title,slug,status,price_cents,sales_count,university,created_at,sellers(id,display_name)').order('created_at', { ascending: false }).limit(200);
+  const status = NOTE_VIEWS.some((v) => v[0] === req.query.status) ? req.query.status : '';
+  const sellerId = isUuid(req.query.seller) ? req.query.seller : '';
+  const narrow = (query) => (sellerId ? query.eq('seller_id', sellerId) : query);
+  let query = narrow(db.from('notes').select('id,title,slug,status,price_cents,sales_count,university,module_code,created_at,sellers(id,display_name)').order('created_at', { ascending: false }).limit(200));
+  if (status) query = query.eq('status', status);
   if (q) query = query.or(`title.ilike."%${q}%",module_code.ilike."%${q}%"`);
-  const { data: notes } = await query;
-  res.render('admin/notes', { title: 'Notes', tab: 'notes', notes: notes || [], q });
+  const [{ data: notes }, { data: seller }, { count: total }, ...counts] = await Promise.all([
+    query,
+    sellerId ? db.from('sellers').select('id,display_name').eq('id', sellerId).maybeSingle() : { data: null },
+    narrow(db.from('notes').select('id', { count: 'exact', head: true })),
+    ...NOTE_VIEWS.map((v) => narrow(db.from('notes').select('id', { count: 'exact', head: true }).eq('status', v[0]))),
+  ]);
+  res.render('admin/notes', {
+    title: 'Notes',
+    tab: 'notes',
+    notes: notes || [],
+    q,
+    status,
+    seller,
+    total: total || 0,
+    views: NOTE_VIEWS.map((v, i) => ({ value: v[0], label: v[1], count: counts[i].count || 0 })),
+  });
 });
 
 router.post('/notes/:id/status', async (req, res, next) => {
@@ -324,13 +416,18 @@ router.post('/notes/:id/status', async (req, res, next) => {
 router.get('/orders', async (req, res) => {
   const status = ['paid', 'pending', 'failed', 'all'].includes(req.query.status) ? req.query.status : 'paid';
   const search = str(req.query.reference, 200);
-  let q = db.from('orders').select('reference,email,buyer_name,amount_cents,platform_fee_cents,seller_earnings_cents,status,download_count,created_at,paid_at,notes(title),sellers(display_name)').order('created_at', { ascending: false }).limit(200);
+  const sellerId = isUuid(req.query.seller) ? req.query.seller : '';
+  let q = db.from('orders').select('reference,email,buyer_name,amount_cents,platform_fee_cents,seller_earnings_cents,status,download_count,created_at,paid_at,notes(title),sellers(id,display_name)').order('created_at', { ascending: false }).limit(200);
+  if (sellerId) q = q.eq('seller_id', sellerId);
   if (search.includes('@')) q = q.eq('email', search.toLowerCase());
   else if (/^EN[A-Z0-9-]+$/i.test(search)) q = q.or(`reference.eq.${search.toUpperCase()},payment_ref.eq.${search.toUpperCase()}`);
   else if (search) q = q.ilike('buyer_name', `%${search.replace(/[%_\\]/g, '')}%`);
   else if (status !== 'all') q = q.eq('status', status);
-  const { data: orders } = await q;
-  res.render('admin/orders', { title: 'Orders', tab: 'orders', orders: orders || [], status, reference: search });
+  const [{ data: orders }, { data: seller }] = await Promise.all([
+    q,
+    sellerId ? db.from('sellers').select('id,display_name').eq('id', sellerId).maybeSingle() : { data: null },
+  ]);
+  res.render('admin/orders', { title: 'Orders', tab: 'orders', orders: orders || [], status, reference: search, seller });
 });
 
 router.post('/orders/:reference/reset-downloads', async (req, res) => {
@@ -350,11 +447,13 @@ router.post('/orders/:reference/reset-downloads', async (req, res) => {
 // "2026-10" for a sale, by the South African calendar (a sale at 00:30 on 1 November is November's)
 const saMonth = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Africa/Johannesburg' }).slice(0, 7);
 
-// Every paid order (Supabase sends at most 1000 rows a request, so it's fetched in pages)
-async function allPaidOrders() {
+// Every paid order, or those paid since a date (Supabase sends at most 1000 rows a request, so it's fetched in pages)
+async function paidOrders({ since } = {}) {
   const out = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await db.from('orders').select('amount_cents,platform_fee_cents,seller_earnings_cents,paid_at,seller_id,sellers(display_name,slug)').eq('status', 'paid').order('paid_at', { ascending: false }).order('id').range(from, from + 999);
+    let q = db.from('orders').select('amount_cents,platform_fee_cents,seller_earnings_cents,paid_at,seller_id,sellers(display_name,slug)').eq('status', 'paid');
+    if (since) q = q.gte('paid_at', since.toISOString());
+    const { data, error } = await q.order('paid_at', { ascending: false }).order('id').range(from, from + 999);
     if (error) throw error; // a partial list would show totals that are quietly too low
     out.push(...data);
     if (data.length < 1000) return out;
@@ -366,7 +465,7 @@ async function allPaidOrders() {
 // subaccount off, so nothing is paid into it; their notes are hidden until they add new details.
 router.post('/sellers/:id/payout-review', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
-  const back = backTo(req, '/admin/money#verify-payouts');
+  const back = backTo(req, '/admin/verifications#bank-accounts');
   const { data: s } = await db.from('sellers').select('id,display_name,full_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since,users(email)').eq('id', req.params.id).maybeSingle();
   if (!s || !s.payout_check_since || !s.paystack_subaccount_code) return res.redirect(back);
   if (req.body.decision === 'approve') {
@@ -401,11 +500,7 @@ router.post('/sellers/:id/payout-review', async (req, res, next) => {
 });
 
 router.get('/money', async (req, res) => {
-  const [paid, { data: noPayouts }, toVerify] = await Promise.all([
-    allPaidOrders(),
-    db.from('sellers').select('id,display_name,verified_at,users(email)').eq('verification_status', 'approved').is('paystack_subaccount_code', null).order('verified_at'),
-    payoutChecks(),
-  ]);
+  const paid = await paidOrders();
 
   // Last 12 months (South African time), newest first, including months with no sales.
   const months = [];
@@ -437,10 +532,57 @@ router.get('/money', async (req, res) => {
     all,
     months,
     sellers: Object.values(bySeller).sort((a, b) => b.gross - a.gross),
-    noPayouts: noPayouts || [],
-    toVerify,
+    best: Math.max(1, ...months.map((m) => m.gross)),
     feeBearerText: config.feeBearer === 'account' ? 'paid by EasyNotes out of its share' : 'deducted from the seller’s share',
   });
+});
+
+/* ---------- Activity ---------- */
+
+const ACTIVITY_GROUPS = [
+  ['sellers', 'Sellers', ['seller.approved', 'seller.rejected', 'seller.revoked', 'seller.payouts_changed', 'seller.payout_checked', 'seller.payout_denied', 'seller.slug_changed', 'seller.account_deleted', 'qualification.submitted', 'qualification.approved', 'qualification.rejected', 'qualification.removed', 'id.deleted', 'review.posted', 'review.hidden', 'review.shown']],
+  ['notes', 'Notes & reports', ['note.uploaded', 'note.flagged', 'note.reported', 'note.removed', 'note.hidden', 'note.restored', 'note.deleted', 'report.resolved']],
+  ['payments', 'Payments', ['webhook.received', 'payment.unmatched', 'payment.mismatch', 'order.downloads_reset']],
+  ['admin', 'Admins', ['admin.added', 'admin.removed', 'email.test']],
+];
+const ACTIVITY_PAGE = 50;
+
+router.get('/activity', async (req, res) => {
+  const group = ACTIVITY_GROUPS.find((g) => g[0] === req.query.group);
+  const before = /^\d{1,18}$/.test(req.query.before || '') ? req.query.before : null;
+  const items = await events.page({ limit: ACTIVITY_PAGE + 1, before, kinds: group ? group[2] : undefined, skip: group ? undefined : QUIET });
+  const more = !!items && items.length > ACTIVITY_PAGE;
+  const list = items && items.slice(0, ACTIVITY_PAGE);
+  res.render('admin/activity', {
+    title: 'Activity',
+    tab: 'activity',
+    items: list,
+    group: group ? group[0] : '',
+    groups: ACTIVITY_GROUPS.map((g) => ({ value: g[0], label: g[1] })),
+    next: more ? list[list.length - 1].id : null,
+    paged: !!before,
+  });
+});
+
+/* ---------- Search (sellers, notes and orders at once) ---------- */
+
+router.get('/search', async (req, res) => {
+  const q = cleanSearch(req.query.q);
+  const ref = q.toUpperCase().replace(/\s/g, '');
+  let sellers = [], notes = [], orders = [];
+  if (q) {
+    const emailUsers = q.includes('@') ? (await db.from('users').select('id').ilike('email', `%${q}%`).limit(20)).data || [] : [];
+    [{ data: sellers }, { data: notes }, { data: orders }] = await Promise.all([
+      (q.includes('@') ? db.from('sellers').select('id,display_name,full_name,verification_status,users(email)').in('user_id', emailUsers.map((u) => u.id))
+        : db.from('sellers').select('id,display_name,full_name,verification_status,users(email)').or(`display_name.ilike."%${q}%",full_name.ilike."%${q}%",slug.ilike."%${q}%"`)).limit(10),
+      db.from('notes').select('id,title,slug,status,module_code,sellers(display_name)').or(`title.ilike."%${q}%",module_code.ilike."%${q}%"`).order('created_at', { ascending: false }).limit(10),
+      (q.includes('@') ? db.from('orders').select('reference,email,buyer_name,amount_cents,status,created_at,notes(title)').eq('email', q.toLowerCase())
+        : /^EN[A-Z0-9-]+$/.test(ref) ? db.from('orders').select('reference,email,buyer_name,amount_cents,status,created_at,notes(title)').or(`reference.eq.${ref},payment_ref.eq.${ref}`)
+        : db.from('orders').select('reference,email,buyer_name,amount_cents,status,created_at,notes(title)').ilike('buyer_name', `%${q.replace(/[%_\\]/g, '')}%`)).order('created_at', { ascending: false }).limit(10),
+    ]);
+  }
+  res.locals.adminSearch = q;
+  res.render('admin/search', { title: 'Search', tab: 'search', q, sellers: sellers || [], notes: notes || [], orders: orders || [] });
 });
 
 /* ---------- Health ---------- */

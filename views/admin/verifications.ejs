@@ -1,84 +1,106 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <h2 class="admin-h">New sellers</h2>
+<%- include('../partials/admin-top', { sub: 'Everything waiting for a decision, oldest first. Document links expire after 10 minutes; refresh for new ones.' }) %>
+<% var ago = function (d) { var n = Math.floor((Date.now() - new Date(d)) / 864e5); return n <= 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago'; }; %>
+
+<nav class="chips admin-jump" aria-label="Jump to">
+  <a class="chip" href="#sellers">New sellers <span class="chip-count<%= queue.length ? ' is-on' : '' %>"><%= queue.length %></span></a>
+  <a class="chip" href="#bank-accounts">Bank accounts <span class="chip-count<%= banks.length ? ' is-on' : '' %>"><%= banks.length %></span></a>
+  <a class="chip" href="#education">Education updates <span class="chip-count<%= changes.length ? ' is-on' : '' %>"><%= changes.length %></span></a>
+</nav>
+
+<section class="admin-block" id="sellers" aria-labelledby="sellers-h">
+  <h2 class="admin-h2" id="sellers-h">New sellers</h2>
   <% if (!queue.length) { %>
-    <div class="empty"><h3>No new sellers to review</h3><p>New submissions show up here, with a count on the Verifications tab.</p></div>
+    <p class="admin-none">Nothing waiting. When someone sends their documents, they show up here.</p>
   <% } else { %>
-    <p class="muted">Oldest first. Document links expire after 10 minutes; refresh the page for new ones.</p>
+    <p class="muted small">Check that the education documents are real and in the same name as the ID. Approving puts their notes on sale once their bank details are set up.</p>
     <div class="queue">
       <% queue.forEach(function (s) { %>
-        <div class="card queue-item">
+        <article class="card queue-item">
           <div>
             <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
-            <span class="small muted"><%= s.users ? s.users.email : '' %> · submitted <%= date(s.submitted_at) %></span>
+            <p class="small muted queue-meta"><%= s.users ? s.users.email : '' %> · sent <%= ago(s.submitted_at) %></p>
             <% s.quals.forEach(function (q) { %><%- include('qual-detail', { q: q }) %><% }) %>
             <div class="doc-links">
-              <% if (s.idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.idUrl %>" target="_blank" rel="noopener noreferrer">ID document</a><% } else { %><span class="muted">No ID document</span><% } %>
+              <% if (s.idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= s.idUrl %>" target="_blank" rel="noopener noreferrer">ID document</a><% } else { %><span class="muted small">No ID document</span><% } %>
             </div>
-            <% if (s.verification_note) { %><p class="fineprint">Previously rejected: “<%= s.verification_note %>”</p><% } %>
+            <% if (s.verification_note) { %><p class="fineprint">Turned down before: “<%= s.verification_note %>”</p><% } %>
           </div>
-          <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification">
-            <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <input type="hidden" name="back" value="/admin/verifications">
-            <div class="field">
-              <label for="note-<%= s.id %>">Reason, if you reject</label>
-              <textarea id="note-<%= s.id %>" name="note" maxlength="500" style="min-height:96px" placeholder="Shown to the seller, e.g. The ID photo is too blurry to read."></textarea>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-hi" type="submit" name="decision" value="approve">Approve</button>
-              <button class="btn btn-danger" type="submit" name="decision" value="reject">Reject</button>
-            </div>
-          </form>
-        </div>
+          <%- include('decide', {
+            action: '/admin/sellers/' + s.id + '/verification', id: 'seller-' + s.id, back: '/admin/verifications#sellers',
+            yes: ['approve', 'Approve seller'], no: ['reject', 'Reject'],
+            reasons: ['The ID photo is too blurry to read.', 'The name on your documents doesn’t match your ID.', 'Upload your degree certificate or academic record, not a transcript request.'],
+            placeholder: 'e.g. The ID photo is too blurry to read.',
+          }) %>
+        </article>
       <% }) %>
     </div>
   <% } %>
+</section>
 
-  <section class="admin-section">
-    <h2>Education updates</h2>
-    <% if (!changes.length) { %>
-      <p class="muted">Nothing waiting. When a verified seller adds education or finishes a course, it shows up here.</p>
-    <% } else { %>
-      <p class="muted">From sellers who are already verified. Their current details stay live until you decide.</p>
-      <div class="queue">
-        <% changes.forEach(function (q) { var s = q.sellers || {}; %>
-          <div class="card queue-item">
-            <div>
-              <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
-              <span class="small muted"><%= s.users ? s.users.email : '' %> · sent <%= date(q.submitted_at) %> · <%= !q.replaced ? 'new education' : (q.replaced.status === 'in_progress' && q.status === 'completed') ? 'finished a course' : 'changed a verified entry' %></span>
-              <% if (q.replaced) { %>
-                <div class="diff">
-                  <p class="small"><strong>What changed</strong> (currently live: <%= q.replaced.name %>, <%= q.replaced.institution %>)</p>
-                  <% if (q.diff.length) { %>
-                    <ul><% q.diff.forEach(function (d) { %><li><span class="muted"><%= d[0] %>:</span> <del><%= d[1] %></del> → <ins><%= d[2] %></ins></li><% }) %></ul>
-                  <% } else { %><p class="small muted">Only the documents changed.</p><% } %>
-                  <% if (q.sameDocs) { %><p class="small muted">No new document uploaded. The links below are the ones already on file.</p><% } %>
-                </div>
-              <% } %>
-              <%- include('qual-detail', { q: q }) %>
-            </div>
-            <form class="form" method="post" action="/admin/qualifications/<%= q.id %>/review">
-              <input type="hidden" name="_csrf" value="<%= csrf %>">
-              <input type="hidden" name="back" value="/admin/verifications">
-              <div class="field">
-                <label for="qnote-<%= q.id %>">Reason, if you reject</label>
-                <textarea id="qnote-<%= q.id %>" name="note" maxlength="500" style="min-height:96px" placeholder="Shown to the seller, e.g. The record doesn’t show the cum laude."></textarea>
-              </div>
-              <div class="form-actions">
-                <button class="btn btn-hi" type="submit" name="decision" value="approve">Approve</button>
-                <button class="btn btn-danger" type="submit" name="decision" value="reject">Reject</button>
-              </div>
-            </form>
+<section class="admin-block" id="bank-accounts" aria-labelledby="banks-h">
+  <h2 class="admin-h2" id="banks-h">Bank accounts</h2>
+  <% if (!banks.length) { %>
+    <p class="admin-none">Nothing waiting. When a seller adds or changes their bank details, they show up here.</p>
+  <% } else { %>
+    <p class="muted small">Paystack holds each seller’s first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Then tick it off here. Until you do, the seller sees “being verified”. Deny it if something’s wrong, like an account in someone else’s name.</p>
+    <div class="queue">
+      <% banks.forEach(function (s) { var match = s.full_name && s.business_name && s.full_name.toLowerCase().split(/\s+/).pop() === s.business_name.toLowerCase().split(/\s+/).pop(); %>
+        <article class="card queue-item">
+          <div>
+            <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
+            <p class="small muted queue-meta"><%= s.users ? s.users.email : '' %> · added <%= ago(s.payout_check_since) %></p>
+            <dl class="facts">
+              <dt>Seller’s name</dt><dd><%= s.full_name || '—' %></dd>
+              <dt>Account holder</dt><dd><%= s.business_name || '—' %><% if (!match) { %> <span class="pill pill-wait">Check the name</span><% } %></dd>
+              <dt>Bank</dt><dd><%= s.bank_name %> ••••<%= s.account_number_last4 %></dd>
+              <dt>Subaccount</dt><dd><code><%= s.paystack_subaccount_code %></code></dd>
+            </dl>
           </div>
-        <% }) %>
-      </div>
-    <% } %>
-  </section>
+          <%- include('payout-review', { s: s, back: '/admin/verifications#bank-accounts' }) %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
 
-  <section class="admin-section">
-    <h2>Recent decisions</h2>
-    <%- include('../partials/activity', { items: decided }) %>
-  </section>
-</div>
-<%- include('../partials/bottom') %>
+<section class="admin-block" id="education" aria-labelledby="edu-h">
+  <h2 class="admin-h2" id="edu-h">Education updates</h2>
+  <% if (!changes.length) { %>
+    <p class="admin-none">Nothing waiting. When a verified seller adds education or finishes a course, it shows up here.</p>
+  <% } else { %>
+    <p class="muted small">From sellers who are already verified. Their current details stay live until you decide.</p>
+    <div class="queue">
+      <% changes.forEach(function (q) { var s = q.sellers || {}; %>
+        <article class="card queue-item">
+          <div>
+            <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a><% if (s.full_name && s.full_name !== s.display_name) { %> <span class="muted small">(<%= s.full_name %>)</span><% } %></h3>
+            <p class="small muted queue-meta"><%= s.users ? s.users.email : '' %> · sent <%= ago(q.submitted_at) %> · <%= !q.replaced ? 'new education' : (q.replaced.status === 'in_progress' && q.status === 'completed') ? 'finished a course' : 'changed a verified entry' %></p>
+            <% if (q.replaced) { %>
+              <div class="diff">
+                <p class="small"><strong>What changed</strong> (currently live: <%= q.replaced.name %>, <%= q.replaced.institution %>)</p>
+                <% if (q.diff.length) { %>
+                  <ul><% q.diff.forEach(function (d) { %><li><span class="muted"><%= d[0] %>:</span> <del><%= d[1] %></del> → <ins><%= d[2] %></ins></li><% }) %></ul>
+                <% } else { %><p class="small muted">Only the documents changed.</p><% } %>
+                <% if (q.sameDocs) { %><p class="small muted">No new document uploaded. The links below are the ones already on file.</p><% } %>
+              </div>
+            <% } %>
+            <%- include('qual-detail', { q: q }) %>
+          </div>
+          <%- include('decide', {
+            action: '/admin/qualifications/' + q.id + '/review', id: 'qual-' + q.id, back: '/admin/verifications#education',
+            yes: ['approve', 'Approve'], no: ['reject', 'Reject'],
+            reasons: ['The document doesn’t show this result.', 'The document is hard to read. Upload a clearer copy.'],
+            placeholder: 'e.g. The record doesn’t show the cum laude.',
+          }) %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<section class="admin-block" aria-labelledby="decided-h">
+  <div class="admin-h2-row"><h2 class="admin-h2" id="decided-h">Recent decisions</h2><a href="/admin/activity?group=sellers">All seller activity</a></div>
+  <%- include('../partials/activity', { items: decided }) %>
+</section>
+
+<%- include('../partials/admin-bottom') %>

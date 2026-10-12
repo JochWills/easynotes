@@ -1,16 +1,14 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <div class="dash-grid">
+<%- include('../partials/admin-top', { sub: 'How EasyNotes is set up, and who can use this dashboard.' }) %>
+  <div class="admin-stack">
     <section class="card">
-      <h2 style="font-size:1.2rem">Site settings</h2>
+      <h2 class="admin-h2">Site settings</h2>
       <p class="muted small">Change these in Render → easynotes → Environment, then save and redeploy.</p>
       <dl class="kv">
         <% settings.forEach(function (s) { %><dt><%= s[0] %></dt><dd><%= s[1] %><code><%= s[2] %></code></dd><% }) %>
       </dl>
     </section>
     <section class="card">
-      <h2 style="font-size:1.2rem">Admins</h2>
+      <h2 class="admin-h2">Admins</h2>
       <ul class="lib-list" style="margin-top:4px">
         <% admins.forEach(function (a) { %>
           <li class="lib-item">
@@ -32,5 +30,4 @@
       </form>
     </section>
   </div>
-</div>
-<%- include('../partials/bottom') %>
+<%- include('../partials/admin-bottom') %>

@@ -1,6 +1,4 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
+<%- include('../partials/admin-top', { sub: 'Checks the database, storage, payments and email, every time you open this page.' }) %>
   <% var bad = checks.filter(function (c) { return c.status === 'fail'; }).length, warn = checks.filter(function (c) { return c.status === 'warn'; }).length; %>
   <div class="alert <%= bad ? 'alert-error' : warn ? 'alert-info' : 'alert-ok' %>">
     <%= bad ? bad + (bad === 1 ? ' problem needs' : ' problems need') + ' fixing' : warn ? 'Working, with ' + warn + (warn === 1 ? ' thing' : ' things') + ' to look at' : 'Everything is working' %>
@@ -19,14 +17,14 @@
     <% }) %>
   </ul>
 
-  <div class="dash-grid admin-section">
+  <div class="admin-cols admin-block">
     <section class="card">
-      <h2 style="font-size:1.2rem">Test email</h2>
+      <h2 class="admin-h2">Test email</h2>
       <p class="muted">Sends a short email to <strong><%= user.email %></strong> from the noreply address.</p>
       <form method="post" action="/admin/health/test-email"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn" type="submit">Send test email</button></form>
     </section>
     <section class="card">
-      <h2 style="font-size:1.2rem">Server</h2>
+      <h2 class="admin-h2">Server</h2>
       <dl class="kv">
         <dt>Version</dt><dd><%= app.commit %></dd>
         <dt>Running for</dt><dd><%= app.uptime %></dd>
@@ -36,5 +34,4 @@
       </dl>
     </section>
   </div>
-</div>
-<%- include('../partials/bottom') %>
+<%- include('../partials/admin-bottom') %>

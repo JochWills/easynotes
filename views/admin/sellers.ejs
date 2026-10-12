@@ -1,35 +1,42 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
-  <div class="chips">
-    <a class="chip" href="/admin/sellers<%= q ? qs({ q: q }) : '' %>" <%- !status ? 'aria-current="page"' : '' %>>All</a>
-    <% statuses.forEach(function (s) { %><a class="chip" href="/admin/sellers<%= qs({ status: s, q: q }) %>" <%- status === s ? 'aria-current="page"' : '' %>><%= { pending: 'In review', approved: 'Verified', rejected: 'Not approved', unsubmitted: 'Not started' }[s] %></a><% }) %>
-  </div>
-    <form method="get" action="/admin/sellers" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
-      <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
-      <label for="as-q" class="sr-only">Find a seller</label>
-      <input id="as-q" type="search" name="q" maxlength="80" value="<%= q %>" placeholder="Name, link or email">
-      <button class="btn btn-sm" type="submit">Find</button>
-    </form>
-  </div>
-  <div class="table-wrap">
-    <table class="data">
-      <thead><tr><th>Seller</th><th>Email</th><th>Degree</th><th>Status</th><th>Payouts</th><th>Joined</th></tr></thead>
-      <tbody>
-        <% sellers.forEach(function (s) { %>
-          <tr>
-            <td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td>
-            <td><%= s.users ? s.users.email : '' %></td>
-            <td><%= s.degree ? s.degree + ', ' + s.university : '—' %></td>
-            <td><%- include('../partials/status-pill', { status: s.verification_status }) %></td>
-            <td><%= s.paystack_subaccount_code ? 'Set up' : 'Missing' %></td>
-            <td><%= date(s.created_at) %></td>
-          </tr>
-        <% }) %>
-        <% if (!sellers.length) { %><tr><td colspan="6" class="muted">No sellers in this view.</td></tr><% } %>
-      </tbody>
-    </table>
-  </div>
+<%- include('../partials/admin-top', { sub: 'Everyone who signed up to sell, newest first.' }) %>
+
+<div class="filter-bar">
+  <nav class="chips" aria-label="Show">
+    <a class="chip" href="/admin/sellers<%= q ? qs({ q: q }) : '' %>" <%- !status ? 'aria-current="page"' : '' %>>All <span class="chip-count"><%= total %></span></a>
+    <% views.forEach(function (v) { %><a class="chip" href="/admin/sellers<%= qs({ status: v.value, q: q }) %>" <%- status === v.value ? 'aria-current="page"' : '' %>><%= v.label %> <span class="chip-count<%= v.count && (v.value === 'pending' || v.value === 'bank-check') ? ' is-on' : '' %>"><%= v.count %></span></a><% }) %>
+  </nav>
+  <form method="get" action="/admin/sellers" class="filter-search" role="search">
+    <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+    <label for="as-q" class="sr-only">Find a seller</label>
+    <input id="as-q" type="search" name="q" maxlength="80" value="<%= q %>" placeholder="Name, link or email">
+    <button class="btn btn-sm btn-ghost" type="submit">Find</button>
+  </form>
 </div>
-<%- include('../partials/bottom') %>
+<% if (status === 'no-payouts' && sellers.length) { %><p class="muted small">Their notes stay hidden from students until they add bank details. You could email them a nudge.</p><% } %>
+
+<div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>Seller</th><th>Status</th><th>Bank details</th><th class="num">Notes</th><th>Joined</th></tr></thead>
+    <tbody>
+      <% sellers.forEach(function (s) { var notes = s.notes && s.notes[0] ? s.notes[0].count : 0; %>
+        <tr>
+          <td><a href="/admin/sellers/<%= s.id %>"><strong><%= s.display_name %></strong></a><br><span class="small muted"><%= s.users ? s.users.email : '' %></span></td>
+          <td><%- include('../partials/status-pill', { status: s.verification_status }) %></td>
+          <td>
+            <% if (s.paystack_subaccount_code && s.payout_check_since) { %><span class="pill pill-wait">To verify</span>
+            <% } else if (s.paystack_subaccount_code) { %><span class="pill pill-ok">Set up</span>
+            <% } else if (s.payout_rejected_note) { %><span class="pill pill-bad">Denied</span>
+            <% } else if (s.verification_status === 'approved') { %><span class="pill pill-muted">Missing</span>
+            <% } else { %><span class="muted">—</span><% } %>
+          </td>
+          <td class="num"><%= notes %></td>
+          <td><%= date(s.created_at) %></td>
+        </tr>
+      <% }) %>
+      <% if (!sellers.length) { %><tr><td colspan="5" class="muted"><%= q ? 'No sellers match “' + q + '”.' : 'No sellers in this view.' %></td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<% if (sellers.length === 200) { %><p class="fineprint">Showing the newest 200. Search to find someone older.</p><% } %>
+
+<%- include('../partials/admin-bottom') %>

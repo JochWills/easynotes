@@ -1,7 +1,5 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <p class="muted">Reports from students and rights holders, uploads the automatic check flagged, and payments that didn’t match an order. Copyright takedown requests should be handled within 2 working days (see the <a href="/copyright">copyright page</a>).</p>
+<%- include('../partials/admin-top', { sub: 'Reports from students and rights holders, uploads the automatic check flagged, and payments that didn’t match an order. Urgent ones come first.' }) %>
+<p class="muted small">Handle copyright takedown requests within 2 working days (see the <a href="/copyright">copyright page</a>). Each item stays here until you mark it resolved.</p>
   <% if (items === null) { %>
     <div class="alert alert-info">The activity log table isn’t set up, so reports can’t be listed. Run the <strong>events</strong> snippet from <code>supabase/schema.sql</code>.</div>
   <% } else if (!items.length) { %>
@@ -64,5 +62,4 @@
       <% }) %>
     </ul>
   <% } %>
-</div>
-<%- include('../partials/bottom') %>
+<%- include('../partials/admin-bottom') %>

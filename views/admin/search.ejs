@@ -1,0 +1,39 @@
+<%- include('../partials/admin-top', { sub: q ? 'Results for “' + q + '”' : 'Find sellers (name, link or email), notes (title or module code) and orders (reference, buyer email or name).' }) %>
+
+<form method="get" action="/admin/search" class="filter-search search-big" role="search">
+  <label for="s-q" class="sr-only">Search</label>
+  <input id="s-q" type="search" name="q" maxlength="80" value="<%= q %>" placeholder="e.g. Lerato, FAC2002F, ENA1B2C3 or someone@example.com" <%= q ? '' : 'autofocus' %>>
+  <button class="btn btn-sm" type="submit">Search</button>
+</form>
+
+<% if (q) { %>
+  <% if (!sellers.length && !notes.length && !orders.length) { %>
+    <div class="empty"><h3>Nothing found</h3><p>Try part of a name, a module code, or a full order reference (it starts with EN).</p></div>
+  <% } %>
+  <% if (sellers.length) { %>
+    <section class="admin-block" aria-labelledby="r-sellers">
+      <h2 class="admin-h2" id="r-sellers">Sellers</h2>
+      <ul class="mini-list">
+        <% sellers.forEach(function (s) { %><li><a href="/admin/sellers/<%= s.id %>"><span class="mini-main"><strong><%= s.display_name %></strong><span class="small muted"><%= s.full_name && s.full_name !== s.display_name ? s.full_name + ' · ' : '' %><%= s.users ? s.users.email : '' %></span></span><span class="mini-side"><%- include('../partials/status-pill', { status: s.verification_status }) %></span></a></li><% }) %>
+      </ul>
+    </section>
+  <% } %>
+  <% if (notes.length) { %>
+    <section class="admin-block" aria-labelledby="r-notes">
+      <div class="admin-h2-row"><h2 class="admin-h2" id="r-notes">Notes</h2><a href="/admin/notes<%= qs({ q: q }) %>">Open in Notes</a></div>
+      <ul class="mini-list">
+        <% notes.forEach(function (n) { %><li><a href="<%= noteUrl(n) %>"><span class="mini-main"><strong><%= n.title %></strong><span class="small muted"><%= [n.module_code, n.sellers && n.sellers.display_name].filter(Boolean).join(' · ') %></span></span><span class="mini-side"><%- include('../partials/status-pill', { status: n.status }) %></span></a></li><% }) %>
+      </ul>
+    </section>
+  <% } %>
+  <% if (orders.length) { %>
+    <section class="admin-block" aria-labelledby="r-orders">
+      <h2 class="admin-h2" id="r-orders">Orders</h2>
+      <ul class="mini-list">
+        <% orders.forEach(function (o) { %><li><a href="/admin/orders?reference=<%= o.reference %>"><span class="mini-main"><strong><%= o.reference %></strong><span class="small muted"><%= o.notes ? o.notes.title + ' · ' : '' %><%= o.buyer_name || o.email %> · <%= date(o.created_at) %></span></span><span class="mini-side"><strong><%= rand(o.amount_cents) %></strong><%- include('../partials/status-pill', { status: o.status, kind: 'order' }) %></span></a></li><% }) %>
+      </ul>
+    </section>
+  <% } %>
+<% } %>
+
+<%- include('../partials/admin-bottom') %>

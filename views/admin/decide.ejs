@@ -1,0 +1,22 @@
+<%# Approve or turn down something waiting for review. Needs: action (where to post), id (unique on the page),
+    back, yes ([value, label]), no ([value, label]), reasons (one-tap reasons), placeholder.
+    Optional: confirm ([title, text, button]) to ask before turning it down. %>
+<form class="form decide" method="post" action="<%= action %>" <% if (locals.confirm) { %>data-confirm-title="<%= confirm[0] %>" data-confirm="<%= confirm[1] %>" data-confirm-yes="<%= confirm[2] %>"<% } %>>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <input type="hidden" name="back" value="<%= back %>">
+  <div class="form-actions decide-yes">
+    <button class="btn btn-hi" type="submit" name="decision" value="<%= yes[0] %>" data-no-confirm><%= yes[1] %></button>
+  </div>
+  <div class="decide-no">
+    <div class="field">
+      <label for="why-<%= id %>">Or turn it down: reason for the seller</label>
+      <textarea id="why-<%= id %>" name="note" maxlength="500" placeholder="<%= placeholder %>"></textarea>
+    </div>
+    <% if (reasons && reasons.length) { %>
+      <div class="reason-chips" aria-label="Common reasons">
+        <% reasons.forEach(function (r) { %><button class="chip" type="button" data-fill="why-<%= id %>"><%= r %></button><% }) %>
+      </div>
+    <% } %>
+    <button class="btn btn-danger-ghost btn-ghost btn-sm" type="submit" name="decision" value="<%= no[0] %>"><%= no[1] %></button>
+  </div>
+</form>

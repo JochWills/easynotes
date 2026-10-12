@@ -1,0 +1,62 @@
+<%# Admin pages: the site header, then a sidebar (a Menu button on phones) and the page heading.
+    Pass sub (a line under the heading), crumb ([href, label] above it) or noHead (the page draws its own).
+    Close with admin-bottom. %>
+<%- include('top', { noindex: true }) %>
+<% var svg = function (d) { return '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'; };
+   var ico = {
+     overview: svg('M3 11l9-7 9 7M5.5 9.5V20h13V9.5M10 20v-5h4v5'),
+     verifications: svg('M12 3l7 3v5.5c0 4.2-2.9 7.9-7 9.5-4.1-1.6-7-5.3-7-9.5V6zM8.8 12l2.2 2.2 4.2-4.4'),
+     reports: svg('M5 21V4M5 4h12l-2.5 4.5L17 13H5'),
+     sellers: svg('M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c.7-3.6 3.3-5.6 6.5-5.6s5.8 2 6.5 5.6M16 4.3a3.5 3.5 0 010 6.6M18 14.6c1.9.8 3.1 2.6 3.5 5.4'),
+     notes: svg('M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6'),
+     orders: svg('M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3'),
+     money: svg('M3 17l6-6 4 4 8-8M15 7h6v6'),
+     activity: svg('M3 12h4l3-7 4 14 3-7h4'),
+     health: svg('M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z'),
+     settings: svg('M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4'),
+   };
+   var groups = [
+     [null, [['overview', '/admin', 'Home'], ['verifications', '/admin/verifications', 'Review', locals.pendingCount], ['reports', '/admin/reports', 'Reports', locals.reportCount]]],
+     ['Manage', [['sellers', '/admin/sellers', 'Sellers'], ['notes', '/admin/notes', 'Notes'], ['orders', '/admin/orders', 'Orders']]],
+     ['Insights', [['money', '/admin/money', 'Money'], ['activity', '/admin/activity', 'Activity']]],
+     ['System', [['health', '/admin/health', 'Health'], ['settings', '/admin/settings', 'Settings']]],
+   ];
+   var waiting = (locals.pendingCount || 0) + (locals.reportCount || 0);
+   var current = 'Admin';
+   groups.forEach(function (g) { g[1].forEach(function (t) { if (t[0] === tab) current = t[2]; }); });
+   var navList = function (where) { %>
+    <form class="admin-search" method="get" action="/admin/search" role="search">
+      <label for="admin-q-<%= where %>" class="sr-only">Search sellers, notes and orders</label>
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="admin-q-<%= where %>" type="search" name="q" maxlength="80" value="<%= locals.adminSearch || '' %>" placeholder="Search everything">
+    </form>
+    <% groups.forEach(function (g) { %>
+      <% if (g[0]) { %><p class="admin-nav-group"><%= g[0] %></p><% } %>
+      <% g[1].forEach(function (t) { %>
+        <a href="<%= t[1] %>" <%- tab === t[0] ? 'aria-current="page"' : '' %>><%- ico[t[0]] %><span><%= t[2] %></span><% if (t[3]) { %><span class="admin-count" aria-label="<%= t[3] %> waiting"><%= t[3] %></span><% } %></a>
+      <% }) %>
+    <% }) %>
+<% }; %>
+<div class="wrap admin">
+  <aside class="admin-side">
+    <nav class="admin-nav admin-nav-wide" aria-label="Admin"><% navList('side'); %></nav>
+    <details class="admin-menu">
+      <summary>
+        <span class="admin-menu-ico" aria-hidden="true"><%- ico[tab] || svg('M4 7h16M4 12h16M4 17h16') %></span>
+        <span><span class="muted">Admin ·</span> <strong><%= current %></strong></span>
+        <% if (waiting) { %><span class="admin-count" aria-label="<%= waiting %> waiting"><%= waiting %></span><% } %>
+        <svg class="admin-menu-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <nav class="admin-nav" aria-label="Admin"><% navList('menu'); %></nav>
+    </details>
+  </aside>
+  <div class="admin-main">
+    <% if (!locals.noHead) { %>
+      <header class="admin-head">
+        <div>
+          <% if (locals.crumb) { %><a class="admin-crumb" href="<%= crumb[0] %>">← <%= crumb[1] %></a><% } %>
+          <h1><%= title %></h1>
+          <% if (locals.sub) { %><p><%= sub %></p><% } %>
+        </div>
+      </header>
+    <% } %>

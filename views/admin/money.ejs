@@ -1,77 +1,45 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <div class="stats">
-    <div class="stat"><b><%= rand(all.fees) %></b><span>EasyNotes revenue, all time</span></div>
-    <div class="stat"><b><%= rand(all.gross) %></b><span>Gross sales</span></div>
-    <div class="stat"><b><%= rand(all.payouts) %></b><span>Paid to sellers</span></div>
-    <div class="stat"><b><%= all.sales %></b><span>Paid orders</span></div>
-  </div>
-  <p class="fineprint" style="margin-top:-14px;margin-bottom:28px">Paystack splits every payment and pays sellers directly, so there’s nothing to pay out by hand. Paystack’s own fee is <%= feeBearerText %>.</p>
+<%- include('../partials/admin-top', { sub: 'Paystack splits every payment and pays sellers directly, so there’s nothing to pay out by hand. Paystack’s own fee is ' + feeBearerText + '.' }) %>
 
-  <section>
-    <h2 style="font-size:1.3rem">By month</h2>
+<div class="kpis">
+  <div class="kpi"><span>EasyNotes revenue</span><b><%= rand(all.fees) %></b><small>All time</small></div>
+  <div class="kpi"><span>Gross sales</span><b><%= rand(all.gross) %></b><small>All time</small></div>
+  <div class="kpi"><span>Paid to sellers</span><b><%= rand(all.payouts) %></b><small>All time</small></div>
+  <div class="kpi"><span>Paid orders</span><b><%= all.sales %></b><small>All time</small></div>
+</div>
+
+<section class="admin-block" aria-labelledby="month-h">
+  <h2 class="admin-h2" id="month-h">By month</h2>
+  <div class="table-wrap">
+    <table class="data money-months">
+      <thead><tr><th>Month</th><th class="num">Orders</th><th>Gross</th><th class="num">EasyNotes</th><th class="num">Sellers</th></tr></thead>
+      <tbody>
+        <% months.forEach(function (m) { %>
+          <tr>
+            <td><%= m.label %></td>
+            <td class="num"><%= m.sales %></td>
+            <td><span class="bar-cell"><span class="bar-num"><%= rand(m.gross) %></span><span class="bar-track" aria-hidden="true"><span class="bar" style="width:<%= Math.round(m.gross / best * 100) %>%"></span></span></span></td>
+            <td class="num"><%= rand(m.fees) %></td>
+            <td class="num"><%= rand(m.payouts) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="admin-block" aria-labelledby="by-seller-h">
+  <h2 class="admin-h2" id="by-seller-h">By seller</h2>
+  <% if (sellers.length) { %>
     <div class="table-wrap">
       <table class="data">
-        <thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Gross</th><th class="num">EasyNotes</th><th class="num">Sellers</th></tr></thead>
+        <thead><tr><th>Seller</th><th class="num">Orders</th><th class="num">Gross</th><th class="num">EasyNotes</th><th class="num">Seller earned</th><th>Last sale</th></tr></thead>
         <tbody>
-          <% months.forEach(function (m) { %><tr><td><%= m.label %></td><td class="num"><%= m.sales %></td><td class="num"><%= rand(m.gross) %></td><td class="num"><%= rand(m.fees) %></td><td class="num"><%= rand(m.payouts) %></td></tr><% }) %>
+          <% sellers.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.name %></a></td><td class="num"><%= s.sales %></td><td class="num"><%= rand(s.gross) %></td><td class="num"><%= rand(s.fees) %></td><td class="num"><%= rand(s.payouts) %></td><td><%= date(s.last) %></td></tr><% }) %>
         </tbody>
       </table>
     </div>
-  </section>
+  <% } else { %><p class="admin-none">No sales yet.</p><% } %>
+  <p class="fineprint">Bank accounts to verify are under <a href="/admin/verifications#bank-accounts">Review</a>. Sellers without bank details are under <a href="/admin/sellers?status=no-payouts">Sellers</a>.</p>
+</section>
 
-  <section class="admin-section">
-    <h2>By seller</h2>
-    <% if (sellers.length) { %>
-      <div class="table-wrap">
-        <table class="data">
-          <thead><tr><th>Seller</th><th class="num">Orders</th><th class="num">Gross</th><th class="num">EasyNotes</th><th class="num">Seller earned</th><th>Last sale</th></tr></thead>
-          <tbody>
-            <% sellers.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.name %></a></td><td class="num"><%= s.sales %></td><td class="num"><%= rand(s.gross) %></td><td class="num"><%= rand(s.fees) %></td><td class="num"><%= rand(s.payouts) %></td><td><%= date(s.last) %></td></tr><% }) %>
-          </tbody>
-        </table>
-      </div>
-    <% } else { %><p class="muted">No sales yet.</p><% } %>
-  </section>
-
-  <% if (toVerify.length) { %>
-    <section class="admin-section" id="verify-payouts">
-      <h2>Payout accounts to verify in Paystack (<%= toVerify.length %>)</h2>
-      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Then tick it off here: until you do, the seller sees their account as “being verified”. If something’s wrong, like an account that isn’t in the seller’s name, deny it.</p>
-      <div class="queue">
-        <% toVerify.forEach(function (s) { %>
-          <div class="card queue-item">
-            <div>
-              <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
-              <span class="small muted">Since <%= date(s.payout_check_since) %></span>
-              <dl class="facts">
-                <dt>Seller’s name</dt><dd><%= s.full_name || '—' %></dd>
-                <dt>Account holder</dt><dd><%= s.business_name || '—' %></dd>
-                <dt>Bank</dt><dd><%= s.bank_name %> ••••<%= s.account_number_last4 %></dd>
-                <dt>Subaccount</dt><dd><code><%= s.paystack_subaccount_code %></code></dd>
-              </dl>
-            </div>
-            <%- include('payout-review', { s: s, back: '/admin/money#verify-payouts' }) %>
-          </div>
-        <% }) %>
-      </div>
-    </section>
-  <% } %>
-
-  <section class="admin-section" id="no-payouts">
-    <h2>Verified, but no payout details (<%= noPayouts.length %>)</h2>
-    <% if (noPayouts.length) { %>
-      <p class="muted">Their notes stay hidden from students until they add bank details. You could email them a nudge.</p>
-      <div class="table-wrap">
-        <table class="data">
-          <thead><tr><th>Seller</th><th>Email</th><th>Verified</th></tr></thead>
-          <tbody>
-            <% noPayouts.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td><td><% if (s.users) { %><a href="mailto:<%= s.users.email %>"><%= s.users.email %></a><% } %></td><td><%= date(s.verified_at) %></td></tr><% }) %>
-          </tbody>
-        </table>
-      </div>
-    <% } else { %><p class="muted">Every verified seller can be paid.</p><% } %>
-  </section>
-</div>
-<%- include('../partials/bottom') %>
+<%- include('../partials/admin-bottom') %>

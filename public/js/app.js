@@ -706,6 +706,16 @@
     b.addEventListener('click', function () { b.classList.add('is-spinning'); });
   });
 
+  // Admin: a one-tap reason fills the "reason for the seller" box (data-fill = the box's id)
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-fill]');
+    if (!b) return;
+    var box = document.getElementById(b.getAttribute('data-fill'));
+    if (!box) return;
+    box.value = b.textContent.trim();
+    box.focus();
+  });
+
   // Confirm destructive actions in a pop-up. On a form: data-confirm (the explanation), and optionally
   // data-confirm-title and data-confirm-yes (the button). On a link to a confirmation page, add
   // data-confirm-post (where to POST): with JavaScript the pop-up does it, without it the page still works.

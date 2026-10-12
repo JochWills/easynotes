@@ -1,0 +1,20 @@
+<%- include('../partials/admin-top', { sub: 'Everything that happened on EasyNotes, newest first: who did it and when.' }) %>
+
+<div class="filter-bar">
+  <nav class="chips" aria-label="Show">
+    <a class="chip" href="/admin/activity" <%- !group ? 'aria-current="page"' : '' %>>Everything</a>
+    <% groups.forEach(function (g) { %><a class="chip" href="/admin/activity<%= qs({ group: g.value }) %>" <%- group === g.value ? 'aria-current="page"' : '' %>><%= g.label %></a><% }) %>
+  </nav>
+</div>
+
+<% if (!group) { %><p class="muted small">Paystack’s payment confirmations are left out here. They’re under Payments.</p><% } %>
+<%- include('../partials/activity', { items: items }) %>
+
+<% if (next || paged) { %>
+  <nav class="pager" aria-label="More activity">
+    <% if (paged) { %><a class="btn btn-ghost btn-sm" href="/admin/activity<%= qs({ group: group }).replace(/\?$/, '') %>">← Newest</a><% } %>
+    <% if (next) { %><a class="btn btn-ghost btn-sm" href="/admin/activity<%= qs({ group: group, before: next }) %>">Older →</a><% } %>
+  </nav>
+<% } %>
+
+<%- include('../partials/admin-bottom') %>

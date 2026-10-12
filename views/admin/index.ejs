@@ -1,45 +1,56 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <div class="stats">
-    <div class="stat"><b><%= rand(totals.fees) %></b><span>EasyNotes revenue</span></div>
-    <div class="stat"><b><%= rand(totals.gross) %></b><span>Gross sales</span></div>
-    <div class="stat"><b><%= totals.sales %></b><span>Paid orders</span></div>
-    <div class="stat"><b><%= sellerCount %></b><span>Verified sellers</span></div>
-    <div class="stat"><b><%= noteCount %></b><span>Published notes</span></div>
-  </div>
+<%- include('../partials/admin-top', { sub: 'What needs you, and how EasyNotes is doing.' }) %>
 
-  <% var ps = locals.pendingSellers || 0, pu = locals.pendingUpdates || 0, toVerify = locals.toVerify || 0; %>
-  <% if (ps || pu || toVerify || noPayouts) { %>
-    <ul class="setup">
-      <% if (ps) { %><li><span class="num"><%= ps %></span><div><h3><%= ps === 1 ? 'Seller' : 'Sellers' %> waiting for verification</h3><p>Check their degree and ID documents.</p></div><a class="btn btn-hi btn-sm" href="/admin/verifications">Review</a></li><% } %>
-      <% if (pu) { %><li><span class="num"><%= pu %></span><div><h3>Education <%= pu === 1 ? 'update' : 'updates' %> to check</h3><p>From sellers who are already verified.</p></div><a class="btn btn-hi btn-sm" href="/admin/verifications">Review</a></li><% } %>
-      <% if (toVerify) { %><li><span class="num"><%= toVerify %></span><div><h3>New payout <%= toVerify === 1 ? 'account' : 'accounts' %> to verify in Paystack</h3><p>Paystack holds the seller’s first payout until you click Verify.</p></div><a class="btn btn-hi btn-sm" href="/admin/money#verify-payouts">See who</a></li><% } %>
-      <% if (noPayouts) { %><li><span class="num"><%= noPayouts %></span><div><h3>Verified <%= noPayouts === 1 ? 'seller hasn’t' : 'sellers haven’t' %> added payout details</h3><p>Their notes stay hidden until they do.</p></div><a class="btn btn-ghost btn-sm" href="/admin/money#no-payouts">See who</a></li><% } %>
+<section class="admin-block" aria-labelledby="todo-h">
+  <h2 class="admin-h2" id="todo-h">To do</h2>
+  <% if (!todo.length) { %>
+    <div class="todo-clear">
+      <span class="todo-clear-ico" aria-hidden="true">✓</span>
+      <div><h3>All caught up</h3><p>Nothing needs you right now. New sellers, bank accounts and reports show up here.</p></div>
+    </div>
+  <% } else { %>
+    <ul class="todo">
+      <% todo.forEach(function (t) { %>
+        <li class="todo-<%= t.tone %>">
+          <span class="todo-count" aria-hidden="true"><%= t.count %></span>
+          <div><h3><%= t.title %></h3><p><%= t.sub %></p></div>
+          <a class="btn btn-sm <%= t.tone === 'later' ? 'btn-ghost' : t.tone === 'urgent' ? 'btn-danger' : 'btn-hi' %>" href="<%= t.href %>"><%= t.label %></a>
+        </li>
+      <% }) %>
     </ul>
   <% } %>
+</section>
 
-  <div class="dash-grid">
-    <section>
-      <h2 style="font-size:1.3rem">Latest orders</h2>
-      <% if (recent.length) { %>
-        <div class="table-wrap">
-          <table class="data">
-            <thead><tr><th>Reference</th><th>Notes</th><th>Status</th><th class="num">Amount</th></tr></thead>
-            <tbody>
-              <% recent.forEach(function (o) { %>
-                <tr><td><a href="/admin/orders?reference=<%= o.reference %>"><%= o.reference %></a></td><td><%= o.notes ? o.notes.title : '' %></td><td><%- include('../partials/status-pill', { status: o.status }) %></td><td class="num"><%= rand(o.amount_cents) %></td></tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <p class="fineprint"><a href="/admin/orders?status=all">All orders</a></p>
-      <% } else { %><p class="muted">No orders yet.</p><% } %>
-    </section>
-    <section>
-      <h2 style="font-size:1.3rem">Activity</h2>
-      <%- include('../partials/activity', { items: activity }) %>
-    </section>
+<section class="admin-block" aria-labelledby="month-h">
+  <div class="admin-h2-row"><h2 class="admin-h2" id="month-h"><%= monthLabel %> so far</h2><a href="/admin/money">Money details</a></div>
+  <div class="kpis">
+    <div class="kpi"><span>EasyNotes revenue</span><b><%= rand(month.fees) %></b><small>Last month: <%= rand(lastMonth.fees) %></small></div>
+    <div class="kpi"><span>Gross sales</span><b><%= rand(month.gross) %></b><small>Last month: <%= rand(lastMonth.gross) %></small></div>
+    <div class="kpi"><span>Paid orders</span><b><%= month.sales %></b><small>Last month: <%= lastMonth.sales %></small></div>
+    <div class="kpi"><span>Notes on sale</span><b><%= liveNotes %></b><small>From <%= sellerCount %> verified <%= sellerCount === 1 ? 'seller' : 'sellers' %></small></div>
   </div>
+  <p class="fineprint">All time: <%= rand(totals.fees) %> EasyNotes revenue from <%= rand(totals.gross) %> in sales (<%= totals.sales %> paid <%= totals.sales === 1 ? 'order' : 'orders' %>).</p>
+</section>
+
+<div class="admin-cols">
+  <section aria-labelledby="orders-h">
+    <div class="admin-h2-row"><h2 class="admin-h2" id="orders-h">Latest orders</h2><a href="/admin/orders?status=all">All orders</a></div>
+    <% if (recent.length) { %>
+      <ul class="mini-list">
+        <% recent.forEach(function (o) { %>
+          <li>
+            <a href="/admin/orders?reference=<%= o.reference %>">
+              <span class="mini-main"><strong><%= o.notes ? o.notes.title : o.reference %></strong><span class="small muted"><%= o.buyer_name || o.email %> · <%= date(o.created_at) %></span></span>
+              <span class="mini-side"><strong><%= rand(o.amount_cents) %></strong><%- include('../partials/status-pill', { status: o.status, kind: 'order' }) %></span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %><p class="muted">No orders yet.</p><% } %>
+  </section>
+  <section aria-labelledby="activity-h">
+    <div class="admin-h2-row"><h2 class="admin-h2" id="activity-h">Activity</h2><a href="/admin/activity">See all</a></div>
+    <%- include('../partials/activity', { items: activity }) %>
+  </section>
 </div>
-<%- include('../partials/bottom') %>
+
+<%- include('../partials/admin-bottom') %>

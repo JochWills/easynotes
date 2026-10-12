@@ -1,93 +1,141 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <p><a href="/admin/sellers">All sellers</a></p>
-  <div class="dash-grid">
-    <div class="card">
-      <h2 style="font-size:1.35rem"><%= s.display_name %> <%- include('../partials/status-pill', { status: s.verification_status }) %></h2>
-      <dl class="facts">
-        <dt>Full name</dt><dd><%= s.full_name || '—' %></dd>
-        <dt>Email</dt><dd><%= s.users ? s.users.email : '' %></dd>
-        <dt>Storefront</dt><dd><a href="<%= storeUrl(s) %>">/<%= s.slug %></a></dd>
-        <dt>Shown as</dt><dd><%= s.degree ? s.degree + ', ' + s.university : '—' %></dd>
-        <dt>Submitted</dt><dd><%= s.submitted_at ? date(s.submitted_at) : '—' %></dd>
-        <dt>Sales</dt><dd><%= totals.sales %> paid, <%= rand(totals.earnings) %> earned</dd>
-        <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %>
-          <% if (s.paystack_subaccount_code && s.payout_check_since) { %><br><span class="pill pill-wait">To verify in Paystack</span><% } %>
-          <% if (!s.paystack_subaccount_code && s.payout_rejected_note) { %><br><span class="small muted">Last bank details denied: “<%= s.payout_rejected_note %>”</span><% } %>
-        </dd>
-      </dl>
-      <% if (s.paystack_subaccount_code && s.payout_check_since) { %>
-        <h3>New bank account</h3>
-        <p class="muted small">Account holder: <strong><%= s.business_name || '—' %></strong>. Verify it under <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a>, then tick it off here.</p>
+<%- include('../partials/admin-top', { noHead: true }) %>
+<% var vs = s.verification_status; var bankCheck = s.paystack_subaccount_code && s.payout_check_since; var email = s.users ? s.users.email : ''; %>
+
+<header class="admin-head">
+  <div>
+    <a class="admin-crumb" href="/admin/sellers">← Sellers</a>
+    <h1><%= s.display_name %> <%- include('../partials/status-pill', { status: vs }) %></h1>
+    <p><%= s.full_name && s.full_name !== s.display_name ? s.full_name + ' · ' : '' %><%= email %> · joined <%= date(s.users ? s.users.created_at : s.created_at) %></p>
+  </div>
+  <div class="admin-head-actions">
+    <% if (vs === 'approved') { %><a class="btn btn-ghost btn-sm" href="<%= storeUrl(s) %>" target="_blank" rel="noopener">Storefront ↗</a><% } %>
+    <% if (email) { %><a class="btn btn-ghost btn-sm" href="mailto:<%= email %>">Email</a><% } %>
+    <a class="btn btn-ghost btn-sm" href="/admin/orders<%= qs({ seller: s.id, status: 'all' }) %>">Orders</a>
+  </div>
+</header>
+
+<div class="seller-admin">
+  <div class="seller-admin-main">
+    <% if (vs === 'pending') { %>
+      <section class="card needs" aria-labelledby="decide-h">
+        <h2 class="admin-h2" id="decide-h">Waiting for verification</h2>
+        <p class="muted small">Sent <%= s.submitted_at ? date(s.submitted_at) : '' %>. Check the education and ID below.</p>
+        <%- include('decide', {
+          action: '/admin/sellers/' + s.id + '/verification', id: 'seller', back: '/admin/sellers/' + s.id,
+          yes: ['approve', 'Approve seller'], no: ['reject', 'Reject'],
+          reasons: ['The ID photo is too blurry to read.', 'The name on your documents doesn’t match your ID.', 'Upload your degree certificate or academic record, not a transcript request.'],
+          placeholder: 'e.g. The ID photo is too blurry to read.',
+        }) %>
+      </section>
+    <% } %>
+    <% if (bankCheck) { %>
+      <section class="card needs" aria-labelledby="bank-h">
+        <h2 class="admin-h2" id="bank-h">New bank account to verify</h2>
+        <p class="muted small">Account holder <strong><%= s.business_name || '—' %></strong>, <%= s.bank_name %> ••••<%= s.account_number_last4 %>. Verify it under <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a>, then tick it off here.</p>
         <%- include('payout-review', { s: s, back: '/admin/sellers/' + s.id }) %>
-      <% } %>
-      <h3>Education</h3>
-      <% if (!quals.length) { %><p class="muted small">None submitted.</p><% } %>
-      <% quals.forEach(function (q) { %>
-        <div class="qual-admin-row"><%- include('../partials/status-pill', { status: q.review_status }) %><%- include('qual-detail', { q: q }) %></div>
-      <% }) %>
-      <h3>ID</h3>
-      <p class="small muted">Links expire after 10 minutes. Refresh the page for new ones.</p>
-      <div class="form-actions">
-        <% if (idUrl) { %><a class="btn btn-ghost btn-sm" href="<%= idUrl %>" target="_blank" rel="noopener noreferrer">Open ID document</a><% } else if (s.verification_status === 'approved') { %><span class="muted small">Checked, then deleted <%= jobsIdDays %> days after approval</span><% } else { %><span class="muted small">No ID document</span><% } %>
+      </section>
+    <% } %>
+    <% if (vs === 'rejected') { %>
+      <div class="alert alert-error"><strong>Not approved</strong><p><%= s.verification_note || 'No reason recorded.' %></p><p class="small">Waiting for them to fix this and send their documents again. They’ll show up under Review when they do.</p></div>
+    <% } else if (vs === 'unsubmitted') { %>
+      <div class="alert alert-info">This seller hasn’t sent their documents for verification yet.</div>
+    <% } %>
+
+    <section class="admin-block" aria-labelledby="edu-h">
+      <h2 class="admin-h2" id="edu-h">Education</h2>
+      <% if (!quals.length) { %><p class="admin-none">None submitted.</p><% } %>
+      <div class="qual-grid">
+        <% quals.forEach(function (q) { %>
+          <div class="card qual-card"><%- include('../partials/status-pill', { status: q.review_status }) %><%- include('qual-detail', { q: q }) %></div>
+        <% }) %>
       </div>
-    </div>
-    <div class="card">
-      <% var vs = s.verification_status; %>
-      <h2 style="font-size:1.35rem"><%= vs === 'approved' ? 'Verification' : 'Decision' %></h2>
-      <% if (vs === 'rejected') { %>
-        <div class="alert alert-error"><strong>Rejected</strong><p><%= s.verification_note || 'No reason recorded.' %></p></div>
-        <p class="muted small">Waiting for the seller to fix this and send their documents again. They’ll show up under Verifications when they do.</p>
-      <% } else if (vs === 'unsubmitted') { %>
-        <p class="muted">This seller hasn’t sent their documents for verification yet.</p>
-      <% } else { %>
-        <% if (vs === 'approved') { %><p class="muted small">Verified. Revoking hides all their notes from students until they’re approved again.</p><% } %>
-        <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification" <%- vs === 'approved' ? 'data-confirm-title="Revoke verification?" data-confirm="All their notes are hidden from students until they’re approved again. They’ll see your reason." data-confirm-yes="Revoke"' : '' %>>
-          <input type="hidden" name="_csrf" value="<%= csrf %>">
-          <div class="field">
-            <label for="a-note">Reason <%= vs === 'approved' ? '(shown to the seller)' : '(shown to the seller if you reject)' %></label>
-            <textarea id="a-note" name="note" maxlength="500" placeholder="e.g. The transcript doesn't show a completed degree. Upload your degree certificate instead."></textarea>
-          </div>
-          <div class="form-actions">
-            <% if (vs === 'pending') { %><button class="btn" type="submit" name="decision" value="approve">Approve seller</button><% } %>
-            <button class="btn btn-danger" type="submit" name="decision" value="reject"><%= vs === 'approved' ? 'Revoke verification' : 'Reject' %></button>
-          </div>
-        </form>
-      <% } %>
-    </div>
+      <p class="small muted" style="margin-top:14px">ID document:
+        <% if (idUrl) { %><a href="<%= idUrl %>" target="_blank" rel="noopener noreferrer">open it</a> (the link expires after 10 minutes)<% } else if (vs === 'approved') { %>checked, then deleted <%= jobsIdDays %> days after approval<% } else { %>none<% } %>
+      </p>
+    </section>
+
   </div>
 
-  <h2 style="font-size:1.35rem;margin-top:34px">Notes (<%= notes.length %>)</h2>
-  <% if (notes.length) { %>
-    <div class="table-wrap">
-      <table class="data">
-        <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th></tr></thead>
-        <tbody>
-          <% notes.forEach(function (n) { %><tr><td><a href="<%= noteUrl(n) %>"><%= n.title %></a></td><td><%- include('../partials/status-pill', { status: n.status }) %></td><td class="num"><%= rand(n.price_cents) %></td><td class="num"><%= n.sales_count %></td></tr><% }) %>
-        </tbody>
-      </table>
-    </div>
-  <% } else { %><p class="muted">No notes uploaded.</p><% } %>
-
-  <h2 style="font-size:1.35rem;margin-top:34px">Reviews (<%= locals.reviews ? reviews.length : 0 %>)</h2>
-  <% if (locals.reviews && reviews.length) { %>
-    <div class="reviews-list">
-      <% reviews.forEach(function (r) { %>
-        <article class="review <%= r.status === 'hidden' ? 'is-hidden' : '' %>">
-          <div class="review-head">
-            <span><strong><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></strong> · <%= r.reviewer_name || 'Verified buyer' %> · <span class="muted small"><%= r.payment_ref %></span><% if (r.status === 'hidden') { %> <span class="pill pill-muted">Hidden</span><% } %></span>
-            <form method="post" action="/admin/reviews/<%= r.id %>/status">
-              <input type="hidden" name="_csrf" value="<%= csrf %>">
-              <input type="hidden" name="back" value="/admin/sellers/<%= s.id %>">
-              <button class="btn btn-ghost btn-sm" name="status" value="<%= r.status === 'hidden' ? 'published' : 'hidden' %>"><%= r.status === 'hidden' ? 'Show again' : 'Hide' %></button>
-            </form>
+  <aside class="seller-admin-side">
+    <section class="card side-card">
+      <h2 class="admin-h3">Sales</h2>
+      <p class="side-big"><%= rand(totals.earnings) %></p>
+      <p class="small muted">earned from <%= totals.sales %> paid <%= totals.sales === 1 ? 'order' : 'orders' %></p>
+    </section>
+    <section class="card side-card">
+      <h2 class="admin-h3">Bank details</h2>
+      <% if (s.paystack_subaccount_code) { %>
+        <p><strong><%= s.bank_name %> ••••<%= s.account_number_last4 %></strong><br><span class="small muted"><%= s.business_name %></span></p>
+        <p class="small"><%- bankCheck ? '<span class="pill pill-wait">To verify in Paystack</span>' : '<span class="pill pill-ok">Verified</span>' %></p>
+        <p class="small muted">Paystack subaccount <code><%= s.paystack_subaccount_code %></code></p>
+      <% } else { %>
+        <p class="small muted">Not set up<%= vs === 'approved' ? '. Their notes are hidden until they add them.' : '.' %></p>
+        <% if (s.payout_rejected_note) { %><p class="small">Last ones denied: “<%= s.payout_rejected_note %>”</p><% } %>
+      <% } %>
+    </section>
+    <section class="card side-card">
+      <h2 class="admin-h3">Storefront</h2>
+      <dl class="side-facts">
+        <dt>Link</dt><dd><a href="<%= storeUrl(s) %>">/<%= s.slug %></a></dd>
+        <dt>Shown as</dt><dd><%= s.degree ? s.degree + ', ' + s.university : '—' %></dd>
+        <% if (s.verified_at) { %><dt>Verified</dt><dd><%= date(s.verified_at) %></dd><% } %>
+      </dl>
+    </section>
+    <% if (vs === 'approved') { %>
+      <details class="card side-card danger-zone">
+        <summary>Revoke verification</summary>
+        <p class="small muted">Hides all their notes from students until they’re approved again. They’ll see your reason.</p>
+        <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification" data-confirm-title="Revoke verification?" data-confirm="All their notes are hidden from students until they’re approved again. They’ll see your reason." data-confirm-yes="Revoke">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <div class="field">
+            <label for="a-note">Reason (shown to the seller)</label>
+            <textarea id="a-note" name="note" maxlength="500" placeholder="e.g. Your notes were copied from a textbook."></textarea>
           </div>
-          <% if (r.body) { %><p class="review-body"><%= r.body %></p><% } %>
-          <p class="review-by muted"><%= date(r.created_at) %><%= r.notes_bought ? ' · Bought ' + r.notes_bought : '' %></p>
-        </article>
-      <% }) %>
-    </div>
-  <% } else { %><p class="muted">No reviews yet.</p><% } %>
+          <button class="btn btn-danger btn-sm" type="submit" name="decision" value="reject">Revoke verification</button>
+        </form>
+      </details>
+    <% } %>
+  </aside>
 </div>
-<%- include('../partials/bottom') %>
+
+  <section class="admin-block" aria-labelledby="notes-h">
+    <div class="admin-h2-row"><h2 class="admin-h2" id="notes-h">Notes (<%= notes.length %>)</h2><% if (notes.length) { %><a href="/admin/notes<%= qs({ seller: s.id }) %>">Open in Notes</a><% } %></div>
+    <% if (notes.length) { %>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody>
+            <% notes.forEach(function (n) { %><tr><td><a href="<%= noteUrl(n) %>"><%= n.title %></a></td><td><%- include('../partials/status-pill', { status: n.status }) %></td><td class="num"><%= rand(n.price_cents) %></td><td class="num"><%= n.sales_count %></td><td><%- include('note-actions', { n: n }) %></td></tr><% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %><p class="admin-none">No notes uploaded.</p><% } %>
+  </section>
+
+  <section class="admin-block" aria-labelledby="reviews-h">
+    <h2 class="admin-h2" id="reviews-h">Reviews (<%= locals.reviews ? reviews.length : 0 %>)</h2>
+    <% if (locals.reviews && reviews.length) { %>
+      <div class="reviews-list">
+        <% reviews.forEach(function (r) { %>
+          <article class="review <%= r.status === 'hidden' ? 'is-hidden' : '' %>">
+            <div class="review-head">
+              <span><strong><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></strong> · <%= r.reviewer_name || 'Verified buyer' %> · <span class="muted small"><%= r.payment_ref %></span><% if (r.status === 'hidden') { %> <span class="pill pill-muted">Hidden</span><% } %></span>
+              <form method="post" action="/admin/reviews/<%= r.id %>/status">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="hidden" name="back" value="/admin/sellers/<%= s.id %>">
+                <button class="btn btn-ghost btn-sm" name="status" value="<%= r.status === 'hidden' ? 'published' : 'hidden' %>"><%= r.status === 'hidden' ? 'Show again' : 'Hide' %></button>
+              </form>
+            </div>
+            <% if (r.body) { %><p class="review-body"><%= r.body %></p><% } %>
+            <p class="review-by muted"><%= date(r.created_at) %><%= r.notes_bought ? ' · Bought ' + r.notes_bought : '' %></p>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %><p class="admin-none">No reviews yet.</p><% } %>
+  </section>
+  <section class="admin-block" aria-labelledby="history-h">
+    <h2 class="admin-h2" id="history-h">History</h2>
+    <%- include('../partials/activity', { items: history }) %>
+  </section>
+
+<%- include('../partials/admin-bottom') %>

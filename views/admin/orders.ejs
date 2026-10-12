@@ -1,37 +1,40 @@
-<%- include('../partials/top', { noindex: true }) %>
-<div class="wrap dash">
-  <%- include('../partials/admin-nav') %>
-  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
-    <div class="chips">
-      <% ['paid','pending','failed','all'].forEach(function (s) { %><a class="chip" href="/admin/orders?status=<%= s %>" <%- !reference && status === s ? 'aria-current="page"' : '' %>><%= s[0].toUpperCase() + s.slice(1) %></a><% }) %>
-    </div>
-    <form method="get" action="/admin/orders" class="search" style="margin:0;box-shadow:none;flex:1;max-width:420px" role="search">
-      <label for="ao-ref" class="sr-only">Find by reference, email or name</label>
-      <input id="ao-ref" type="search" name="reference" maxlength="80" value="<%= reference %>" placeholder="Reference (EN…), buyer email or name">
-      <button class="btn btn-sm" type="submit">Find</button>
-    </form>
-  </div>
-  <div class="table-wrap">
-    <table class="data">
-      <thead><tr><th>Reference</th><th>Date</th><th>Notes</th><th>Seller</th><th>Buyer</th><th>Status</th><th class="num">Amount</th><th class="num">Fee</th><th class="num">Downloads</th><th></th></tr></thead>
-      <tbody>
-        <% orders.forEach(function (o) { %>
-          <tr>
-            <td><strong><%= o.reference %></strong></td>
-            <td><%= date(o.paid_at || o.created_at) %></td>
-            <td><%= o.notes ? o.notes.title : '' %></td>
-            <td><%= o.sellers ? o.sellers.display_name : '' %></td>
-            <td><% if (o.buyer_name) { %><%= o.buyer_name %><br><% } %><span class="small muted"><%= o.email %></span></td>
-            <td><%- include('../partials/status-pill', { status: o.status }) %></td>
-            <td class="num"><%= rand(o.amount_cents) %></td>
-            <td class="num"><%= rand(o.platform_fee_cents) %></td>
-            <td class="num"><%= o.download_count %>/<%= maxDownloads %></td>
-            <td><% if (o.status === 'paid' && o.download_count > 0) { %><form method="post" action="/admin/orders/<%= o.reference %>/reset-downloads"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm">Reset</button></form><% } %></td>
-          </tr>
-        <% }) %>
-        <% if (!orders.length) { %><tr><td colspan="10" class="muted">No orders found.</td></tr><% } %>
-      </tbody>
-    </table>
-  </div>
+<%- include('../partials/admin-top', { sub: 'Find an order by reference, buyer email or name. Reset downloads if a buyer runs out.' }) %>
+<% var labels = { paid: 'Paid', pending: 'Awaiting payment', failed: 'Failed', all: 'All' }; var sel = seller ? { seller: seller.id } : {}; %>
+
+<div class="filter-bar">
+  <nav class="chips" aria-label="Show">
+    <% ['paid', 'pending', 'failed', 'all'].forEach(function (s) { %><a class="chip" href="/admin/orders<%= qs(Object.assign({ status: s }, sel)) %>" <%- !reference && status === s ? 'aria-current="page"' : '' %>><%= labels[s] %></a><% }) %>
+  </nav>
+  <form method="get" action="/admin/orders" class="filter-search" role="search">
+    <% if (seller) { %><input type="hidden" name="seller" value="<%= seller.id %>"><% } %>
+    <label for="ao-ref" class="sr-only">Find by reference, email or name</label>
+    <input id="ao-ref" type="search" name="reference" maxlength="80" value="<%= reference %>" placeholder="Reference (EN…), buyer email or name">
+    <button class="btn btn-sm btn-ghost" type="submit">Find</button>
+  </form>
 </div>
-<%- include('../partials/bottom') %>
+<% if (seller) { %><p class="filter-on">Only orders for <a href="/admin/sellers/<%= seller.id %>"><strong><%= seller.display_name %></strong></a> · <a href="/admin/orders<%= qs({ status: status }) %>">Show everyone’s</a></p><% } %>
+<% if (reference) { %><p class="filter-on">Results for “<%= reference %>” · <a href="/admin/orders<%= qs(Object.assign({ status: status }, sel)) %>">Clear search</a></p><% } %>
+
+<div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>Order</th><th>Notes</th><th>Buyer</th><th>Status</th><th class="num">Amount</th><th>Downloads</th></tr></thead>
+    <tbody>
+      <% orders.forEach(function (o) { %>
+        <tr>
+          <td class="nowrap"><strong><%= o.reference %></strong><br><span class="small muted"><%= date(o.paid_at || o.created_at) %></span></td>
+          <td><%= o.notes ? o.notes.title : '' %><% if (o.sellers) { %><br><span class="small muted">by <a href="/admin/sellers/<%= o.sellers.id %>"><%= o.sellers.display_name %></a></span><% } %></td>
+          <td><% if (o.buyer_name) { %><%= o.buyer_name %><br><% } %><span class="small muted"><%= o.email %></span></td>
+          <td><%- include('../partials/status-pill', { status: o.status, kind: 'order' }) %></td>
+          <td class="num"><strong><%= rand(o.amount_cents) %></strong><br><span class="small muted">fee <%= rand(o.platform_fee_cents) %></span></td>
+          <td class="nowrap"><%= o.download_count %>/<%= maxDownloads %>
+            <% if (o.status === 'paid' && o.download_count > 0) { %><form class="inline-form" method="post" action="/admin/orders/<%= o.reference %>/reset-downloads" data-confirm-title="Reset downloads?" data-confirm="The buyer can download <%= o.notes ? '“' + o.notes.title + '”' : 'these notes' %> <%= maxDownloads %> more times." data-confirm-yes="Reset"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm">Reset</button></form><% } %>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!orders.length) { %><tr><td colspan="6" class="muted">No orders found.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<% if (orders.length === 200) { %><p class="fineprint">Showing the newest 200. Search by reference or email to find older ones.</p><% } %>
+
+<%- include('../partials/admin-bottom') %>
