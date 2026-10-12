@@ -992,6 +992,7 @@
         document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
       });
       if (focus) tab.focus();
+      if (list.querySelector('.tab-ink')) list.querySelector('.tab-ink').dispatchEvent(new Event('tab-change'));
     };
     document.documentElement.classList.add('tabs-on');
     // Storefront tabs have their own address (#reviews, #about) so they can be linked to and survive a reload
@@ -1010,9 +1011,24 @@
         list.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
+    // The blue underline slides to the tab under the pointer, and back to the open tab when the pointer leaves
+    var ink = document.createElement('span');
+    ink.className = 'tab-ink';
+    ink.setAttribute('aria-hidden', 'true');
+    list.appendChild(ink);
+    var current = function () { return tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]; };
+    var inkTo = function (t) { ink.style.width = t.offsetWidth + 'px'; ink.style.transform = 'translateX(' + t.offsetLeft + 'px)'; };
+    inkTo(current());
+    ink.addEventListener('tab-change', function () { inkTo(current()); });
+    requestAnimationFrame(function () { list.classList.add('ink-on'); });
+    list.addEventListener('mouseleave', function () { inkTo(current()); });
+    window.addEventListener('resize', function () { inkTo(current()); });
+    if (document.fonts) document.fonts.ready.then(function () { inkTo(current()); });
     tabs.forEach(function (t, i) {
+      t.addEventListener('mouseenter', function () { inkTo(t); });
       t.addEventListener('click', function () {
         select(t);
+        inkTo(t);
         if (t.hasAttribute('data-hash')) history.replaceState(null, '', i === 0 ? location.pathname + location.search : '#' + t.getAttribute('data-hash'));
       });
       t.addEventListener('keydown', function (e) {

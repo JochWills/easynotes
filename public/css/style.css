@@ -781,6 +781,11 @@ legend { font-family: var(--display); font-weight: 700; font-size: 1.15rem; marg
 .note-tabs button:hover { color: var(--ink); }
 .note-tabs button[aria-selected="true"] { color: var(--blue); font-weight: 600; }
 .note-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--blue); border-radius: 2px; }
+.note-tabs { position: relative; }
+/* With JavaScript, one underline that slides between tabs replaces the fixed one */
+.tab-ink { position: absolute; left: 0; bottom: 0; width: 0; height: 2px; border-radius: 2px; background: var(--blue); pointer-events: none; }
+.note-tabs:has(.tab-ink) button[aria-selected="true"]::after { content: none; }
+.note-tabs.ink-on .tab-ink { transition: transform .32s cubic-bezier(.2, .8, .2, 1), width .32s cubic-bezier(.2, .8, .2, 1); }
 .note-tabs button:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; border-radius: 6px; }
 .tab-panel { padding: 24px 26px; margin-top: 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .tab-panel h2 { font-size: 1.2rem; margin: 0 0 8px; }
