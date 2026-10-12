@@ -7,7 +7,7 @@ const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
 
 // The "Popular at" links on the home page, in this order
 const HOME_UNIS = ['UCT', 'Stellenbosch', 'NMU', 'Milpark', 'Emeris', 'UP', 'UJ', 'UNISA'];
-const { isUuid, noteUrl, storeUrl, str, rand } = require('../lib/helpers');
+const { isUuid, noteUrl, storeUrl, str, rand, qs } = require('../lib/helpers');
 const { limit } = require('../lib/limits');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
@@ -34,6 +34,11 @@ router.get('/', async (req, res) => {
   const { data: notes, count } = await publicNotes().order('created_at', { ascending: false }).limit(8);
   res.render('home', {
     title: null,
+    jsonLd: [
+      { '@context': 'https://schema.org', '@type': 'WebSite', name: 'EasyNotes', url: config.baseUrl + '/',
+        potentialAction: { '@type': 'SearchAction', target: `${config.baseUrl}/notes?q={search_term_string}`, 'query-input': 'required name=search_term_string' } },
+      { '@context': 'https://schema.org', '@type': 'Organization', name: 'EasyNotes', url: config.baseUrl + '/', logo: config.baseUrl + '/icon-512.png', email: config.supportEmail },
+    ],
     notes: notes || [],
     total: count || 0,
     popularUnis: HOME_UNIS.map((short) => UNIVERSITIES.find((u) => u.short === short)).filter(Boolean),
@@ -88,8 +93,14 @@ router.get('/notes', async (req, res) => {
     throw error;
   }
 
+  const where = university ? ` at ${university}` : '';
+  const kind = subject ? `${subject} notes` : level ? `${level} notes` : 'Study notes';
   res.render('browse', {
     title: q ? `Notes matching "${q}"` : subject && university ? `${subject} notes for ${university}` : subject ? `${subject} notes` : university ? `Notes for ${university}` : 'Browse notes',
+    description: `${kind}${where} from verified academics who passed the module. Free preview of every set, pay once and download the PDF instantly.`,
+    // Searches are endless and thin, so they stay out of search results (their links are still followed).
+    noindex: q ? 'follow' : false,
+    canonical: ('/notes' + qs({ university, subject, level, page: page > 1 ? page : undefined })).replace(/\?$/, ''),
     notes: notes || [],
     count: count || 0,
     filters: { q, subject, university, level, sort },
@@ -174,8 +185,28 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     reviews.forSeller(note.seller_id), // the seller's star rating, shown by their name
   ]);
 
+  const uni = UNIVERSITIES.find((u) => u.name === note.university);
+  const named = /\b(notes?|summary|summaries|guide)\b/i.test(note.title) ? note.title : `${note.title} notes`;
+  const titled = `${note.module_code && !note.title.includes(note.module_code) ? note.module_code + ' ' : ''}${named}`;
+  const withUni = `${titled} (${uni ? uni.short : note.university})`;
   res.render('note', {
-    title: note.module_code ? `${note.module_code}: ${note.title}` : note.title,
+    title: withUni.length <= 58 ? withUni : titled, // e.g. "FAC2002F Deferred Tax notes (UCT)"
+    canonical: noteUrl(note),
+    jsonLd: live ? [
+      {
+        '@context': 'https://schema.org', '@type': 'Product', name: note.title, description: note.description.slice(0, 500),
+        sku: note.id, category: note.subject, url: config.baseUrl + noteUrl(note),
+        image: `${config.baseUrl}/og/note/${note.id}.png`,
+        brand: { '@type': 'Brand', name: 'EasyNotes' },
+        offers: { '@type': 'Offer', price: (note.price_cents / 100).toFixed(2), priceCurrency: 'ZAR', availability: 'https://schema.org/InStock', url: config.baseUrl + noteUrl(note),
+          seller: { '@type': 'Person', name: note.sellers.display_name, url: config.baseUrl + storeUrl(note.sellers) } },
+      },
+      { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Notes', item: config.baseUrl + '/notes' },
+        { '@type': 'ListItem', position: 2, name: note.subject, item: config.baseUrl + '/notes' + qs({ subject: note.subject }) },
+        { '@type': 'ListItem', position: 3, name: note.title },
+      ] },
+    ] : null,
     description: note.description.slice(0, 155),
     ogTitle: `${note.module_code ? note.module_code + ': ' : ''}${note.title} · ${rand(note.price_cents)}`,
     // the version changes when the note is edited or the seller renames their storefront, so apps fetch a fresh picture
@@ -212,7 +243,7 @@ router.get('/sitemap.xml', async (req, res) => {
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`);
 });
 
-router.get('/how-it-works', (req, res) => res.render('how', { title: 'How EasyNotes works' }));
+router.get('/how-it-works', (req, res) => res.render('how', { title: 'How EasyNotes works', description: 'How buying study notes on EasyNotes works: preview pages for free, pay once by card, download the PDF straight away. Every seller is a verified academic.' }));
 router.get('/sell', (req, res) => res.render('sell', { title: 'Sell your notes' }));
 router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of sale' }));
 router.get('/seller-terms', (req, res) => res.render('seller-terms', { title: 'Seller terms' }));

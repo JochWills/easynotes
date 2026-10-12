@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= locals.title ? title + ' | EasyNotes' : 'EasyNotes: study notes from verified academics' %></title>
   <meta name="description" content="<%= locals.description || 'PDF study notes for South African university modules and professional exams, written by verified academics. Pay once, download instantly.' %>">
-  <% if (locals.noindex) { %><meta name="robots" content="noindex"><% } %>
+  <% if (locals.noindex) { %><meta name="robots" content="<%= locals.noindex === 'follow' ? 'noindex, follow' : 'noindex' %>"><% } %>
+  <%# The one address search engines should list this page under (no sort order, tracking tags and so on) %>
+  <% if (!locals.noindex) { %><link rel="canonical" href="<%= (locals.baseUrl || 'https://easynotes.co.za') + (locals.canonical || locals.currentPath || '/') %>"><% } %>
+  <% if (locals.jsonLd) { %><script type="application/ld+json"><%- JSON.stringify(jsonLd).replace(/</g, '\\u003c') %></script><% } %>
   <% var site = locals.baseUrl || 'https://easynotes.co.za'; var ogT = locals.ogTitle || locals.title || 'EasyNotes: study notes from students who already passed'; var ogD = locals.description || 'Study notes from verified South African graduates. Free preview, instant PDF download.'; var ogI = site + (locals.ogImage || '/og/site.png?v=1'); %>
   <%# Link previews on WhatsApp, Instagram, LinkedIn, Facebook and X %>
   <meta property="og:site_name" content="EasyNotes">
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= ogT %>">
   <meta property="og:description" content="<%= ogD %>">
-  <meta property="og:url" content="<%= site + (locals.currentPath || '/') %>">
+  <meta property="og:url" content="<%= site + (locals.canonical || locals.currentPath || '/') %>">
   <meta property="og:image" content="<%= ogI %>">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">

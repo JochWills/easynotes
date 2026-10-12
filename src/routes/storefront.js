@@ -59,7 +59,7 @@ async function renderStore(req, res, { author, live }, extra = {}) {
     title: /\bnotes?\b/i.test(author.display_name) ? author.display_name : `${author.display_name}’s notes`, // not "Josh’s Notes’s notes"
     noindex: !live,
     live,
-    description: author.headline || `Study notes by ${author.display_name}, a verified academic on EasyNotes.`,
+    description: `${author.headline ? author.headline.replace(/[.\s]+$/, '') + '. ' : ''}Study notes by ${author.display_name}, a verified academic on EasyNotes. Free preview of every set.`,
     ogTitle: `${author.display_name} on EasyNotes`,
     ogImage: live ? `/og/store/${author.slug}.png?v=${ogVersion}` : null,
     author,

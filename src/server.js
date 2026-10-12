@@ -99,6 +99,13 @@ app.use((req, res, next) => {
   res.locals.edu = { when: education.when, results: education.results, isOverdue: education.isOverdue, honoursLabel: education.honoursLabel }; // education wording for views
   next();
 });
+// One address for the whole site: the Render address (easynotes.onrender.com) forwards to BASE_URL, so Google
+// doesn't see two copies of every page. Not /healthz, which Render calls on its own address.
+const siteHost = new URL(config.baseUrl).host;
+app.use((req, res, next) => {
+  if (!config.isProd || req.get('host') === siteHost || req.path === '/healthz' || (req.method !== 'GET' && req.method !== 'HEAD')) return next();
+  res.redirect(301, config.baseUrl + req.originalUrl);
+});
 app.use(loadUser);
 app.use(notify.dots); // red dots for sellers on the menu items and dashboard tabs with unseen news
 // Logged-in pages are never kept by the browser, so Back after logging out can't show them again.
