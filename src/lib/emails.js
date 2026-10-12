@@ -162,6 +162,20 @@ async function sendPayoutDetailsChanged(email, name, bankName, last4) {
   return mail.send({ to: email, subject: 'Your EasyNotes payout account changed', html, text });
 }
 
+async function sendPayoutDenied(email, name, bankName, last4, reason) {
+  const first = String(name || '').trim().split(' ')[0];
+  const { html, text } = compose({
+    heading: 'Your bank details weren’t accepted',
+    paragraphs: [
+      `Hi ${esc(first)}, we couldn’t accept <strong>${esc(bankName)} ••••${esc(last4)}</strong> as your payout account. Here’s why:`,
+      `<em>${esc(reason)}</em>`,
+      'Your notes are hidden from students until you add new bank details. Sales you already made are safe.',
+    ],
+    button: { url: `${config.baseUrl}/seller/payouts`, label: 'Add new bank details' },
+  });
+  return mail.send({ to: email, subject: 'Your EasyNotes bank details need another look', html, text });
+}
+
 /* ---------- Sellers and admins: password reset ---------- */
 
 const RESET_MINUTES = 60;
@@ -343,7 +357,7 @@ module.exports = {
   sendStudyReminder,
   sendQualificationDecision,
   REPORT_REASONS, sendReportNotice, sendReportReceipt,
-  sendAccountDeleted, sendPayoutDetailsChanged, EMAIL_CHANGE_HOURS, sendEmailChangeLink, readEmailChangeToken, sendEmailChangedNotice,
+  sendAccountDeleted, sendPayoutDetailsChanged, sendPayoutDenied, EMAIL_CHANGE_HOURS, sendEmailChangeLink, readEmailChangeToken, sendEmailChangedNotice,
   LIBRARY_DAYS, libraryUrl, readLibraryToken, sendLibraryLink, sendPurchaseEmail, sendSaleEmails,
   RESET_MINUTES, sendPasswordReset, readResetToken, sendAdminInvite, sendTestEmail,
   sendVerificationDecision,

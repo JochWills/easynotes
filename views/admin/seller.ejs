@@ -13,12 +13,15 @@
         <dt>Submitted</dt><dd><%= s.submitted_at ? date(s.submitted_at) : '—' %></dd>
         <dt>Sales</dt><dd><%= totals.sales %> paid, <%= rand(totals.earnings) %> earned</dd>
         <dt>Payouts</dt><dd><%= s.paystack_subaccount_code ? s.bank_name + ' ••••' + s.account_number_last4 + ' (' + s.paystack_subaccount_code + ')' : 'Not set up' %>
-          <% if (s.paystack_subaccount_code && s.payout_check_since) { %>
-            <br><span class="pill pill-wait">To verify in Paystack</span>
-            <form method="post" action="/admin/sellers/<%= s.id %>/payout-checked" style="display:inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="back" value="/admin/sellers/<%= s.id %>"><button class="btn btn-ghost btn-sm">I’ve verified it</button></form>
-          <% } %>
+          <% if (s.paystack_subaccount_code && s.payout_check_since) { %><br><span class="pill pill-wait">To verify in Paystack</span><% } %>
+          <% if (!s.paystack_subaccount_code && s.payout_rejected_note) { %><br><span class="small muted">Last bank details denied: “<%= s.payout_rejected_note %>”</span><% } %>
         </dd>
       </dl>
+      <% if (s.paystack_subaccount_code && s.payout_check_since) { %>
+        <h3>New bank account</h3>
+        <p class="muted small">Account holder: <strong><%= s.business_name || '—' %></strong>. Verify it under <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a>, then tick it off here.</p>
+        <%- include('payout-review', { s: s, back: '/admin/sellers/' + s.id }) %>
+      <% } %>
       <h3>Education</h3>
       <% if (!quals.length) { %><p class="muted small">None submitted.</p><% } %>
       <% quals.forEach(function (q) { %>

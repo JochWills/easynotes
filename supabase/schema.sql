@@ -224,6 +224,8 @@ alter table sellers add column if not exists notify_reviews boolean not null def
 -- Paystack holds the first payout to a new or changed subaccount until an admin clicks Verify in its
 -- dashboard. Set when a seller adds or changes bank details; cleared once that's done.
 alter table sellers add column if not exists payout_check_since timestamptz;
+-- Why an admin turned the bank details down (shown on the seller's Payouts page until they add new ones)
+alter table sellers add column if not exists payout_rejected_note text;
 
 -- Notifications for sellers (sales, verification decisions, reviews, notes hidden by EasyNotes...), shown with a red dot
 -- in the account menu and listed at /seller/notifications. read_at is set once the seller has seen them.

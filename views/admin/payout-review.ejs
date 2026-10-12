@@ -1,0 +1,13 @@
+<%# Verify or deny a seller's new bank account. Needs s (the seller) and back (where to return). %>
+<form class="form" method="post" action="/admin/sellers/<%= s.id %>/payout-review" data-confirm="Their bank details are removed and their notes are hidden until they add new ones." data-confirm-title="Deny these bank details?" data-confirm-yes="Deny">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <input type="hidden" name="back" value="<%= back %>">
+  <div class="field">
+    <label for="pnote-<%= s.id %>">Reason, if you deny</label>
+    <textarea id="pnote-<%= s.id %>" name="note" maxlength="500" style="min-height:80px" placeholder="Shown to the seller, e.g. The account must be in your own name."></textarea>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-hi" type="submit" name="decision" value="approve" data-no-confirm>I’ve verified it in Paystack</button>
+    <button class="btn btn-danger" type="submit" name="decision" value="deny">Deny</button>
+  </div>
+</form>

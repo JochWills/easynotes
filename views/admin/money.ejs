@@ -38,14 +38,23 @@
   <% if (toVerify.length) { %>
     <section class="admin-section" id="verify-payouts">
       <h2>Payout accounts to verify in Paystack (<%= toVerify.length %>)</h2>
-      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Then tick it off here: until you do, the seller sees their account as “being verified”.</p>
-      <div class="table-wrap">
-        <table class="data">
-          <thead><tr><th>Seller</th><th>Bank</th><th>Subaccount</th><th>Since</th><th></th></tr></thead>
-          <tbody>
-            <% toVerify.forEach(function (s) { %><tr><td><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></td><td><%= s.bank_name %> ••••<%= s.account_number_last4 %></td><td><code><%= s.paystack_subaccount_code %></code></td><td><%= date(s.payout_check_since) %></td><td><form method="post" action="/admin/sellers/<%= s.id %>/payout-checked"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm">I’ve verified it</button></form></td></tr><% }) %>
-          </tbody>
-        </table>
+      <p class="muted">These sellers added or changed their bank details. Paystack holds their first payout until you open <a href="https://dashboard.paystack.com/#/subaccounts" target="_blank" rel="noopener">Subaccounts in Paystack</a> and click Verify. Then tick it off here: until you do, the seller sees their account as “being verified”. If something’s wrong, like an account that isn’t in the seller’s name, deny it.</p>
+      <div class="queue">
+        <% toVerify.forEach(function (s) { %>
+          <div class="card queue-item">
+            <div>
+              <h3><a href="/admin/sellers/<%= s.id %>"><%= s.display_name %></a></h3>
+              <span class="small muted">Since <%= date(s.payout_check_since) %></span>
+              <dl class="facts">
+                <dt>Seller’s name</dt><dd><%= s.full_name || '—' %></dd>
+                <dt>Account holder</dt><dd><%= s.business_name || '—' %></dd>
+                <dt>Bank</dt><dd><%= s.bank_name %> ••••<%= s.account_number_last4 %></dd>
+                <dt>Subaccount</dt><dd><code><%= s.paystack_subaccount_code %></code></dd>
+              </dl>
+            </div>
+            <%- include('payout-review', { s: s, back: '/admin/money#verify-payouts' }) %>
+          </div>
+        <% }) %>
       </div>
     </section>
   <% } %>

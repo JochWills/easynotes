@@ -12,6 +12,7 @@ const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
 const education = require('../lib/education');
 const notify = require('../lib/notify');
+const paystack = require('../lib/paystack');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -109,7 +110,7 @@ router.post('/reports/:id/resolve', async (req, res) => {
 // Sellers whose new bank account still needs Verify clicking in Paystack (it holds their first payout till then).
 // They stay on the list, and the seller sees "being verified", until an admin ticks them off.
 async function payoutChecks() {
-  const { data } = await db.from('sellers').select('id,display_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since').not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null).order('payout_check_since').limit(100);
+  const { data } = await db.from('sellers').select('id,display_name,full_name,business_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since').not('payout_check_since', 'is', null).not('paystack_subaccount_code', 'is', null).order('payout_check_since').limit(100);
   return data || [];
 }
 
@@ -360,16 +361,43 @@ async function allPaidOrders() {
   }
 }
 
-// "I've verified it in Paystack": takes the seller off the list.
-router.post('/sellers/:id/payout-checked', async (req, res, next) => {
+// A new bank account, after checking it in Paystack: "I've verified it" takes the seller off the list.
+// "Deny" (say the account isn't in the seller's name) removes the bank details and switches the Paystack
+// subaccount off, so nothing is paid into it; their notes are hidden until they add new details.
+router.post('/sellers/:id/payout-review', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
-  const { data: s } = await db.from('sellers').update({ payout_check_since: null }).eq('id', req.params.id).not('payout_check_since', 'is', null).select('id,display_name,bank_name,account_number_last4').maybeSingle();
-  if (s) {
+  const back = backTo(req, '/admin/money#verify-payouts');
+  const { data: s } = await db.from('sellers').select('id,display_name,full_name,bank_name,account_number_last4,paystack_subaccount_code,payout_check_since,users(email)').eq('id', req.params.id).maybeSingle();
+  if (!s || !s.payout_check_since || !s.paystack_subaccount_code) return res.redirect(back);
+  if (req.body.decision === 'approve') {
+    await db.from('sellers').update({ payout_check_since: null }).eq('id', s.id);
     events.log('seller.payout_checked', { seller_id: s.id, seller: s.display_name }, req.user.email);
     notify.add(s.id, { kind: 'payouts', title: 'Your payout account is verified', body: `Your share of each sale will be paid into ${s.bank_name} ••••${s.account_number_last4}.`, link: '/seller/payouts' });
     flash(req, 'ok', `${s.display_name} marked as verified in Paystack.`);
+  } else if (req.body.decision === 'deny') {
+    const note = str(req.body.note, 500);
+    if (!note) {
+      flash(req, 'error', 'Add a reason so the seller knows what to fix.');
+      return res.redirect(back);
+    }
+    try {
+      await paystack.updateSubaccount(s.paystack_subaccount_code, { active: false });
+    } catch (err) {
+      console.error('[admin] subaccount not switched off', err.message, err.paystack);
+      flash(req, 'error', `Paystack didn’t switch the account off (${err.message}), so nothing was changed. Try again.`);
+      return res.redirect(back);
+    }
+    const { error } = await db.from('sellers').update({
+      paystack_subaccount_code: null, business_name: null, bank_code: null, bank_name: null, account_number_last4: null,
+      payout_check_since: null, payout_rejected_note: note,
+    }).eq('id', s.id);
+    if (error) throw error;
+    events.log('seller.payout_denied', { seller_id: s.id, seller: s.display_name, bank: s.bank_name, last4: s.account_number_last4, subaccount: s.paystack_subaccount_code, reason: note }, req.user.email);
+    notify.add(s.id, { kind: 'payouts', title: 'Your bank details weren’t accepted', body: note, link: '/seller/payouts' });
+    if (s.users) emails.sendPayoutDenied(s.users.email, s.full_name || s.display_name, s.bank_name, s.account_number_last4, note).catch((err) => console.error('[admin] payout email not sent', err.message));
+    flash(req, 'ok', `${s.display_name}’s bank details removed. Their notes are hidden until they add new ones; they can see your reason.`);
   }
-  res.redirect(backTo(req, '/admin/money#verify-payouts'));
+  res.redirect(back);
 });
 
 router.get('/money', async (req, res) => {
