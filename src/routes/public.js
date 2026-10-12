@@ -3,7 +3,7 @@ const db = require('../lib/supabase');
 const config = require('../lib/config');
 const preview = require('../lib/preview');
 const { publicNotes, isPublic } = require('../lib/queries');
-const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS, PRIVATE_INSTITUTION } = require('../lib/constants');
+const { UNIVERSITIES, NOTE_INSTITUTIONS, LEVELS } = require('../lib/constants');
 
 const { isUuid, noteUrl, storeUrl, str, rand, qs } = require('../lib/helpers');
 const { limit } = require('../lib/limits');
@@ -28,16 +28,17 @@ function searchWords(q) {
 }
 const wordForms = (w) => [...new Set([w, w.replace(/([a-z])(\d)/g, '$1 $2')])];
 
-// "Popular at" on the home page: the institutions with the most notes on sale right now (then the most sales),
-// so every link leads to notes. Shown by their short name (UCT, UJ...).
+// "Popular at" on the home page: the institutions from our list with the most notes on sale right now (then the
+// most sales), so every link leads to notes. Shown by their short name (UCT, UJ...). Institutions sellers typed in
+// themselves ("Other") and "Private institution" are left out.
 async function popularInstitutions(max = 8) {
   const { data } = await publicNotes('university,sales_count,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
   const byKey = new Map();
   for (const n of data || []) {
-    const name = String(n.university || '').trim();
-    if (!name || name === PRIVATE_INSTITUTION) continue; // too vague to be a useful link
-    const key = name.toLowerCase();
-    const row = byKey.get(key) || { name, notes: 0, sales: 0 };
+    const uni = UNIVERSITIES.find((u) => u.name.toLowerCase() === String(n.university || '').trim().toLowerCase());
+    if (!uni) continue;
+    const key = uni.name;
+    const row = byKey.get(key) || { name: uni.name, short: uni.short, notes: 0, sales: 0 };
     row.notes += 1;
     row.sales += n.sales_count || 0;
     byKey.set(key, row);
@@ -45,7 +46,7 @@ async function popularInstitutions(max = 8) {
   return [...byKey.values()]
     .sort((a, b) => b.notes - a.notes || b.sales - a.sales || a.name.localeCompare(b.name))
     .slice(0, max)
-    .map((r) => ({ name: r.name, short: (UNIVERSITIES.find((u) => u.name.toLowerCase() === r.name.toLowerCase()) || {}).short || r.name }));
+    .map((r) => ({ name: r.name, short: r.short }));
 }
 
 router.get('/', async (req, res) => {
