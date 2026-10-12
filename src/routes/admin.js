@@ -255,7 +255,7 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
     await db.from('sellers').update({ verification_status: 'rejected', verification_note: note, verified_at: null }).eq('id', req.params.id);
     await db.from('qualifications').update({ review_status: 'rejected', review_note: note, reviewed_at: new Date().toISOString() }).eq('seller_id', req.params.id).eq('review_status', 'pending');
     const revoked = s.verification_status === 'approved';
-    flash(req, 'ok', `${s.display_name} ${revoked ? 'revoked' : 'rejected'}. All their notes are hidden from students.`);
+    flash(req, 'ok', revoked ? `${s.display_name} revoked. All their notes are hidden from students.` : `${s.display_name} not approved. They can see your reason and send their documents again.`);
     events.log(revoked ? 'seller.revoked' : 'seller.rejected', { seller_id: req.params.id, name: s.display_name, reason: note }, req.user.email);
     notify.add(req.params.id, { kind: 'verification', title: revoked ? 'Your verification was withdrawn' : 'We couldn’t verify your documents', body: note, link: '/seller/verification' });
   } else {

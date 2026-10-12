@@ -1,0 +1,2 @@
+<%# Shown when the form came back with something to fix: browsers can't keep a chosen file, so say so. Needs name. %>
+<% if (locals.sentFiles && sentFiles.includes(name) && locals.errors && Object.keys(errors).length && !errors[name]) { %><span class="pick-again">Choose this file again. Files can’t be kept when something on the form needs fixing.</span><% } %>

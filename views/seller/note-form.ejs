@@ -80,6 +80,7 @@
               <span class="dropzone-empty"><span><strong><%= editing ? 'Choose a new PDF' : 'Choose your PDF' %></strong><span class="dz-drag"> or drag it here</span></span><small>PDF only, up to 50 MB</small></span>
               <span class="dropzone-chosen" hidden><strong data-file-name></strong><small data-file-meta></small></span>
             </label>
+            <%- include('../partials/pick-again', { name: 'pdf' }) %>
             <%- include('../partials/field-error', { name: 'pdf' }) %>
           </div>
         </section>

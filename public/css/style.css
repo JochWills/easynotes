@@ -570,6 +570,7 @@ fieldset.field legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 .field > label, .field > .label { display: block; font-weight: 600; margin-bottom: 6px; }
 .hint { display: block; color: var(--muted); font-size: .88rem; font-weight: 400; margin-top: 6px; }
 .error-text { display: block; color: var(--bad); font-size: .9rem; font-weight: 600; margin-top: 6px; }
+.pick-again { display: block; color: var(--wait); font-size: .9rem; font-weight: 600; margin-top: 6px; }
 .field input[type="text"], .field input[type="email"], .field input[type="password"], .field input[type="number"],
 .field input[type="search"], .field select, .field textarea {
   width: 100%; font: inherit; color: var(--ink); background: var(--paper);

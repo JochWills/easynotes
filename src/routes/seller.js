@@ -52,6 +52,7 @@ const afterUpload = (back) => (req, res, next) => {
     flash(req, 'error', req.uploadError);
     return res.redirect(back(req));
   }
+  res.locals.sentFiles = Object.keys(req.files || {}); // if the form comes back with something to fix, these need choosing again
   next();
 };
 
@@ -180,7 +181,10 @@ const eduFiles = (extra = []) => upload.fields([{ name: 'doc', maxCount: 1 }, { 
 
 router.get('/verification', async (req, res) => {
   const quals = await education.forSeller(req.seller.id);
-  res.render('seller/verification', eduLocals({ title: req.seller.verification_status === 'approved' ? 'Education' : 'Verification', quals, q: {} }));
+  // Sending again after a rejection: start from what they sent last time (the documents still need choosing again)
+  const last = req.seller.verification_status === 'rejected' && quals[0];
+  const q = last ? (({ id, seller_id, doc_path, record_path, review_status, review_note, replaces_id, submitted_at, reviewed_at, created_at, reminded_at, ...fields }) => fields)(last) : {};
+  res.render('seller/verification', eduLocals({ title: req.seller.verification_status === 'approved' ? 'Education' : 'Verification', quals, q }));
 });
 
 // First verification: a completed degree plus ID. Starts over if an earlier attempt was rejected.
