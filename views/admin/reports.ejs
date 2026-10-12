@@ -56,7 +56,7 @@
           <div class="actions">
             <% if (n) { %><a class="btn btn-ghost btn-sm" href="/admin/notes/<%= n.id %>/file" target="_blank" rel="noopener">Open PDF</a><% } %>
             <% if (n && n.status !== 'removed' && n.status !== 'deleted') { %>
-              <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm="Remove these notes? The seller won't be able to republish them. Past buyers can still download."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove notes</button></form>
+              <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm-title="Remove “<%= n.title %>”?" data-confirm="It’s taken off EasyNotes and the seller can’t publish it again. People who bought it can still download it." data-confirm-yes="Remove notes"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove notes</button></form>
             <% } %>
             <form method="post" action="/admin/reports/<%= e.id %>/resolve"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Mark resolved</button></form>
           </div>

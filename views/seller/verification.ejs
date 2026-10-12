@@ -50,7 +50,7 @@
                   <% if (q.review_status === 'rejected') { %><a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?retry=<%= q.id %>">Fix and send again</a><% } %>
                   <% var degrees = quals.filter(function (o) { return o.review_status === 'approved' && o.status === 'completed'; }); %>
                   <% if (!(q.review_status === 'approved' && q.status === 'completed' && degrees.length === 1)) { %>
-                    <form method="post" action="/seller/verification/education/<%= q.id %>/remove" data-confirm="Remove <%= q.name %> from your education?<%= q.review_status === 'approved' ? ' It comes off your storefront straight away.' : '' %>">
+                    <form method="post" action="/seller/verification/education/<%= q.id %>/remove" data-confirm-title="Remove <%= q.name %>?" data-confirm="<%= q.review_status === 'approved' ? 'It comes off your storefront straight away. To show it again you’d need to send it for review.' : 'It’s taken out of your education.' %>" data-confirm-yes="Remove">
                       <input type="hidden" name="_csrf" value="<%= csrf %>">
                       <button class="linklike" type="submit">Remove</button>
                     </form>

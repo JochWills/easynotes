@@ -16,7 +16,7 @@
           <li class="lib-item">
             <div><strong><%= a.email %></strong><span class="small muted">Added <%= date(a.created_at) %><%= a.id === user.id ? ' · you' : '' %></span></div>
             <% if (a.id !== user.id && admins.length > 1) { %>
-              <form method="post" action="/admin/admins/<%= a.id %>/remove" data-confirm="Remove <%= a.email %> as an admin? They'll lose access straight away."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form>
+              <form method="post" action="/admin/admins/<%= a.id %>/remove" data-confirm-title="Remove this admin?" data-confirm="<%= a.email %> loses access to the admin dashboard straight away." data-confirm-yes="Remove admin"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form>
             <% } %>
           </li>
         <% }) %>

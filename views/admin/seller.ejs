@@ -35,7 +35,7 @@
         <p class="muted">This seller hasn’t sent their documents for verification yet.</p>
       <% } else { %>
         <% if (vs === 'approved') { %><p class="muted small">Verified. Revoking hides all their notes from students until they’re approved again.</p><% } %>
-        <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification" <%- vs === 'approved' ? 'data-confirm="Revoke this seller’s verification? All their notes will be hidden from students."' : '' %>>
+        <form class="form" method="post" action="/admin/sellers/<%= s.id %>/verification" <%- vs === 'approved' ? 'data-confirm-title="Revoke verification?" data-confirm="All their notes are hidden from students until they’re approved again. They’ll see your reason." data-confirm-yes="Revoke"' : '' %>>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="field">
             <label for="a-note">Reason <%= vs === 'approved' ? '(shown to the seller)' : '(shown to the seller if you reject)' %></label>

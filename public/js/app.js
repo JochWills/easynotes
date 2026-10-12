@@ -706,12 +706,70 @@
     b.addEventListener('click', function () { b.classList.add('is-spinning'); });
   });
 
-  // Confirm destructive actions
-  document.querySelectorAll('form[data-confirm]').forEach(function (f) {
-    f.addEventListener('submit', function (e) {
-      if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
+  // Confirm destructive actions in a pop-up. On a form: data-confirm (the explanation), and optionally
+  // data-confirm-title and data-confirm-yes (the button). On a link to a confirmation page, add
+  // data-confirm-post (where to POST): with JavaScript the pop-up does it, without it the page still works.
+  var confirmDlg = null, onYes = null;
+  var askConfirm = function (el, yes) {
+    var body = el.getAttribute('data-confirm');
+    if (typeof HTMLDialogElement !== 'function') { if (window.confirm(body)) yes(); return; }
+    if (!confirmDlg) {
+      confirmDlg = document.createElement('dialog');
+      confirmDlg.className = 'unsaved confirm';
+      confirmDlg.setAttribute('aria-labelledby', 'confirm-title');
+      confirmDlg.setAttribute('aria-describedby', 'confirm-body');
+      confirmDlg.innerHTML = '<span class="confirm-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+        '<h2 id="confirm-title"></h2><p id="confirm-body"></p>' +
+        '<div class="unsaved-actions"><button type="button" class="btn btn-danger" data-act="yes"></button>' +
+        '<button type="button" class="btn btn-ghost" data-act="no">Cancel</button></div>';
+      confirmDlg.addEventListener('click', function (e) {
+        var act = e.target === confirmDlg ? 'no' : (e.target.closest('[data-act]') || { getAttribute: function () { return null; } }).getAttribute('data-act');
+        if (!act) return;
+        confirmDlg.close();
+        if (act === 'yes' && onYes) onYes();
+      });
+      document.body.appendChild(confirmDlg);
+    }
+    confirmDlg.querySelector('h2').textContent = el.getAttribute('data-confirm-title') || 'Are you sure?';
+    confirmDlg.querySelector('p').textContent = body;
+    confirmDlg.querySelector('[data-act="yes"]').textContent = el.getAttribute('data-confirm-yes') || 'Yes, go ahead';
+    onYes = yes;
+    confirmDlg.showModal();
+    confirmDlg.querySelector('[data-act="no"]').focus(); // the safe choice is the one Enter picks
+  };
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.hasAttribute || !f.hasAttribute('data-confirm') || f.hasAttribute('data-confirmed')) return;
+    if (e.submitter && e.submitter.hasAttribute('data-no-confirm')) return; // e.g. Approve next to Revoke
+    e.preventDefault();
+    var submitter = e.submitter;
+    askConfirm(f, function () {
+      f.setAttribute('data-confirmed', '');
+      if (f.requestSubmit) f.requestSubmit(submitter || undefined); else f.submit();
+      f.removeAttribute('data-confirmed');
     });
-  });
+  }, true);
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[data-confirm-post]');
+    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var token = document.querySelector('input[name="_csrf"]');
+    if (!token) return; // no form token on the page: let the link open the confirmation page
+    e.preventDefault();
+    var menu = a.closest('details');
+    if (menu) menu.removeAttribute('open');
+    askConfirm(a, function () {
+      var f = document.createElement('form');
+      f.method = 'post';
+      f.action = a.getAttribute('data-confirm-post');
+      var t = document.createElement('input');
+      t.type = 'hidden'; t.name = '_csrf'; t.value = token.value;
+      f.appendChild(t);
+      document.body.appendChild(f);
+      var editing = document.querySelector('form[data-unsaved]');
+      if (editing) editing.setAttribute('data-sending', ''); // deleting: unsaved edits don't matter any more
+      HTMLFormElement.prototype.submit.call(f);
+    });
+  }, true);
 
   // Browse filters apply as soon as a dropdown changes
   document.querySelectorAll('form[data-autosubmit] select, select[form]').forEach(function (s) {

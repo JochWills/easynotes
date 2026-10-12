@@ -123,7 +123,7 @@
           <% } %>
           <div class="note-form-links">
             <a href="/seller/notes">Cancel</a>
-            <% if (editing) { %><a class="delete-link" href="/seller/notes/<%= note.id %>/delete">Delete these notes</a><% } %>
+            <% if (editing) { %><a class="delete-link" href="/seller/notes/<%= note.id %>/delete" data-confirm-post="/seller/notes/<%= note.id %>/delete" data-confirm-title="Delete “<%= note.title %>”?" data-confirm="<%= note.sales_count ? 'It has ' + note.sales_count + (note.sales_count === 1 ? ' sale' : ' sales') + '. It comes off EasyNotes straight away, but people who bought it can still download it. This can’t be undone.' : 'Nobody has bought it, so the listing and its PDF are erased. This can’t be undone.' %>" data-confirm-yes="Delete notes">Delete these notes</a><% } %>
           </div>
         </div>
       </div>

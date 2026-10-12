@@ -46,7 +46,7 @@
                           <% } %>
                         </form>
                       <% } %>
-                      <a role="menuitem" class="is-danger" href="/seller/notes/<%= n.id %>/delete">Delete</a>
+                      <a role="menuitem" class="is-danger" href="/seller/notes/<%= n.id %>/delete" data-confirm-post="/seller/notes/<%= n.id %>/delete" data-confirm-title="Delete “<%= n.title %>”?" data-confirm="<%= n.sales_count ? 'It has ' + n.sales_count + (n.sales_count === 1 ? ' sale' : ' sales') + '. It comes off EasyNotes straight away, but people who bought it can still download it. This can’t be undone.' : 'Nobody has bought it, so the listing and its PDF are erased. This can’t be undone.' %>" data-confirm-yes="Delete notes">Delete</a>
                     </div>
                   </details>
                 </div>

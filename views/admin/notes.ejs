@@ -25,7 +25,7 @@
                 <% if (n.status === 'deleted') { %>
                   <span class="small muted">Deleted by the seller</span>
                 <% } else if (n.status !== 'removed') { %>
-                  <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm="Remove these notes? The seller won't be able to republish them. Past buyers can still download."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove</button></form>
+                  <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm-title="Remove “<%= n.title %>”?" data-confirm="It’s taken off EasyNotes and the seller can’t publish it again. People who bought it can still download it." data-confirm-yes="Remove notes"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove</button></form>
                 <% } else { %>
                   <form method="post" action="/admin/notes/<%= n.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" name="action" value="restore">Restore as hidden</button></form>
                 <% } %>

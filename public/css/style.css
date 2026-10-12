@@ -140,6 +140,8 @@ dialog.unsaved {
 dialog.unsaved[open] { animation: fade-in .16s ease-out; }
 dialog.unsaved::backdrop { background: rgba(14, 26, 58, .45); backdrop-filter: blur(2px); }
 dialog.unsaved h2 { font-size: 1.35rem; margin: 0 0 8px; }
+.confirm-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 16px; border-radius: 50%; background: var(--bad-bg); color: var(--bad); }
+dialog.confirm h2 { overflow-wrap: anywhere; }
 dialog.unsaved p { color: var(--ink-soft); margin: 0 0 22px; }
 .unsaved-actions { display: grid; gap: 10px; }
 .unsaved-actions .btn { width: 100%; }
