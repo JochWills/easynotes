@@ -46,6 +46,7 @@ Notes only appear to students when **all three** are true: note published, selle
    - `samples` (public) – free previews
    - `verification` (private) – degree + ID documents
 3. **Project settings → API**: copy the Project URL and the **service_role** key.
+4. **Connect** (top of the project) → **Session pooler** → copy the URI, put your database password in it, and set it as `DATABASE_URL`. The site then applies `schema.sql` itself whenever the file changes (on start-up), so you never paste it in again. Forgot the password? **Project settings → Database → Reset database password**. `npm run migrate` applies it right away.
 
 > The service role key bypasses all security. It only lives in Render's environment variables and is never sent to the browser.
 
@@ -72,7 +73,7 @@ Without `RESEND_API_KEY` the site works as before and simply sends no emails. "F
 1. Push this folder to a GitHub repo.
 2. Render → **New → Blueprint** → pick the repo (it reads `render.yaml`), or create a Web Service manually with:
    - Build: `npm ci`  Start: `npm start`  Health check: `/healthz`
-3. Fill in the env vars: `BASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYSTACK_SECRET_KEY` (`SESSION_SECRET` is generated for you).
+3. Fill in the env vars: `BASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `PAYSTACK_SECRET_KEY` (`SESSION_SECRET` is generated for you).
 4. Add your custom domain (e.g. `easynotes.co.za`) under the service's Settings, then update `BASE_URL` to match.
 
 The Starter plan is recommended: the free plan sleeps after inactivity, which makes the first page load slow and can delay Paystack webhooks.
@@ -103,6 +104,7 @@ Paystack can't reach `localhost` for webhooks, but the browser callback still co
 | `BASE_URL` | `http://localhost:3000` | Public URL, used for the Paystack callback |
 | `SESSION_SECRET` | — | Signs the login cookie |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | — | Database + storage |
+| `DATABASE_URL` | — | Optional. Session pooler URI; the site applies `supabase/schema.sql` when it changes |
 | `PAYSTACK_SECRET_KEY` | — | Payments, subaccounts, webhook signature |
 | `PLATFORM_FEE_PERCENT` | `15` | Your cut of each sale |
 | `PAYSTACK_FEE_BEARER` | `account` | Who pays Paystack's fee |

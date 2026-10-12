@@ -141,5 +141,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(config.port, () => console.log(`EasyNotes running on ${config.baseUrl} (port ${config.port})`));
-require('./lib/jobs').start();
+// Bring the database up to date (supabase/schema.sql) before taking visitors. If that fails the site still
+// starts: everything new in the schema is optional until it's there.
+require('./lib/migrate')
+  .migrate()
+  .then((result) => console.log('[schema]', result))
+  .catch((err) => console.error('[schema] not applied, the site runs without the latest database changes:', err.message))
+  .finally(() => {
+    app.listen(config.port, () => console.log(`EasyNotes running on ${config.baseUrl} (port ${config.port})`));
+    require('./lib/jobs').start();
+  });

@@ -1,4 +1,5 @@
--- EasyNotes schema. Run once in Supabase > SQL Editor.
+-- EasyNotes schema. Applied by the site itself when it starts and this file has changed (needs DATABASE_URL,
+-- see src/lib/migrate.js), or paste it into Supabase > SQL Editor. Safe to run again: it only adds what's missing.
 -- The app talks to Supabase only from the server with the service role key.
 -- RLS is enabled with no policies, so the public anon key can read/write nothing.
 

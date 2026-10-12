@@ -9,6 +9,7 @@
     "dev": "node --watch src/server.js",
     "preview": "node scripts/preview.js",
     "create-admin": "node scripts/create-admin.js",
+    "migrate": "node src/lib/migrate.js",
     "make-previews": "node scripts/make-previews.js"
   },
   "engines": {
@@ -27,6 +28,7 @@
     "helmet": "^8.0.0",
     "multer": "^2.0.0",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.10.38"
+    "pdfjs-dist": "^4.10.38",
+    "pg": "^8.23.1"
   }
 }
