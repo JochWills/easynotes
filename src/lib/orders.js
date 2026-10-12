@@ -1,6 +1,7 @@
 const db = require('./supabase');
 const events = require('./events');
 const { sendPurchaseEmail, sendSaleEmails } = require('./emails');
+const notify = require('./notify');
 
 // Every order bought in one payment shares payment_ref (the Paystack reference).
 async function ordersFor(paymentRef) {
@@ -56,6 +57,7 @@ async function markPaid(paymentRef, tx) {
     // Only the call that flips the orders to paid sends the emails (buyer's download link, seller's sale notice), so the callback and webhook don't both send them.
     sendPurchaseEmail(updated).catch((err) => console.error('[orders] purchase email not sent', err.message));
     sendSaleEmails(updated).catch((err) => console.error('[orders] sale email not sent', err.message));
+    notify.sales(updated).catch((err) => console.error('[orders] sale notification not saved', err.message));
   }
   return ordersFor(paymentRef);
 }

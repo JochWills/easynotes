@@ -220,6 +220,22 @@ alter table reviews enable row level security;
 alter table sellers add column if not exists notify_sales boolean not null default true;
 alter table sellers add column if not exists notify_reviews boolean not null default true;
 
+-- Notifications for sellers (sales, verification decisions, reviews, notes hidden by EasyNotes...), shown with a red dot
+-- in the account menu and listed at /seller/notifications. read_at is set once the seller has seen them.
+create table if not exists notifications (
+  id bigint generated always as identity primary key,
+  seller_id uuid not null references sellers(id) on delete cascade,
+  kind text not null,
+  title text not null,
+  body text,
+  link text,
+  created_at timestamptz not null default now(),
+  read_at timestamptz
+);
+create index if not exists notifications_seller_idx on notifications (seller_id, created_at desc);
+create index if not exists notifications_unread_idx on notifications (seller_id) where read_at is null;
+alter table notifications enable row level security;
+
 -- Deleting a note or a whole seller account happens in one transaction, so a failure part-way leaves nothing
 -- half deleted. The app removes the files from storage afterwards, using the paths these return.
 -- Raises 'checkout_in_progress' when someone started paying in the last 2 hours (the payment may still go through).
@@ -286,6 +302,7 @@ begin
   else
     delete from qualifications where seller_id = s.id;
     delete from reviews where seller_id = s.id;
+    delete from notifications where seller_id = s.id;
     update sellers set
       display_name = 'Deleted seller', full_name = null, avatar_path = null, slug = 'deleted-' || s.id,
       headline = null, bio = null, degree = null, university = null, graduation_year = null,

@@ -4,6 +4,7 @@ const education = require('../lib/education');
 const reviews = require('../lib/reviews');
 const events = require('../lib/events');
 const emails = require('../lib/emails');
+const notify = require('../lib/notify');
 const flash = require('../lib/flash');
 const db = require('../lib/supabase');
 const { publicNotes } = require('../lib/queries');
@@ -111,6 +112,7 @@ router.post('/:slug/reviews', reviewLimiter, async (req, res, next) => {
   }
   events.log('review.posted', { seller_id: store.author.id, seller: store.author.display_name, rating: review.rating, ref: review.payment_ref }, values.email);
   emails.sendNewReview(store.author.id, review).catch((err) => console.error('[reviews] seller email not sent', err.message));
+  notify.add(store.author.id, { kind: 'review', title: `New ${review.rating}-star review`, body: review.body ? `“${review.body.slice(0, 140)}${review.body.length > 140 ? '…' : ''}” · ${review.reviewer_name || 'a buyer'}` : `From ${review.reviewer_name || 'a buyer'}`, link: `/${store.slug}#reviews` });
   flash(req, 'ok', 'Thanks for your review! It’s now on this storefront.');
   res.redirect(303, '/' + store.slug + '#reviews');
 });

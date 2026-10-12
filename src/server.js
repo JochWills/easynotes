@@ -8,6 +8,7 @@ const helpers = require('./lib/helpers');
 const { loadUser } = require('./lib/auth');
 const { csrf, verifyCsrf } = require('./lib/csrf');
 const education = require('./lib/education');
+const notify = require('./lib/notify');
 
 const app = express();
 app.set('trust proxy', 1); // Render terminates TLS in front of the app
@@ -96,6 +97,11 @@ app.use((req, res, next) => {
   next();
 });
 app.use(loadUser);
+// Sellers get a red dot in the account menu while they have notifications they haven't seen
+app.use(async (req, res, next) => {
+  res.locals.unreadCount = req.seller ? await notify.unreadCount(req.seller.id) : 0;
+  next();
+});
 // Logged-in pages are never kept by the browser, so Back after logging out can't show them again.
 app.use((req, res, next) => {
   if (req.user) res.set('Cache-Control', 'private, no-store');

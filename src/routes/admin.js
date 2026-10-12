@@ -11,6 +11,7 @@ const { requireAdmin } = require('../lib/auth');
 const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
 const education = require('../lib/education');
+const notify = require('../lib/notify');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -166,6 +167,7 @@ router.post('/qualifications/:id/review', async (req, res, next) => {
     if (q.replaces_id) await db.from('qualifications').update({ review_status: 'superseded' }).eq('id', q.replaces_id).eq('seller_id', q.seller_id);
     await education.refreshHeadline(q.seller_id);
     events.log('qualification.approved', { seller_id: q.seller_id, qualification_id: q.id, name: q.name, seller: who }, req.user.email);
+    notify.add(q.seller_id, { kind: 'education', title: `${q.name} is verified`, body: 'It now shows on your storefront.', link: '/seller/verification' });
     flash(req, 'ok', `${q.name} approved for ${who}. It now shows on their storefront.`);
   } else if (req.body.decision === 'reject') {
     if (!note) {
@@ -174,6 +176,7 @@ router.post('/qualifications/:id/review', async (req, res, next) => {
     }
     await db.from('qualifications').update({ review_status: 'rejected', review_note: note, reviewed_at: new Date().toISOString() }).eq('id', q.id);
     events.log('qualification.rejected', { seller_id: q.seller_id, qualification_id: q.id, name: q.name, seller: who, reason: note }, req.user.email);
+    notify.add(q.seller_id, { kind: 'education', title: `${q.name} wasn’t approved`, body: note, link: '/seller/verification' });
     flash(req, 'ok', `${q.name} not approved. ${who} can see why and send it again.`);
   } else return res.redirect(back);
   emails.sendQualificationDecision(q.id).catch((err) => console.error('[admin] education email not sent', err.message));
@@ -222,7 +225,7 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
   const back = backTo(req, `/admin/sellers/${req.params.id}`);
   const decision = req.body.decision;
   const note = str(req.body.note, 500) || null;
-  const { data: s } = await db.from('sellers').select('display_name,verification_status').eq('id', req.params.id).maybeSingle();
+  const { data: s } = await db.from('sellers').select('display_name,verification_status,paystack_subaccount_code').eq('id', req.params.id).maybeSingle();
   if (!s) return next();
 
   // Only a waiting submission can be decided; an approved seller can only be revoked
@@ -239,6 +242,9 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
     await education.refreshHeadline(req.params.id);
     flash(req, 'ok', `${s.display_name} approved. Their published notes are visible once payouts are set up.`);
     events.log('seller.approved', { seller_id: req.params.id, name: s.display_name }, req.user.email);
+    notify.add(req.params.id, s.paystack_subaccount_code
+      ? { kind: 'verification', title: 'You’re verified', body: 'Your published notes are now live for students.', link: '/seller' }
+      : { kind: 'verification', title: 'You’re verified', body: 'One step left: add your payout details so your notes can go on sale.', link: '/seller/payouts' });
   } else if (decision === 'reject') {
     if (!note) {
       flash(req, 'error', 'Add a reason so the seller knows what to fix.');
@@ -249,6 +255,7 @@ router.post('/sellers/:id/verification', async (req, res, next) => {
     const revoked = s.verification_status === 'approved';
     flash(req, 'ok', `${s.display_name} ${revoked ? 'revoked' : 'rejected'}. All their notes are hidden from students.`);
     events.log(revoked ? 'seller.revoked' : 'seller.rejected', { seller_id: req.params.id, name: s.display_name, reason: note }, req.user.email);
+    notify.add(req.params.id, { kind: 'verification', title: revoked ? 'Your verification was withdrawn' : 'We couldn’t verify your documents', body: note, link: '/seller/verification' });
   } else {
     return res.redirect(back);
   }
@@ -283,13 +290,19 @@ router.post('/notes/:id/status', async (req, res, next) => {
   const status = Object.hasOwn(map, String(req.body.action)) ? map[req.body.action] : null;
   if (status) {
     // Notes the seller deleted stay deleted: changing them would put them back in the seller's list.
-    const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).neq('status', 'deleted').select('title').maybeSingle();
+    const { data: n } = await db.from('notes').update({ status }).eq('id', req.params.id).neq('status', 'deleted').select('title,seller_id').maybeSingle();
     if (!n) {
       flash(req, 'error', 'The seller deleted these notes, so they can’t be changed. Past buyers can still download them.');
       return res.redirect(backToReferer(req, '/admin/notes'));
     }
     flash(req, 'ok', req.body.action === 'remove' ? 'Notes removed. The seller can’t republish them.' : 'Notes updated.');
     events.log(`note.${req.body.action === 'remove' ? 'removed' : req.body.action === 'restore' ? 'restored' : 'hidden'}`, { note_id: req.params.id, title: n?.title }, req.user.email);
+    const support = `Email ${config.supportEmail} if you think this is a mistake.`;
+    notify.add(n.seller_id, {
+      remove: { kind: 'note', title: `EasyNotes removed “${n.title}”`, body: `It’s hidden from students and can’t be published again. ${support}`, link: '/seller/notes' },
+      unpublish: { kind: 'note', title: `EasyNotes hid “${n.title}” from students`, body: `Past buyers can still download it. ${support}`, link: '/seller/notes' },
+      restore: { kind: 'note', title: `“${n.title}” can be published again`, body: 'Publish it from your notes when you’re ready.', link: '/seller/notes' },
+    }[req.body.action]);
   }
   res.redirect(backToReferer(req, '/admin/notes'));
 });

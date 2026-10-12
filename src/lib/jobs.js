@@ -4,11 +4,13 @@ const db = require('./supabase');
 const storage = require('./storage');
 const events = require('./events');
 const emails = require('./emails');
+const notify = require('./notify');
 
 const DAY = 24 * 60 * 60 * 1000;
 const ID_KEEP_DAYS = 30; // ID copies are deleted this long after approval (POPIA: keep only what's needed)
 const REJECTED_KEEP_DAYS = 60; // ...or this long after a rejected submission that was never resent
 const WEBHOOK_LOG_KEEP_DAYS = 30; // every Paystack webhook is logged; old entries are only noise
+const READ_NOTIFICATIONS_KEEP_DAYS = 180; // sellers see the newest 50 anyway
 
 const thisMonth = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
@@ -30,6 +32,7 @@ async function remindOverdueStudies() {
     if (!count) {
       try {
         await emails.sendStudyReminder(q.id);
+        await notify.add(q.seller_id, { kind: 'education', title: `Finished ${q.name}?`, body: 'Upload your certificate or final record, or update your expected finish date.', link: '/seller/verification' });
         sent++;
       } catch (err) {
         console.error('[jobs] reminder not sent', err.message);
@@ -63,8 +66,15 @@ async function pruneWebhookLog() {
   return (data || []).length;
 }
 
+async function pruneReadNotifications() {
+  const before = new Date(Date.now() - READ_NOTIFICATIONS_KEEP_DAYS * DAY).toISOString();
+  const { data, error } = await db.from('notifications').delete().not('read_at', 'is', null).lt('created_at', before).select('id');
+  if (error) throw error;
+  return (data || []).length;
+}
+
 async function runAll() {
-  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog]]) {
+  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog], ['notification clean-up', pruneReadNotifications]]) {
     try {
       const n = await task();
       if (n) console.log(`[jobs] ${name}: ${n}`);

@@ -1,0 +1,42 @@
+<%- include('../partials/top', { noindex: true }) %>
+<%
+  // "Just now", "12 min ago", "3 h ago", "Yesterday", then the date
+  var ago = function (d) {
+    var mins = Math.round((Date.now() - new Date(d)) / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return mins + ' min ago';
+    if (mins < 24 * 60) return Math.round(mins / 60) + ' h ago';
+    if (mins < 48 * 60) return 'Yesterday';
+    return date(d);
+  };
+  var icons = {
+    sale: '<path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/>',
+    review: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+    verification: '<path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z M8.8 12l2.2 2.2 4.3-4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>',
+    education: '<path d="M2 9l10-5 10 5-10 5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" fill="none" stroke="currentColor" stroke-width="2"/>',
+    note: '<path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>',
+  };
+%>
+<div class="wrap dash">
+  <%- include('../partials/seller-nav') %>
+  <% if (unavailable) { %>
+    <div class="empty"><h3>Notifications aren’t available yet</h3><p>They’ll show here once the site has been updated. Sales and reviews still reach you by email.</p></div>
+  <% } else if (!notifications.length) { %>
+    <div class="empty"><h3>No notifications yet</h3><p>Sales, reviews and updates about your verification and notes show up here.</p><a class="btn btn-ghost" href="/seller">Back to your dashboard</a></div>
+  <% } else { %>
+    <ul class="notif-list">
+      <% notifications.forEach(function (n) { var isNew = !n.read_at; %>
+        <li class="notif notif-<%= n.kind %><%= isNew ? ' is-new' : '' %>">
+          <span class="notif-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><%- icons[n.kind] || icons.note %></svg></span>
+          <div class="notif-text">
+            <% if (n.link) { %><a class="notif-title" href="<%= n.link %>"><%= n.title %></a><% } else { %><strong class="notif-title"><%= n.title %></strong><% } %>
+            <% if (n.body) { %><p><%= n.body %></p><% } %>
+            <span class="notif-when"><% if (isNew) { %><span class="notif-new">New</span> · <% } %><time datetime="<%= new Date(n.created_at).toISOString() %>"><%= ago(n.created_at) %></time></span>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+    <% if (notifications.length === 50) { %><p class="fineprint">Showing your latest 50 notifications.</p><% } %>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

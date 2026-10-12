@@ -10,7 +10,8 @@
             { "pathname": "/library" },
             { "pathname": "/reset" },
             { "pathname": "/webhooks/*" },
-            { "pathname": "/admin/health" }
+            { "pathname": "/admin/health" },
+            { "pathname": "/seller/notifications" }
           ] } },
           { "not": { "selector_matches": "[target=_blank], [download], [data-no-prerender]" } }
         ]
