@@ -1042,27 +1042,14 @@
     });
   });
 
-  // Storefront: sort and filter the seller's notes in the page. The controls only show on the Notes tab.
+  // Storefront: filter the seller's notes by subject in the page. The control only shows on the Notes tab.
   var noteTools = document.querySelector('[data-note-tools]');
   if (noteTools) {
-    var grid = document.querySelector('#notes .grid-notes');
-    var slots = Array.prototype.slice.call(grid.querySelectorAll('[data-note-slot]'));
-    var sortSel = noteTools.querySelector('[data-note-sort]');
+    var slots = Array.prototype.slice.call(document.querySelectorAll('#notes [data-note-slot]'));
     var filterSel = noteTools.querySelector('[data-note-filter]');
-    var num = function (el, k) { return Number(el.getAttribute('data-' + k)) || 0; };
-    var orders = {
-      popular: function (a, b) { return num(b, 'sales') - num(a, 'sales'); },
-      new: function (a, b) { return num(b, 'new') - num(a, 'new'); },
-      price_asc: function (a, b) { return num(a, 'price') - num(b, 'price'); },
-      price_desc: function (a, b) { return num(b, 'price') - num(a, 'price'); },
-    };
-    var apply = function () {
-      slots.slice().sort(orders[sortSel.value] || orders.popular).forEach(function (el) { grid.appendChild(el); });
-      var subject = filterSel ? filterSel.value : '';
-      slots.forEach(function (el) { el.hidden = !!subject && el.getAttribute('data-subject') !== subject; });
-    };
-    sortSel.addEventListener('change', apply);
-    if (filterSel) filterSel.addEventListener('change', apply);
+    filterSel.addEventListener('change', function () {
+      slots.forEach(function (el) { el.hidden = !!filterSel.value && el.getAttribute('data-subject') !== filterSel.value; });
+    });
     var notesTab = document.getElementById('tab-notes');
     var showTools = function () { noteTools.hidden = notesTab.getAttribute('aria-selected') !== 'true'; };
     showTools();

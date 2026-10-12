@@ -37,25 +37,15 @@
     <button type="button" role="tab" id="tab-reviews" aria-controls="reviews" aria-selected="false" tabindex="-1" data-hash="reviews">Reviews <span class="tab-count"><%= rv.count + prevCount %></span></button>
     <button type="button" role="tab" id="tab-about" aria-controls="about" aria-selected="false" tabindex="-1" data-hash="about">About</button>
   </div>
-  <% if (notes.length > 1) { var subjects = notes.map(function (n) { return n.subject; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).sort(); %>
-    <%# Sorting and filtering happen in the page (shown by JavaScript, only on the Notes tab) %>
+  <% var subjects = notes.map(function (n) { return n.subject; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).sort(); %>
+  <% if (subjects.length > 1) { %>
+    <%# Filter by subject in the page (shown by JavaScript, only on the Notes tab) %>
     <div class="store-tools" data-note-tools hidden>
-      <% if (subjects.length > 1) { %>
-        <div class="sort-by">
-          <label for="st-subject" class="sr-only">Subject</label>
-          <select id="st-subject" data-note-filter>
-            <option value="">All subjects</option>
-            <% subjects.forEach(function (s) { %><option value="<%= s %>"><%= s %></option><% }) %>
-          </select>
-        </div>
-      <% } %>
       <div class="sort-by">
-        <label for="st-sort" class="sr-only">Sort by</label>
-        <select id="st-sort" data-note-sort>
-          <option value="popular">Most bought</option>
-          <option value="new">Newest</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
+        <label for="st-subject" class="sr-only">Subject</label>
+        <select id="st-subject" data-note-filter>
+          <option value="">All subjects</option>
+          <% subjects.forEach(function (s) { %><option value="<%= s %>"><%= s %></option><% }) %>
         </select>
       </div>
     </div>
@@ -65,7 +55,7 @@
   <div class="store-panel" id="notes" role="tabpanel" aria-labelledby="tab-notes">
     <% if (notes.length) { %>
       <div class="grid-notes">
-        <% notes.forEach(function (n) { %><div class="note-slot" data-note-slot data-sales="<%= n.sales_count || 0 %>" data-new="<%= new Date(n.created_at).getTime() %>" data-price="<%= n.price_cents %>" data-subject="<%= n.subject %>"><%- include('partials/note-card', { n: n }) %></div><% }) %>
+        <% notes.forEach(function (n) { %><div class="note-slot" data-note-slot data-subject="<%= n.subject %>"><%- include('partials/note-card', { n: n }) %></div><% }) %>
       </div>
     <% } else if (locals.isOwner) { %>
       <%# The seller looking at their own storefront: what's still needed before notes show here %>
