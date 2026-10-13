@@ -1085,15 +1085,19 @@
         entries.forEach(function (en) { seen[en.target.getAttribute('data-page')] = en.intersectionRatio; });
         var best = 1, max = -1;
         Object.keys(seen).forEach(function (k) { if (seen[k] > max) { max = seen[k]; best = Number(k); } });
-        setCurrent(best);
+        // On the "That's the free preview" slide no page is in view: stay on the last page, don't jump to 1
+        if (max > 0) setCurrent(best);
       }, { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 1] });
       pages.forEach(function (p) { io.observe(p); });
     }
     var goTo = function (n) {
       var p = pages[n - 1];
-      if (p) scroller.scrollTo({ top: p.offsetTop - stack.offsetTop, behavior: 'smooth' });
+      if (p) scroller.scrollTo({ top: p.offsetTop - stack.offsetTop, left: p.offsetLeft - stack.offsetLeft, behavior: 'smooth' });
       setCurrent(n);
     };
+    // Phones swipe sideways through the pages: the hint goes once they've swiped
+    var hint = v.querySelector('[data-viewer-swipe]');
+    if (hint) scroller.addEventListener('scroll', function () { if (scroller.scrollLeft > 20) hint.classList.add('is-done'); }, { passive: true });
     thumbs.forEach(function (t) {
       t.addEventListener('click', function (e) { e.preventDefault(); goTo(Number(t.getAttribute('data-thumb'))); });
     });

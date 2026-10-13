@@ -1799,3 +1799,20 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
 /* Form checks: a checkbox that still needs ticking */
 .check.has-error input[type="checkbox"] { outline: 2px solid var(--bad); outline-offset: 2px; }
 .check + .error-text { margin-top: -4px; }
+
+/* Note preview on phones: swipe sideways through full-width pages, so swiping up and down always scrolls
+   the page instead of getting caught in the preview box. Full screen keeps the normal up-and-down view. */
+.viewer-swipe { display: none; }
+@media (max-width: 560px) {
+  .viewer:not(:fullscreen) .viewer-scroll { height: auto; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; border-radius: 6px; }
+  .viewer:not(:fullscreen) .viewer-scroll::-webkit-scrollbar { display: none; }
+  .viewer:not(:fullscreen) .viewer-stack { --zoom: 1; width: auto; display: flex; align-items: flex-start; gap: 10px; padding-bottom: 0; }
+  .viewer:not(:fullscreen) .viewer-page { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; }
+  .viewer:not(:fullscreen) .viewer-end { flex: 0 0 100%; align-self: stretch; align-content: center; margin-top: 0; border-radius: 3px; scroll-snap-align: center; }
+  .viewer:not(:fullscreen) .viewer-zoom { display: none; }
+  .viewer:not(:fullscreen) .viewer-full { margin-left: auto; }
+  .viewer-swipe { display: block; margin: 8px 0 2px; text-align: center; color: var(--muted); font-size: .85rem; transition: opacity .3s; }
+  .viewer-swipe span { display: inline-block; animation: swipe-nudge 1.6s ease-in-out infinite; }
+  .viewer-swipe.is-done { opacity: 0; }
+}
+@keyframes swipe-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
