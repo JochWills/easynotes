@@ -226,6 +226,9 @@ alter table sellers add column if not exists notify_reviews boolean not null def
 alter table sellers add column if not exists payout_check_since timestamptz;
 -- Why an admin turned the bank details down (shown on the seller's Payouts page until they add new ones)
 alter table sellers add column if not exists payout_rejected_note text;
+-- Keyed hash of the full bank account number (never the number itself), so a change to another account that
+-- happens to end in the same 4 digits still needs checking.
+alter table sellers add column if not exists account_number_hash text;
 
 -- Notifications for sellers (sales, verification decisions, reviews, notes hidden by EasyNotes...), shown with a red dot
 -- in the account menu and listed at /seller/notifications. read_at is set once the seller has seen them.
@@ -314,7 +317,7 @@ begin
       display_name = 'Deleted seller', full_name = null, avatar_path = null, slug = 'deleted-' || s.id,
       headline = null, bio = null, degree = null, university = null, graduation_year = null,
       degree_doc_path = null, id_doc_path = null, verification_status = 'unsubmitted', verification_note = null,
-      submitted_at = null, verified_at = null, business_name = null, bank_code = null, bank_name = null, account_number_last4 = null
+      submitted_at = null, verified_at = null, business_name = null, bank_code = null, bank_name = null, account_number_last4 = null, account_number_hash = null
     where id = s.id;
     update users set email = 'deleted-' || s.user_id || '@deleted.invalid', password_hash = p_dead_hash where id = s.user_id;
   end if;

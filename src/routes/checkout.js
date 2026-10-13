@@ -18,6 +18,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const checkoutLimiter = limit(10, 100);
 const downloadLimiter = limit(15, 60);
 const linkLimiter = limit(15, 15);
+const callbackLimiter = limit(10, 100); // each visit asks Paystack about the payment
 
 const newReference = () => `EN${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 const backTo = (req, fallback) => {
@@ -211,7 +212,7 @@ const withNotes = async (orders) => {
   return orders.map((o) => ({ ...o, notes: byId[o.note_id] || { title: 'Notes', slug: '' } }));
 };
 
-router.get('/checkout/callback', async (req, res) => {
+router.get('/checkout/callback', callbackLimiter, async (req, res) => {
   const paymentRef = str(req.query.reference || req.query.trxref, 40).toUpperCase();
   if (!paymentRef) return res.redirect('/');
 

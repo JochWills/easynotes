@@ -1,5 +1,6 @@
 // Every email the site sends. All go out from MAIL_FROM (the noreply address) via mailer.js;
 // replies go to SUPPORT_EMAIL.
+const crypto = require('crypto');
 const config = require('./config');
 const db = require('./supabase');
 const mail = require('./mailer');
@@ -179,8 +180,9 @@ async function sendPayoutDenied(email, name, bankName, last4, reason) {
 /* ---------- Sellers and admins: password reset ---------- */
 
 const RESET_MINUTES = 60;
-// The token carries a piece of the current password hash, so it stops working once the password changes.
-const hashTag = (passwordHash) => String(passwordHash).slice(-12);
+// The token carries a keyed tag of the current password hash, so it stops working once the password changes.
+// Keyed, because the token's contents can be read: a piece of the hash itself would let anyone with the link test password guesses offline.
+const hashTag = (passwordHash) => crypto.createHmac('sha256', config.sessionSecret).update('password-reset:' + String(passwordHash)).digest('base64url').slice(0, 16);
 
 const resetUrl = (user, minutes) =>
   `${config.baseUrl}/reset?t=${tokens.make('password-reset', { u: user.id, h: hashTag(user.password_hash) }, minutes * 60000)}`;

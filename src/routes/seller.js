@@ -432,6 +432,11 @@ router.post('/payouts', payoutsLimiter, async (req, res) => {
     primary_contact_name: s.full_name || s.display_name,
   };
 
+  // A keyed hash of the full number tells a different account from the one on file, even with the same last 4 digits.
+  // Without a stored hash (details saved before it was kept) any save counts as a new account.
+  const accountHash = crypto.createHmac('sha256', config.sessionSecret).update(`bank-account:${bank.code}:${values.account_number}`).digest('hex');
+  const newAccount = !s.paystack_subaccount_code || s.bank_code !== bank.code || s.account_number_hash !== accountHash;
+
   let code = s.paystack_subaccount_code;
   try {
     if (code) await paystack.updateSubaccount(code, payload);
@@ -441,19 +446,23 @@ router.post('/payouts', payoutsLimiter, async (req, res) => {
     return renderPayouts(res, req, values, { form: `Paystack didn’t accept these details: ${err.message}` }, 400, true);
   }
 
-  const { error } = await db
-    .from('sellers')
-    .update({
-      paystack_subaccount_code: code,
-      business_name: values.business_name,
-      bank_code: bank.code,
-      bank_name: bank.name,
-      account_number_last4: values.account_number.slice(-4),
-      payout_rejected_note: null,
-      // New bank account: Paystack holds the first payout until an admin verifies it
-      ...(!s.paystack_subaccount_code || s.bank_code !== bank.code || s.account_number_last4 !== values.account_number.slice(-4) ? { payout_check_since: new Date().toISOString() } : {}),
-    })
-    .eq('id', s.id);
+  const update = {
+    paystack_subaccount_code: code,
+    business_name: values.business_name,
+    bank_code: bank.code,
+    bank_name: bank.name,
+    account_number_last4: values.account_number.slice(-4),
+    account_number_hash: accountHash,
+    payout_rejected_note: null,
+    // New bank account: Paystack holds the first payout until an admin verifies it
+    ...(newAccount ? { payout_check_since: new Date().toISOString() } : {}),
+  };
+  let { error } = await db.from('sellers').update(update).eq('id', s.id);
+  if (error && /account_number_hash/.test(error.message || '')) {
+    // The column isn't there yet (supabase/schema.sql not applied): save without it. With no stored hash, every save is checked.
+    const { account_number_hash, ...rest } = update;
+    ({ error } = await db.from('sellers').update(rest).eq('id', s.id));
+  }
   if (error) throw error;
   events.log('seller.payouts_changed', { seller_id: s.id, seller: s.display_name, bank: bank.name, last4: values.account_number.slice(-4), first: !s.paystack_subaccount_code }, req.user.email);
   emails.sendPayoutDetailsChanged(req.user.email, s.full_name || s.display_name, bank.name, values.account_number.slice(-4)).catch((err) => console.error('[payouts] notice not sent', err.message));
@@ -636,12 +645,19 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
     }
     throw error;
   }
+  let sold = 0;
   if (pdf) {
     await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
     await preview.removePreview(n.file_path, n.page_count);
     await afterPdfSaved(req, n.id, values.title, pdf.buffer);
+    // Buyers download whatever file the note has now, so a swap after sales (say for a blank PDF) would take what
+    // they paid for. The old file is kept and an admin checks the change (Admin > Reports can open both).
+    ({ count: sold } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', n.id).eq('status', 'paid'));
+    if (sold) {
+      await events.log('note.flagged', { note_id: n.id, title: values.title, seller_id: req.seller.id, flags: [`PDF replaced after ${sold} ${sold === 1 ? 'sale' : 'sales'}: compare it with the previous version`], previous_file: n.file_path }, req.user.email);
+    }
   }
-  await storage.remove('notes', oldFiles);
+  if (sold === 0) await storage.remove('notes', oldFiles); // if the count failed (null), keep the old file to be safe
   flash(req, 'ok', pdf ? 'Changes saved. Past buyers will get the new file when they download again.' : 'Changes saved.');
   res.redirect('/seller/notes');
 });

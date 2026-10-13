@@ -110,6 +110,17 @@ router.get('/notes/:id/file', async (req, res, next) => {
   res.redirect(await storage.signedUrl('notes', n.file_path, 120));
 });
 
+// The PDF a seller replaced after it had sold (kept so it can be compared, or put back).
+router.get('/reports/:id/previous-file', async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!(Number.isInteger(id) && id > 0)) return next();
+  const { data: e } = await db.from('events').select('kind,detail').eq('id', id).maybeSingle();
+  const path = e && e.kind === 'note.flagged' && e.detail?.previous_file;
+  if (!path) return next();
+  res.set('Cache-Control', 'no-store');
+  res.redirect(await storage.signedUrl('notes', path, 120));
+});
+
 router.post('/reports/:id/resolve', async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isInteger(id) && id > 0) {
@@ -491,6 +502,7 @@ router.post('/sellers/:id/payout-review', async (req, res, next) => {
       payout_check_since: null, payout_rejected_note: note,
     }).eq('id', s.id);
     if (error) throw error;
+    await db.from('sellers').update({ account_number_hash: null }).eq('id', s.id); // its own update: the column may not exist yet
     events.log('seller.payout_denied', { seller_id: s.id, seller: s.display_name, bank: s.bank_name, last4: s.account_number_last4, subaccount: s.paystack_subaccount_code, reason: note }, req.user.email);
     notify.add(s.id, { kind: 'payouts', title: 'Your bank details weren’t accepted', body: note, link: '/seller/payouts' });
     if (s.users) emails.sendPayoutDenied(s.users.email, s.full_name || s.display_name, s.bank_name, s.account_number_last4, note).catch((err) => console.error('[admin] payout email not sent', err.message));
