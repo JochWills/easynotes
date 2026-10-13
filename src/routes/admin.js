@@ -553,7 +553,7 @@ router.get('/money', async (req, res) => {
 
 const ACTIVITY_GROUPS = [
   ['sellers', 'Sellers', ['seller.approved', 'seller.rejected', 'seller.revoked', 'seller.payouts_changed', 'seller.payout_checked', 'seller.payout_denied', 'seller.slug_changed', 'seller.account_deleted', 'qualification.submitted', 'qualification.approved', 'qualification.rejected', 'qualification.removed', 'id.deleted', 'review.posted', 'review.hidden', 'review.shown']],
-  ['notes', 'Notes & reports', ['note.uploaded', 'note.flagged', 'note.reported', 'note.removed', 'note.hidden', 'note.restored', 'note.deleted', 'report.resolved']],
+  ['notes', 'Notes & reports', ['note.uploaded', 'note.flagged', 'note.reported', 'note.removed', 'note.hidden', 'note.restored', 'note.deleted', 'note.buyers_emailed', 'report.resolved']],
   ['payments', 'Payments', ['webhook.received', 'payment.unmatched', 'payment.mismatch', 'order.downloads_reset']],
   ['admin', 'Admins', ['admin.added', 'admin.removed', 'email.test']],
 ];

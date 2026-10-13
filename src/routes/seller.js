@@ -646,6 +646,7 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
     throw error;
   }
   let sold = 0;
+  let emailed = false;
   if (pdf) {
     await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
     await preview.removePreview(n.file_path, n.page_count);
@@ -655,12 +656,35 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
     ({ count: sold } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', n.id).eq('status', 'paid'));
     if (sold) {
       await events.log('note.flagged', { note_id: n.id, title: values.title, seller_id: req.seller.id, flags: [`PDF replaced after ${sold} ${sold === 1 ? 'sale' : 'sales'}: compare it with the previous version`], previous_file: n.file_path }, req.user.email);
+      emailed = await emailBuyersAboutUpdate(req, n.id, values.title);
     }
   }
   if (sold === 0) await storage.remove('notes', oldFiles); // if the count failed (null), keep the old file to be safe
-  flash(req, 'ok', pdf ? 'Changes saved. Past buyers will get the new file when they download again.' : 'Changes saved.');
+  flash(
+    req,
+    'ok',
+    !pdf ? 'Changes saved.'
+    : emailed ? 'Changes saved. We’re emailing everyone who bought these notes a link to the new version.'
+    : sold ? 'Changes saved. Past buyers get the new file when they download again (they were already emailed about an update in the last day).'
+    : 'Changes saved.'
+  );
   res.redirect('/seller/notes');
 });
+
+// A new PDF for notes that have sold: email the buyers, at most once a day per note so re-uploads can't flood them.
+// Runs in the background (one email at a time). Returns whether emails are on their way.
+async function emailBuyersAboutUpdate(req, noteId, title) {
+  if (!config.resendApiKey) return false;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: recent, error } = await db.from('events').select('id').eq('kind', 'note.buyers_emailed').eq('detail->>note_id', noteId).gte('created_at', since).limit(1);
+  if (error || (recent && recent.length)) return false;
+  await events.log('note.buyers_emailed', { note_id: noteId, title, seller_id: req.seller.id }, req.user.email);
+  emails.sendNoteUpdated(noteId).then(
+    (n) => console.log(`[seller] update emailed to ${n} buyers of ${noteId}`),
+    (err) => console.error('[seller] update emails not sent', err.message)
+  );
+  return true;
+}
 
 router.post('/notes/:id/status', ownNote, async (req, res) => {
   const n = req.note;
