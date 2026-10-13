@@ -1794,3 +1794,7 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
   .store-tools .sort-by label:not(.sr-only) { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .store-tools .dd-pop { left: 0; right: auto; }
 }
+
+/* Form checks: a checkbox that still needs ticking */
+.check.has-error input[type="checkbox"] { outline: 2px solid var(--bad); outline-offset: 2px; }
+.check + .error-text { margin-top: -4px; }

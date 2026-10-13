@@ -1301,6 +1301,71 @@
     update();
   });
 
+  // Form checks everywhere: instead of the browser's own pop-up ("Please fill out this field"), show our message
+  // under the field, go to the first one to fix, and clear it as soon as it's fixed. (Forms marked novalidate,
+  // like signup and uploads, check themselves.)
+  var fieldName = function (el) {
+    var label = el.labels && el.labels[0];
+    return label ? label.textContent.trim().replace(/\s*\(.*\)$/, '').replace(/^your\s+/i, '').toLowerCase() : '';
+  };
+  var problem = function (el) {
+    var v = el.validity, name = fieldName(el);
+    if (v.valid) return '';
+    if (v.valueMissing) {
+      if (el.hasAttribute('data-msg')) return el.getAttribute('data-msg');
+      if (el.type === 'checkbox') return 'Tick this box to continue.';
+      if (el.type === 'file') return 'Choose a file.';
+      if (el.tagName === 'SELECT') return name ? 'Choose your ' + name + '.' : 'Choose an option.';
+      if (el.type === 'email') return 'Enter your email address.';
+      if (el.type === 'password') return 'Enter your ' + (/password/.test(name) ? name : 'password') + '.';
+      return name ? 'Enter your ' + name + '.' : 'Fill this in.';
+    }
+    if (v.typeMismatch) return el.type === 'email' ? 'Enter a full email address, like you@example.com.' : 'Check this is right.';
+    if (v.tooShort) return el.type === 'password' ? 'Use at least ' + el.minLength + ' characters.' : el.name === 'name' ? 'Enter your first and last name.' : 'Enter at least ' + el.minLength + ' characters.';
+    if (v.tooLong) return 'Keep it to ' + el.maxLength + ' characters or fewer.';
+    if (v.rangeUnderflow || v.rangeOverflow) return 'Enter a number from ' + el.min + ' to ' + el.max + '.';
+    if (v.stepMismatch) return 'Enter a whole number.';
+    if (v.patternMismatch) return el.title || 'Check this is in the right format.';
+    return 'Check this is right.';
+  };
+  var errorFor = new WeakMap();
+  var showProblem = function (el, msg) {
+    var box = (el.type === 'checkbox' && el.closest('.check')) || el.closest('.field') || el.parentElement;
+    var old = errorFor.get(el);
+    if (old) old.remove();
+    errorFor.delete(el);
+    box.classList.toggle('has-error', !!msg);
+    if (!msg) { el.removeAttribute('aria-invalid'); return; }
+    var span = document.createElement('span');
+    span.className = 'error-text';
+    span.id = (el.id || el.name || 'field') + '-problem';
+    span.textContent = msg;
+    if (box.classList.contains('check')) box.after(span); else box.appendChild(span);
+    errorFor.set(el, span);
+    el.setAttribute('aria-invalid', 'true');
+    el.setAttribute('aria-describedby', span.id);
+  };
+  var focusedOne = false;
+  document.addEventListener('invalid', function (e) {
+    var el = e.target;
+    if (!el.form || el.form.noValidate) return;
+    e.preventDefault();
+    showProblem(el, problem(el));
+    if (!focusedOne) {
+      focusedOne = true;
+      setTimeout(function () { focusedOne = false; }, 0);
+      var spot = el.closest('.field, .check') || el;
+      spot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus({ preventScroll: true });
+    }
+  }, true);
+  var recheck = function (e) {
+    var el = e.target;
+    if (errorFor.has(el) && el.validity && el.validity.valid) showProblem(el, '');
+  };
+  document.addEventListener('input', recheck);
+  document.addEventListener('change', recheck);
+
   // Upload form: check the fields before sending, so a big PDF isn't uploaded only to be sent back
   // (the server checks everything again; these messages match its own)
   document.querySelectorAll('[data-note-form]').forEach(function (f) {

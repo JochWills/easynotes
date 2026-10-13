@@ -17,7 +17,7 @@
         </div>
         <div class="field<%= errors.confirm ? ' has-error' : '' %>">
           <label for="r-confirm">Type it again</label>
-          <input id="r-confirm" type="password" name="confirm" maxlength="72" required minlength="8" autocomplete="new-password">
+          <input id="r-confirm" data-msg="Type your new password again." type="password" name="confirm" maxlength="72" required minlength="8" autocomplete="new-password">
           <%- include('partials/field-error', { name: 'confirm' }) %>
         </div>
         <button class="btn btn-hi btn-block" type="submit">Save new password</button>
