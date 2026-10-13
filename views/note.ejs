@@ -152,7 +152,33 @@
           <% if (live) { %><button class="btn btn-ghost btn-block" type="button" data-dialog-open="share-note">Share these notes</button><% } %>
         </div>
       <% } else if (live) { %>
-        <form class="buy-form" method="post" action="/checkout/<%= note.id %>" data-buy-form data-checkout>
+        <% var cartN = (locals.cartIds || []).length; var picks = (locals.suggest || []).filter(function (n) { return (locals.cartIds || []).indexOf(n.id) === -1; }).slice(0, 3); %>
+        <form method="post" action="/cart/add/<%= note.id %>" class="buy-cart" data-note-cart <%= inCart ? 'hidden' : '' %>>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn btn-hi btn-block btn-lg" type="submit" data-umami-event="Add to cart" data-umami-event-from="note page">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
+            Add to cart · <%= rand(note.price_cents) %>
+          </button>
+        </form>
+        <div class="cart-added" data-cart-added <%= inCart ? '' : 'hidden' %>>
+          <p class="cart-added-head"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-cart-added-text><%= inCart ? 'In your cart' : 'Added to your cart' %></span></p>
+          <a class="btn btn-hi btn-block btn-lg" href="/cart"><span>Go to cart (<span data-cart-n><%= cartN %></span>)</span></a>
+          <a class="btn btn-ghost btn-block" href="/notes">Keep browsing</a>
+          <% if (picks.length) { %>
+            <div class="cart-suggest">
+              <p class="cart-suggest-head"><%= note.module_code && picks.every(function (n) { return n.module_code === note.module_code; }) ? 'Also for ' + note.module_code : picks.every(function (n) { return n.seller_id === note.seller_id; }) ? 'More from ' + author.display_name : 'Add these too?' %></p>
+              <ul>
+                <% picks.forEach(function (n) { %>
+                  <li>
+                    <a href="<%= noteUrl(n) %>"><span class="cart-suggest-title"><%= n.title %></span><span class="small muted"><%= n.seller_id === note.seller_id ? (n.module_code || n.subject) : 'by ' + n.sellers.display_name %> · <%= rand(n.price_cents) %></span></a>
+                    <form method="post" action="/cart/add/<%= n.id %>" data-cart-add data-note="<%= n.id %>"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="card-cart" type="submit" data-umami-event="Add to cart" data-umami-event-from="suggestion" aria-label="Add <%= n.title %> to cart">+ Add</button></form>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+        </div>
+        <form class="buy-form" <%= inCart ? 'hidden' : '' %> method="post" action="/checkout/<%= note.id %>" data-buy-form data-checkout>
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <div class="buy-fields" data-buy-fields>
             <div class="field">
@@ -169,22 +195,10 @@
               <span>I understand this is a digital download and <a href="/terms">all sales are final</a>.</span>
             </label>
           </div>
-          <button class="btn btn-hi btn-block btn-lg" type="submit" data-umami-event="Buy now" data-buy-btn data-pay-label="Pay <%= rand(note.price_cents) %>">
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
-            <span data-buy-label>Buy now – <%= rand(note.price_cents) %></span>
+          <button class="btn btn-ghost btn-block" type="submit" data-umami-event="Buy now" data-buy-btn data-pay-label="Pay <%= rand(note.price_cents) %>">
+            <span data-buy-label>Buy now</span>
           </button>
         </form>
-        <% if (inCart) { %>
-          <a class="btn btn-ghost btn-block btn-lg" href="/cart">✓ In your cart · View cart</a>
-        <% } else { %>
-          <form method="post" action="/cart/add/<%= note.id %>" class="buy-cart">
-            <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <button class="btn btn-ghost btn-block btn-lg" type="submit" data-umami-event="Add to cart" data-umami-event-from="note page">
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.4a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.5 8H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg>
-              Add to cart
-            </button>
-          </form>
-        <% } %>
 
         <div class="buy-secure">
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z M8.8 12l2.2 2.2 4.3-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>

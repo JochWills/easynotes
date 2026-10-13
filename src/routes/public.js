@@ -202,10 +202,15 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
   if (!live && !isOwner && !isAdmin) return next();
   if (live && req.params.slug !== note.slug) return res.redirect(301, noteUrl(note));
 
-  const [{ data: more }, rev] = await Promise.all([
+  const [{ data: more }, rev, { data: sameModule }] = await Promise.all([
     publicNotes().eq('seller_id', note.seller_id).neq('id', note.id).order('sales_count', { ascending: false }).limit(4),
     reviews.forSeller(note.seller_id), // the seller's star rating, shown by their name
+    // Suggested after "Add to cart": other notes for the same module first, then more from this seller
+    note.module_code
+      ? publicNotes().eq('module_code', note.module_code).eq('university', note.university).neq('seller_id', note.seller_id).order('sales_count', { ascending: false }).limit(4)
+      : Promise.resolve({ data: [] }),
   ]);
+  const suggest = [...(sameModule || []), ...(more || [])].filter((n, i, all) => all.findIndex((m) => m.id === n.id) === i);
 
   const uni = UNIVERSITIES.find((u) => u.name === note.university);
   const named = /\b(notes?|summary|summaries|guide)\b/i.test(note.title) ? note.title : `${note.title} notes`;
@@ -238,6 +243,7 @@ router.get(['/note/:id', '/note/:id/:slug'], async (req, res, next) => {
     live,
     isOwner,
     more: more || [],
+    suggest,
     rating: reviews.combinedRating(rev.list, note.sellers.slug),
     previewImages: preview.previewUrls(note),
     previewPlan: preview.previewPlan(note.page_count),

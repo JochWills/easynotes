@@ -209,6 +209,7 @@
     if (badge && !count) badge.remove();
     else if (badge) badge.textContent = count;
     link.setAttribute('aria-label', 'Cart, ' + count + (count === 1 ? ' item' : ' items'));
+    document.querySelectorAll('[data-cart-n]').forEach(function (n) { n.textContent = count; });
   };
   // The button changes straight away and the request finishes in the background (it takes about half a
   // second from South Africa); if the server says no, it changes back and says why.
@@ -242,6 +243,41 @@
       showToast(data.result === 'already' ? 'That’s already in your cart.' : 'Added to your cart.', 'ok');
     }).catch(function () {
       // Fall back to a normal form post (which handles an expired session, etc.)
+      undo();
+      f.submit();
+    });
+  });
+
+  // Note page: "Add to cart" swaps straight away for "Go to cart", "Keep browsing" and a few more notes to add.
+  // If the server says no, the buttons come back and it says why.
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.hasAttribute('data-note-cart') || !window.fetch) return;
+    e.preventDefault();
+    var added = document.querySelector('[data-cart-added]');
+    var buy = document.querySelector('[data-buy-form]');
+    var badge = document.querySelector('.cart-link .cart-count');
+    var before = badge ? Number(badge.textContent) || 0 : 0;
+    var body = new URLSearchParams(new FormData(f));
+    f.hidden = true;
+    if (buy) buy.hidden = true;
+    added.hidden = false;
+    added.classList.add('is-new');
+    setCartCount(before + 1);
+    var undo = function () { f.hidden = false; if (buy) buy.hidden = false; added.hidden = true; setCartCount(before); };
+    fetch(f.action, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: body,
+      credentials: 'same-origin',
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function (data) {
+      if (data.result === 'own') { undo(); showToast('You can’t buy your own notes.', 'error'); return; }
+      if (data.result === 'full') { undo(); showToast('Your cart is full (' + data.max + ' sets of notes). Check out, then start a new cart.', 'error'); return; }
+      setCartCount(data.count);
+    }).catch(function () {
       undo();
       f.submit();
     });
@@ -876,12 +912,14 @@
     update();
   });
 
-  // Note page: "Buy now" first opens the email + terms fields, then becomes the Pay button.
+  // Note page: "Buy now" first opens the email + terms fields, then becomes the (blue) Pay button.
   // (Handled on click, before the browser checks the still-hidden required fields.)
   document.querySelectorAll('[data-buy-form]').forEach(function (f) {
     var btn = f.querySelector('[data-buy-btn]');
     var open = function (focus) {
       f.classList.add('is-open');
+      btn.classList.replace('btn-ghost', 'btn-hi');
+      btn.classList.add('btn-lg');
       f.querySelector('[data-buy-fields]').classList.add('is-revealed');
       f.querySelector('[data-buy-label]').textContent = btn.getAttribute('data-pay-label');
       if (focus) f.querySelector('[data-buy-fields] input').focus();
