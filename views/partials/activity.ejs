@@ -24,7 +24,7 @@
     case 'note.flagged': return 'Automatic check flagged “' + (d.title || '') + '”: ' + (d.flags || []).join(', ');
     case 'note.reported': return (d.reason === 'copyright_mine' ? 'Takedown request for “' : 'Report about “') + (d.title || '') + '”';
     case 'note.deleted': return 'Seller deleted notes “' + (d.title || '') + '”';
-    case 'note.buyers_emailed': return 'Emailed past buyers of “' + (d.title || '') + '” about a new version';
+    case 'note.buyers_emailed': return 'Emailed ' + (d.buyers ? d.buyers + ' past ' + (d.buyers === 1 ? 'buyer' : 'buyers') : 'past buyers') + ' of “' + (d.title || '') + '” about a new version';
     case 'seller.account_deleted': return (d.display_name || 'A seller') + ' deleted their account' + (d.sold_notes ? ' (' + d.sold_notes + ' sold ' + (d.sold_notes === 1 ? 'set' : 'sets') + ' of notes kept for past buyers)' : '');
     case 'seller.payout_checked': return (d.seller || 'A seller') + '’s payout account marked as verified in Paystack';
     case 'seller.payout_denied': return (d.seller || 'A seller') + '’s bank details ' + (d.bank ? d.bank + ' ••••' + (d.last4 || '') + ' ' : '') + 'denied' + (d.reason ? ': ' + d.reason : '');

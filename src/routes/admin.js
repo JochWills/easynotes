@@ -14,6 +14,7 @@ const education = require('../lib/education');
 const notify = require('../lib/notify');
 const { publicNotes } = require('../lib/queries');
 const paystack = require('../lib/paystack');
+const buyerUpdates = require('../lib/buyer-updates');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -119,6 +120,20 @@ router.get('/reports/:id/previous-file', async (req, res, next) => {
   if (!path) return next();
   res.set('Cache-Control', 'no-store');
   res.redirect(await storage.signedUrl('notes', path, 120));
+});
+
+// A replaced PDF that looked wrong: once an admin has checked it, email the buyers about it (and resolve the report).
+router.post('/reports/:id/email-buyers', async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!(Number.isInteger(id) && id > 0)) return next();
+  const { data: e } = await db.from('events').select('id,kind,detail').eq('id', id).maybeSingle();
+  if (!e || e.kind !== 'note.flagged' || !e.detail?.held_email || !isUuid(e.detail.note_id)) return next();
+  const { data: done } = await db.from('events').select('id').eq('kind', 'report.resolved').eq('detail->>report_id', String(id)).limit(1);
+  if (done && done.length) return res.redirect('/admin/reports');
+  const count = await buyerUpdates.queue(e.detail.note_id, { title: e.detail.title, sellerId: e.detail.seller_id, actor: req.user.email, reportId: id });
+  await events.log('report.resolved', { report_id: id, kind: e.kind, title: e.detail.title }, req.user.email);
+  flash(req, count ? 'ok' : 'error', count ? `Emailing ${count} ${count === 1 ? 'buyer' : 'buyers'} about the new version. Marked as resolved.` : 'No emails were sent (emails are switched off, or nobody is waiting for one). Marked as resolved.');
+  res.redirect('/admin/reports');
 });
 
 router.post('/reports/:id/resolve', async (req, res) => {

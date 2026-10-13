@@ -5,6 +5,7 @@ const storage = require('./storage');
 const events = require('./events');
 const emails = require('./emails');
 const notify = require('./notify');
+const buyerUpdates = require('./buyer-updates');
 
 const DAY = 24 * 60 * 60 * 1000;
 const ID_KEEP_DAYS = 30; // ID copies are deleted this long after approval (POPIA: keep only what's needed)
@@ -74,7 +75,7 @@ async function pruneReadNotifications() {
 }
 
 async function runAll() {
-  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog], ['notification clean-up', pruneReadNotifications]]) {
+  for (const [name, task] of [['study reminders', remindOverdueStudies], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog], ['notification clean-up', pruneReadNotifications], ['update emails', buyerUpdates.sendQueued]]) {
     try {
       const n = await task();
       if (n) console.log(`[jobs] ${name}: ${n}`);

@@ -64,37 +64,22 @@ async function sendPurchaseEmail(orders) {
   return sendLibraryLink(orders[0].email, note?.title || 'Your notes', 1, name);
 }
 
-// A seller uploaded a new PDF: everyone who bought the notes gets a link to download the new version.
-// One email per buyer, sent one after another (Resend allows a couple a second). Returns how many were sent.
-async function sendNoteUpdated(noteId) {
-  const { data: note } = await db.from('notes').select('title,sellers(display_name)').eq('id', noteId).maybeSingle();
-  if (!note) return 0;
-  const buyers = new Map(); // email -> name, newest purchase first
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await db.from('orders').select('email,buyer_name').eq('note_id', noteId).eq('status', 'paid').order('paid_at', { ascending: false }).order('id').range(from, from + 999);
-    if (error) throw error;
-    for (const o of data) if (!buyers.has(o.email)) buyers.set(o.email, o.buyer_name);
-    if (data.length < 1000) break;
-  }
+// A seller uploaded a new PDF of notes this buyer bought (queued and sent by buyer-updates.js).
+// note: { title, sellers: { display_name } }
+async function sendNoteUpdated(note, email, name) {
+  const first = String(name || '').trim().split(' ')[0];
   const by = note.sellers?.display_name;
-  let sent = 0;
-  for (const [email, name] of buyers) {
-    const first = String(name || '').trim().split(' ')[0];
-    const intro = `${by ? esc(by) : 'The seller'} has uploaded a new version of <strong>${esc(note.title)}</strong>, which you bought on EasyNotes. Download it again to get the latest copy.`;
-    const { html, text } = compose({
-      heading: 'Your notes have been updated',
-      paragraphs: first ? [`Hi ${esc(first)},`, intro] : [intro],
-      button: { url: libraryUrl(email), label: 'Download the new version' },
-      small: [`This link shows every purchase made with ${esc(email)} and works for ${LIBRARY_DAYS} days. Need a new one? Enter your email at ${esc(config.baseUrl)}/download.`],
-    });
-    try {
-      if (await mail.send({ to: email, subject: `Updated: ${note.title}`, html, text })) sent++;
-    } catch (err) {
-      console.error('[emails] update email not sent', err.message);
-    }
-    await new Promise((r) => setTimeout(r, 600));
-  }
-  return sent;
+  const intro = `${by ? esc(by) : 'The seller'} has uploaded a new version of <strong>${esc(note.title)}</strong>, which you bought on EasyNotes. Download it again to get the latest copy.`;
+  const { html, text } = compose({
+    heading: 'Your notes have been updated',
+    paragraphs: first ? [`Hi ${esc(first)},`, intro] : [intro],
+    button: { url: libraryUrl(email), label: 'Download the new version' },
+    small: [
+      'We’ve added an extra download to your purchase, so getting the new version doesn’t use up your downloads.',
+      `This link shows every purchase made with ${esc(email)} and works for ${LIBRARY_DAYS} days. Need a new one? Enter your email at ${esc(config.baseUrl)}/download.`,
+    ],
+  });
+  return mail.send({ to: email, subject: `Updated: ${note.title}`, html, text });
 }
 
 /* ---------- Sellers: you made a sale ---------- */

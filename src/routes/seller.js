@@ -12,6 +12,7 @@ const events = require('../lib/events');
 const profanity = require('../lib/profanity');
 const { scanPdf } = require('../lib/scan');
 const emails = require('../lib/emails');
+const buyerUpdates = require('../lib/buyer-updates');
 
 // After an upload: record the seller's declaration and flag anything that looks like someone else's
 // material for an admin to check (Admin > Reports). Never blocks the upload.
@@ -19,6 +20,7 @@ async function afterPdfSaved(req, noteId, title, buffer) {
   events.log('note.uploaded', { note_id: noteId, title, seller_id: req.seller.id, declaration: 'own-work-v3' }, req.user.email);
   const flags = await scanPdf(buffer);
   if (flags.length) events.log('note.flagged', { note_id: noteId, title, seller_id: req.seller.id, flags }, 'scanner');
+  return flags;
 }
 const flash = require('../lib/flash');
 const { requireSeller, logIn } = require('../lib/auth');
@@ -646,45 +648,42 @@ router.post('/notes/:id', ownNote, noteFiles, afterUpload((req) => `/seller/note
     throw error;
   }
   let sold = 0;
-  let emailed = false;
+  let buyers = null; // what happened about emailing past buyers: 'held', 'recent', or how many were emailed
   if (pdf) {
     await preview.makePreview(update.file_path, pdf.buffer, update.page_count);
     await preview.removePreview(n.file_path, n.page_count);
-    await afterPdfSaved(req, n.id, values.title, pdf.buffer);
+    const scanFlags = await afterPdfSaved(req, n.id, values.title, pdf.buffer);
     // Buyers download whatever file the note has now, so a swap after sales (say for a blank PDF) would take what
     // they paid for. The old file is kept and an admin checks the change (Admin > Reports can open both).
     ({ count: sold } = await db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', n.id).eq('status', 'paid'));
     if (sold) {
-      await events.log('note.flagged', { note_id: n.id, title: values.title, seller_id: req.seller.id, flags: [`PDF replaced after ${sold} ${sold === 1 ? 'sale' : 'sales'}: compare it with the previous version`], previous_file: n.file_path }, req.user.email);
-      emailed = await emailBuyersAboutUpdate(req, n.id, values.title);
+      // Buyers are emailed about the new version straight away, unless it looks wrong: then an admin checks it first.
+      const doubts = [
+        ...(scanFlags.length ? ['The automatic check flagged the new file (see its own report)'] : []),
+        ...(!update.page_count ? ['The new file’s pages couldn’t be counted'] : n.page_count && update.page_count < n.page_count / 2 ? [`Far fewer pages than before (${n.page_count} → ${update.page_count})`] : []),
+      ];
+      const held = doubts.length > 0;
+      const flags = [`PDF replaced after ${sold} ${sold === 1 ? 'sale' : 'sales'}: compare it with the previous version`, ...doubts];
+      if (held) flags.push('Buyers haven’t been emailed about it yet: use “Email buyers” once you’ve checked it');
+      await events.log('note.flagged', { note_id: n.id, title: values.title, seller_id: req.seller.id, flags, previous_file: n.file_path, held_email: held || undefined }, req.user.email);
+      if (held) buyers = 'held';
+      else if (await buyerUpdates.emailedRecently(n.id)) buyers = 'recent';
+      else buyers = await buyerUpdates.queue(n.id, { title: values.title, sellerId: req.seller.id, actor: req.user.email });
     }
   }
   if (sold === 0) await storage.remove('notes', oldFiles); // if the count failed (null), keep the old file to be safe
+  const people = (k) => (k === 1 ? 'the 1 person' : `the ${k} people`);
   flash(
     req,
     'ok',
-    !pdf ? 'Changes saved.'
-    : emailed ? 'Changes saved. We’re emailing everyone who bought these notes a link to the new version.'
-    : sold ? 'Changes saved. Past buyers get the new file when they download again (they were already emailed about an update in the last day).'
-    : 'Changes saved.'
+    !pdf || !sold ? 'Changes saved.'
+    : buyers === 'held' ? 'Changes saved. The new file is quite different from the old one, so the EasyNotes team will check it before your buyers are emailed (usually within a working day).'
+    : buyers === 'recent' ? 'Changes saved. Past buyers get the new file when they download again (they were already emailed about an update in the last day).'
+    : buyers ? `Changes saved. We’re emailing ${people(buyers)} who bought these notes a link to the new version.`
+    : 'Changes saved. Past buyers get the new file when they download again.'
   );
   res.redirect('/seller/notes');
 });
-
-// A new PDF for notes that have sold: email the buyers, at most once a day per note so re-uploads can't flood them.
-// Runs in the background (one email at a time). Returns whether emails are on their way.
-async function emailBuyersAboutUpdate(req, noteId, title) {
-  if (!config.resendApiKey) return false;
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: recent, error } = await db.from('events').select('id').eq('kind', 'note.buyers_emailed').eq('detail->>note_id', noteId).gte('created_at', since).limit(1);
-  if (error || (recent && recent.length)) return false;
-  await events.log('note.buyers_emailed', { note_id: noteId, title, seller_id: req.seller.id }, req.user.email);
-  emails.sendNoteUpdated(noteId).then(
-    (n) => console.log(`[seller] update emailed to ${n} buyers of ${noteId}`),
-    (err) => console.error('[seller] update emails not sent', err.message)
-  );
-  return true;
-}
 
 router.post('/notes/:id/status', ownNote, async (req, res) => {
   const n = req.note;

@@ -328,3 +328,23 @@ revoke execute on function delete_note(uuid, uuid) from public, anon, authentica
 revoke execute on function delete_seller_account(uuid, text) from public, anon, authenticated;
 grant execute on function delete_note(uuid, uuid) to service_role;
 grant execute on function delete_seller_account(uuid, text) to service_role;
+
+-- "Your notes have been updated" emails to past buyers, queued so a restart part-way through doesn't lose any
+-- (src/lib/buyer-updates.js). sent_at is set once sent; an address that fails 3 times is given up on.
+create table if not exists update_emails (
+  id bigint generated always as identity primary key,
+  note_id uuid not null references notes(id) on delete cascade,
+  email text not null,
+  buyer_name text,
+  attempts int not null default 0,
+  sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists update_emails_unsent_idx on update_emails (id) where sent_at is null;
+alter table update_emails enable row level security;
+
+-- Each update email gives the purchase one download back, so getting the new version doesn't use up the allowance.
+create or replace function credit_download(p_note_id uuid) returns void
+language sql as $$ update orders set download_count = greatest(download_count - 1, 0) where note_id = p_note_id and status = 'paid'; $$;
+revoke execute on function credit_download(uuid) from public, anon, authenticated;
+grant execute on function credit_download(uuid) to service_role;
