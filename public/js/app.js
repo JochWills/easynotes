@@ -210,41 +210,39 @@
     else if (badge) badge.textContent = count;
     link.setAttribute('aria-label', 'Cart, ' + count + (count === 1 ? ' item' : ' items'));
   };
+  // The button changes straight away and the request finishes in the background (it takes about half a
+  // second from South Africa); if the server says no, it changes back and says why.
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (!f.hasAttribute('data-cart-add') || !window.fetch) return;
     e.preventDefault();
-    var btn = f.querySelector('button');
-    btn.disabled = true;
+    var badge = document.querySelector('.cart-link .cart-count');
+    var before = badge ? Number(badge.textContent) || 0 : 0;
+    var done = document.createElement('a');
+    done.className = 'card-cart is-in';
+    done.href = '/cart';
+    done.textContent = '✓ In cart';
+    done.setAttribute('data-note', f.getAttribute('data-note'));
+    var body = new URLSearchParams(new FormData(f));
+    f.replaceWith(done);
+    setCartCount(before + 1);
+    var undo = function () { done.replaceWith(f); setCartCount(before); };
     fetch(f.action, {
       method: 'POST',
       headers: { Accept: 'application/json' },
-      body: new URLSearchParams(new FormData(f)),
+      body: body,
       credentials: 'same-origin',
     }).then(function (r) {
       if (!r.ok) throw new Error(r.status);
       return r.json();
     }).then(function (data) {
-      if (data.result === 'own') {
-        btn.disabled = false;
-        showToast('You can’t buy your own notes.', 'error');
-        return;
-      }
-      if (data.result === 'full') {
-        btn.disabled = false;
-        showToast('Your cart is full (' + data.max + ' sets of notes). Check out, then start a new cart.', 'error');
-        return;
-      }
+      if (data.result === 'own') { undo(); showToast('You can’t buy your own notes.', 'error'); return; }
+      if (data.result === 'full') { undo(); showToast('Your cart is full (' + data.max + ' sets of notes). Check out, then start a new cart.', 'error'); return; }
       setCartCount(data.count);
-      var done = document.createElement('a');
-      done.className = 'card-cart is-in';
-      done.href = '/cart';
-      done.textContent = '✓ In cart';
-      done.setAttribute('data-note', f.getAttribute('data-note'));
-      f.replaceWith(done);
       showToast(data.result === 'already' ? 'That’s already in your cart.' : 'Added to your cart.', 'ok');
     }).catch(function () {
       // Fall back to a normal form post (which handles an expired session, etc.)
+      undo();
       f.submit();
     });
   });
