@@ -474,7 +474,7 @@ router.post('/payouts', payoutsLimiter, async (req, res) => {
 
 function requireApproved(req, res, next) {
   if (req.seller.verification_status !== 'approved') {
-    flash(req, 'info', 'You can upload notes once your degree has been verified.');
+    flash(req, 'info', 'You can upload notes once you’re verified.');
     return res.redirect('/seller');
   }
   next();

@@ -110,12 +110,13 @@ function sortQuals(list) {
     (b.year_completed || 0) - (a.year_completed || 0));
 }
 
-// "BCom Accounting (cum laude)" or "BCom Accounting (student, final year)": the one line shown on note pages.
+// "BCom Accounting (cum laude)" or "BCom Accounting (student)": the one line shown on note pages.
+// (No year of study here: this line is copied onto the seller, so "1st year" would still show years later.)
 function headlineOf(quals) {
   const verified = sortQuals(quals.filter((q) => q.review_status === 'approved'));
   const top = verified.find((q) => q.status === 'completed') || verified[0];
   if (!top) return null;
-  const extra = top.status === 'in_progress' ? (top.current_year ? `student, ${top.current_year.toLowerCase()}` : 'student') : top.honours !== 'none' ? HONOURS[top.honours].toLowerCase() : '';
+  const extra = top.status === 'in_progress' ? 'student' : top.honours !== 'none' ? HONOURS[top.honours].toLowerCase() : '';
   return { degree: top.name + (extra ? ` (${extra})` : ''), university: top.institution, graduation_year: top.status === 'completed' ? top.year_completed : null };
 }
 
@@ -140,7 +141,9 @@ function when(q) {
   const [y, m] = String(q.expected_completion || '').split('-');
   const month = y ? `${MONTHS[Number(m) - 1] || ''} ${y}`.trim() : '';
   if (isOverdue(q)) return `Due to finish ${month}`;
-  return ['Studying now', q.current_year, month && `finishing ${month}`].filter(Boolean).join(' · ');
+  // The year of study is only true for the year it was given in
+  const yearOfStudy = q.submitted_at && new Date(q.submitted_at).getFullYear() !== new Date().getFullYear() ? null : q.current_year;
+  return ['Studying now', yearOfStudy, month && `finishing ${month}`].filter(Boolean).join(' · ');
 }
 
 // "78% average · Distinctions in Tax and Auditing"
