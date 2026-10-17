@@ -4,7 +4,7 @@
   <p><a href="/seller/verification">← Your education</a></p>
   <% var m = locals.mode || 'add'; var target = locals.replaces || locals.retryOf; %>
   <% var heads = {
-       add: ['Add education', 'Add another qualification you’ve completed, or further study you’re doing now, like honours, a master’s or a PhD.'],
+       add: ['Add education', 'Add another qualification you’ve completed or are studying now.'],
        finish: ['You’ve finished ' + (target && target.name), 'Congratulations! Upload your certificate or final academic record. Your current entry stays on your storefront until we’ve checked it.'],
        edit: ['Edit ' + (target && target.name), 'Change anything that’s out of date or wrong. We check every change before it shows, and your current entry stays on your storefront until then.'],
        retry: ['Fix and send again', 'Update the details or upload a clearer document, then send it back for review.']
@@ -21,7 +21,6 @@
         <p class="muted"><%= heads[m][1] %></p>
       </header>
       <%- include('qual-fields', { allowStudying: locals.allowStudying !== false && m !== 'finish', keepDocs: m === 'edit', existing: m === 'add' || m === 'finish' ? null : target }) %>
-      <% if (locals.onlyDegree) { %><p class="small muted">This is the completed degree your verification is based on, so it stays marked as finished.</p><% } %>
       <div class="form-actions">
         <button class="btn btn-hi" type="submit">Send for review</button>
         <a href="/seller/verification">Cancel</a>

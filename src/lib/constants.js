@@ -39,7 +39,7 @@ const DEGREE_UNIVERSITIES = UNIVERSITIES.map((u) => u.name);
 const OTHER_UNIVERSITY = 'Other (type it in)';
 
 // Education a seller can verify, lowest to highest (the highest verified one is shown on their notes).
-// Sellers need a completed degree; only further study above a bachelor's can be added while still in progress.
+// Sellers need a qualification they've completed or are registered for and studying now.
 const QUAL_LEVELS = [
   'Bachelor’s degree',
   'Honours degree or Postgraduate Diploma',
@@ -51,7 +51,6 @@ const QUAL_LEVELS = [
 const QUAL_RANK = { 'Bachelor’s degree': 3, 'Honours degree or Postgraduate Diploma': 4, 'Professional qualification': 4, 'Master’s degree': 5, 'Doctorate (PhD)': 6 };
 const HONOURS = { none: '', merit: 'Distinction', cum_laude: 'Cum laude', summa_cum_laude: 'Summa cum laude' };
 const STUDY_YEARS = ['1st year', '2nd year', '3rd year or later', 'Final year'];
-const STUDYING_MIN_RANK = 4; // honours / PGDip and up
 
 
 // Suggested subjects on the upload form. Sellers can add their own; those then show for everyone.
@@ -80,4 +79,4 @@ const RESERVED_SLUGS = new Set([
 // Also reserved: deleted-…, which accounts that are deleted after making sales get (routes/seller.js).
 const isReservedSlug = (slug) => RESERVED_SLUGS.has(slug) || /^deleted(-|$)/.test(slug);
 
-module.exports = { isReservedSlug, STUDYING_MIN_RANK, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, PRIVATE_INSTITUTION };
+module.exports = { isReservedSlug, QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, SUBJECTS, RESERVED_SLUGS, UNIVERSITIES, NOTE_INSTITUTIONS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, LEVELS, PRIVATE_INSTITUTION };

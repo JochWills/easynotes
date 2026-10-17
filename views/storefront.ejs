@@ -2,7 +2,7 @@
 <% var rv = locals.reviews || { list: [], count: 0, avg: 0 }; var prev = locals.previous; var prevCount = prev ? prev.reviews.length : 0; var rt = locals.rating || rv; var form = locals.review || { values: {}, errors: {} }; var errors = form.errors || {}; %>
 <% var stars = function (n, cls) { var out = '<span class="stars ' + (cls || '') + '" aria-hidden="true">'; for (var i = 1; i <= 5; i++) out += '<span class="' + (n >= i - 0.25 ? 'on' : n >= i - 0.75 ? 'half' : '') + '">★</span>'; return out + '</span>'; }; %>
 <% if (locals.live === false) { %>
-  <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until the degree is verified.</div></div>
+  <div class="preview-banner"><div class="wrap">Preview only. Students can’t see this storefront until you’re verified.</div></div>
 <% } %>
 <section class="page-head store-page-head">
   <div class="wrap">
@@ -59,7 +59,7 @@
       </div>
     <% } else if (locals.isOwner) { %>
       <%# The seller looking at their own storefront: what's still needed before notes show here %>
-      <% var next = author.verification_status !== 'approved' ? ['Once your degree is verified, the notes you publish show here for students.', '/seller', 'Go to your dashboard']
+      <% var next = author.verification_status !== 'approved' ? ['Once you’re verified, the notes you publish show here for students.', '/seller', 'Go to your dashboard']
            : !(locals.me && me.paystack_subaccount_code) ? ['Add your payout details and the notes you publish show here for students.', '/seller/payouts', 'Add payout details']
            : ['Upload and publish your notes and they show here for students.', '/seller/notes/new', 'Upload notes']; %>
       <div class="empty"><h3>Your notes will show here</h3><p><%= next[0] %></p><a class="btn" href="<%= next[1] %>"><%= next[2] %></a></div>
@@ -143,7 +143,7 @@
                 <li>The best time to ask is just after their exam, while the notes are fresh.</li>
               </ul>
             <% } else { %>
-              <p>Your review link will be ready here once your degree is verified and your storefront is live.</p>
+              <p>Your review link will be ready here once you’re verified and your storefront is live.</p>
             <% } %>
           </div>
         <% } %>

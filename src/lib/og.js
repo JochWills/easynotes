@@ -266,7 +266,7 @@ async function siteCard() {
   for (const l of ['Study notes from students', 'who already passed.']) { ctx.fillText(l, 72, y); y += 88; }
   ctx.font = F.body(32);
   ctx.fillStyle = C.soft;
-  ctx.fillText('Verified South African graduates. Free preview, instant PDF download.', 72, y + 22);
+  ctx.fillText('Verified South African academics. Free preview, instant PDF download.', 72, y + 22);
   ctx.font = F.bodyBold(28);
   ctx.fillStyle = C.blue;
   ctx.fillText('easynotes.co.za', 72, H - 70);

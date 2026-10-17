@@ -18,7 +18,7 @@ A South African study-notes marketplace. Verified academics run their own storef
 
 **Sellers**
 1. Sign up → storefront at `/s/their-name`.
-2. Upload degree certificate/transcript + ID → status "In review".
+2. Upload certificate/academic record (or proof of registration if still studying) + ID → status "In review".
 3. Add bank details → a Paystack subaccount is created.
 4. Once you approve them, they upload PDFs (max 50 MB) with an optional free sample, and set their own price (R25–R500).
 

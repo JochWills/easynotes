@@ -8,8 +8,8 @@
     <ol class="setup">
       <li class="<%= verified ? 'done' : '' %>">
         <span class="num"><%= verified ? '✓' : '1' %></span>
-        <div><h3>Verify your degree</h3>
-          <p><% if (me.verification_status === 'pending') { %>We’re reviewing your documents. This usually takes up to two working days.<% } else if (me.verification_status === 'rejected') { %>Not approved: <%= me.verification_note %><% } else if (verified) { %>Verified on <%= date(me.verified_at) %>.<% } else { %>Upload your degree certificate or transcript and your ID.<% } %></p>
+        <div><h3>Verify your studies</h3>
+          <p><% if (me.verification_status === 'pending') { %>We’re reviewing your documents. This usually takes up to two working days.<% } else if (me.verification_status === 'rejected') { %>Not approved: <%= me.verification_note %><% } else if (verified) { %>Verified on <%= date(me.verified_at) %>.<% } else { %>Upload your certificate, academic record or proof of registration, and your ID.<% } %></p>
         </div>
         <% if (['unsubmitted','rejected'].includes(me.verification_status)) { %><a class="btn btn-sm" href="/seller/verification"><%= me.verification_status === 'rejected' ? 'Resubmit' : 'Start' %></a><% } else { %><%- include('../partials/status-pill', { status: me.verification_status }) %><% } %>
       </li>
@@ -20,7 +20,7 @@
       </li>
       <li class="<%= hasNotes ? 'done' : '' %>">
         <span class="num"><%= hasNotes ? '✓' : '3' %></span>
-        <div><h3>Upload your first notes</h3><p><%= verified ? 'Add a PDF, price it and publish.' : 'Available once your degree is verified.' %> <a href="/digital-notes">Handwritten notes? Use our AI guide.</a></p></div>
+        <div><h3>Upload your first notes</h3><p><%= verified ? 'Add a PDF, price it and publish.' : 'Available once you’re verified.' %> <a href="/digital-notes">Handwritten notes? Use our AI guide.</a></p></div>
         <% if (verified) { %><a class="btn btn-sm" href="/seller/notes/new">Upload</a><% } %>
       </li>
     </ol>

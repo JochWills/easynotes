@@ -9,7 +9,7 @@
   <%# The one address search engines should list this page under (no sort order, tracking tags and so on) %>
   <% if (!locals.noindex) { %><link rel="canonical" href="<%= (locals.baseUrl || 'https://easynotes.co.za') + (locals.canonical || locals.currentPath || '/') %>"><% } %>
   <% if (locals.jsonLd) { %><script type="application/ld+json"><%- JSON.stringify(jsonLd).replace(/</g, '\\u003c') %></script><% } %>
-  <% var site = locals.baseUrl || 'https://easynotes.co.za'; var ogT = locals.ogTitle || locals.title || 'EasyNotes: study notes from students who already passed'; var ogD = locals.description || 'Study notes from verified South African graduates. Free preview, instant PDF download.'; var ogI = site + (locals.ogImage || '/og/site.png?v=1'); %>
+  <% var site = locals.baseUrl || 'https://easynotes.co.za'; var ogT = locals.ogTitle || locals.title || 'EasyNotes: study notes from students who already passed'; var ogD = locals.description || 'Study notes from verified South African academics. Free preview, instant PDF download.'; var ogI = site + (locals.ogImage || '/og/site.png?v=2'); %>
   <%# Link previews on WhatsApp, Instagram, LinkedIn, Facebook and X %>
   <meta property="og:site_name" content="EasyNotes">
   <meta property="og:type" content="website">

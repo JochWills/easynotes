@@ -48,8 +48,8 @@
                     <a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?edit=<%= q.id %>">Edit</a>
                   <% } %>
                   <% if (q.review_status === 'rejected') { %><a class="btn btn-ghost btn-sm" href="/seller/verification/education/new?retry=<%= q.id %>">Fix and send again</a><% } %>
-                  <% var degrees = quals.filter(function (o) { return o.review_status === 'approved' && o.status === 'completed'; }); %>
-                  <% if (!(q.review_status === 'approved' && q.status === 'completed' && degrees.length === 1)) { %>
+                  <% var verifiedQuals = quals.filter(function (o) { return o.review_status === 'approved'; }); %>
+                  <% if (!(q.review_status === 'approved' && verifiedQuals.length === 1)) { %>
                     <form method="post" action="/seller/verification/education/<%= q.id %>/remove" data-confirm-title="Remove <%= q.name %>?" data-confirm="<%= q.review_status === 'approved' ? 'It comes off your storefront straight away. To show it again you’d need to send it for review.' : 'It’s taken out of your education.' %>" data-confirm-yes="Remove">
                       <input type="hidden" name="_csrf" value="<%= csrf %>">
                       <button class="linklike" type="submit">Remove</button>
@@ -68,7 +68,7 @@
           <li>Started or completed further study, like honours or a master’s? Use <strong>Add education</strong>.</li>
           <li>Something wrong or out of date, like your dates or marks? Click <strong>Edit</strong>. Changes are checked before they show.</li>
           <li>We check every change. Your verified education stays on your storefront and your notes stay on sale while we do.</li>
-          <li>Dropped something? <strong>Remove</strong> it (except while it’s under review). Your completed degree stays, since your verification is based on it.</li>
+          <li>Dropped something? <strong>Remove</strong> it (except while it’s under review). Your last verified qualification stays, since your verification is based on it.</li>
         </ul>
       </aside>
     </div>
@@ -80,9 +80,9 @@
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <header class="form-section-head">
           <h2>Your education</h2>
-          <p class="muted">Tell us your highest completed degree. Once you’re verified you can add more, including honours, a master’s or a PhD you’re still studying.</p>
+          <p class="muted">Tell us your highest qualification, finished or still studying. Still studying? Upload your proof of registration. Once you’re verified you can add more.</p>
         </header>
-        <%- include('qual-fields') %>
+        <%- include('qual-fields', { allowStudying: true }) %>
         <fieldset class="form">
           <legend>Your ID</legend>
           <div class="field <%= errors.id_doc ? 'has-error' : '' %>">
@@ -98,7 +98,7 @@
       <div>
         <h2 style="font-size:1.2rem">What we check</h2>
         <ul class="checklist checklist-dark">
-          <li>You’ve completed a degree at a recognised institution</li>
+          <li>You’ve completed, or are registered for, a qualification at a recognised institution</li>
           <li>The name on your documents matches your ID</li>
           <li>The details you enter, including any marks or distinction, match your documents</li>
         </ul>

@@ -78,7 +78,7 @@ router.post('/signup', limiter, async (req, res) => {
   }
 
   logIn(req, user);
-  flash(req, 'ok', 'Account created. Next step: verify your degree.');
+  flash(req, 'ok', 'Account created. Next step: verify your studies.');
   res.redirect('/seller');
 });
 

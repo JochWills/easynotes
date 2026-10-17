@@ -3,13 +3,13 @@ const db = require('./supabase');
 const storage = require('./storage');
 const profanity = require('./profanity');
 const { str } = require('./helpers');
-const { QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, STUDYING_MIN_RANK, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY } = require('./constants');
+const { QUAL_LEVELS, QUAL_RANK, HONOURS, STUDY_YEARS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY } = require('./constants');
 
 const MB = 1024 * 1024;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Checks the education form. `files` holds multer's doc / record uploads.
-// allowStudying: false for the first verification (a finished degree is the minimum) and for "I've finished this".
+// allowStudying: false for "I've finished this", which is always completed.
 // docOptional: editing an entry, where the documents already on file can be kept.
 function validate(body, files, { allowStudying = false, docOptional = false } = {}) {
   const now = new Date();
@@ -47,9 +47,6 @@ function validate(body, files, { allowStudying = false, docOptional = false } = 
   // Cum laude and summa cum laude are only awarded once a qualification is finished
   if (status === 'in_progress' && (values.honours === 'cum_laude' || values.honours === 'summa_cum_laude')) {
     errors.honours = 'Cum laude and summa cum laude are awarded when you finish. Choose “Distinction” instead.';
-  }
-  if (status === 'in_progress' && values.level && (QUAL_RANK[values.level] || 0) < STUDYING_MIN_RANK) {
-    errors.level = 'Only further study, like honours, a master’s or a PhD, can be added while you’re still studying.';
   }
   if (status === 'in_progress') {
     values.current_year = STUDY_YEARS.includes(body.current_year) ? body.current_year : null;
@@ -113,12 +110,12 @@ function sortQuals(list) {
     (b.year_completed || 0) - (a.year_completed || 0));
 }
 
-// "BCom Accounting (cum laude)" or "BCom Honours (in progress)": the one line shown on note pages.
+// "BCom Accounting (cum laude)" or "BCom Accounting (student, final year)": the one line shown on note pages.
 function headlineOf(quals) {
   const verified = sortQuals(quals.filter((q) => q.review_status === 'approved'));
   const top = verified.find((q) => q.status === 'completed') || verified[0];
   if (!top) return null;
-  const extra = top.status === 'in_progress' ? 'in progress' : top.honours !== 'none' ? HONOURS[top.honours].toLowerCase() : '';
+  const extra = top.status === 'in_progress' ? (top.current_year ? `student, ${top.current_year.toLowerCase()}` : 'student') : top.honours !== 'none' ? HONOURS[top.honours].toLowerCase() : '';
   return { degree: top.name + (extra ? ` (${extra})` : ''), university: top.institution, graduation_year: top.status === 'completed' ? top.year_completed : null };
 }
 

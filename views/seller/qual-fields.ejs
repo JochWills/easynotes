@@ -7,7 +7,7 @@
     <legend>Have you finished it?</legend>
     <div class="choice-row">
       <label class="choice"><input type="radio" name="status" value="completed" <%= st === 'completed' ? 'checked' : '' %>> <span><strong>Yes, I’ve finished</strong><small>Graduated or qualified</small></span></label>
-      <label class="choice"><input type="radio" name="status" value="in_progress" <%= st === 'in_progress' ? 'checked' : '' %>> <span><strong>No, I’m still studying</strong><small>Honours, master’s or PhD</small></span></label>
+      <label class="choice"><input type="radio" name="status" value="in_progress" <%= st === 'in_progress' ? 'checked' : '' %>> <span><strong>No, I’m still studying</strong><small>Registered and studying now</small></span></label>
     </div>
     <%- include('../partials/field-error', { name: 'status' }) %>
   </fieldset>

@@ -189,12 +189,12 @@ router.get('/verification', async (req, res) => {
   res.render('seller/verification', eduLocals({ title: req.seller.verification_status === 'approved' ? 'Education' : 'Verification', quals, q }));
 });
 
-// First verification: a completed degree plus ID. Starts over if an earlier attempt was rejected.
+// First verification: a qualification they've completed or are studying now, plus ID. Starts over if an earlier attempt was rejected.
 router.post('/verification', eduFiles([{ name: 'id_doc', maxCount: 1 }]), afterUpload(() => '/seller/verification'), verifyCsrf, async (req, res) => {
   const s = req.seller;
   if (!['unsubmitted', 'rejected'].includes(s.verification_status)) return res.redirect('/seller/verification');
 
-  const { values, errors, docs } = education.validate(req.body, req.files);
+  const { values, errors, docs } = education.validate(req.body, req.files, { allowStudying: true });
   const idFile = req.files?.id_doc?.[0];
   const idType = idFile && storage.detectType(idFile.buffer);
   if (!idFile) errors.id_doc = 'Upload your ID document.';
@@ -247,18 +247,16 @@ async function eduStart(req) {
   if (src.retry && row.review_status === 'rejected') return { q: fields, mode: 'retry', retryOf: row };
   if (row.review_status !== 'approved') return { q: {}, mode: 'gone' };
   if (quals.some((x) => x.replaces_id === row.id && x.review_status === 'pending')) return { q: {}, mode: 'gone' }; // a change is already in review
-  const isDegree = (x) => x.review_status === 'approved' && x.status === 'completed';
-  const onlyDegree = isDegree(row) && quals.filter(isDegree).length === 1;
   if ((src.finish || src.mode === 'finish') && row.status === 'in_progress') {
     const { status, year_completed, current_year, expected_completion, ...keep } = fields;
     return { q: keep, mode: 'finish', replaces: row };
   }
-  return { q: fields, mode: 'edit', replaces: row, onlyDegree };
+  return { q: fields, mode: 'edit', replaces: row };
 }
 
 const EDU_TITLES = { add: 'Add education', finish: 'Finished your studies', edit: 'Edit education', retry: 'Fix and send again' };
-// Finishing is always "completed"; your only completed degree can't become "still studying".
-const studyingAllowed = (st) => !(st.mode === 'finish' || st.onlyDegree);
+// Finishing is always "completed".
+const studyingAllowed = (st) => st.mode !== 'finish';
 
 router.get('/verification/education/new', async (req, res) => {
   if (req.seller.verification_status !== 'approved') return res.redirect('/seller/verification');
@@ -327,7 +325,7 @@ router.get('/verification/id-file', async (req, res, next) => {
 });
 
 // Taking an entry off (dropped out, added by mistake). No review needed: removing can't overstate anything.
-// The last verified finished qualification stays, since a completed degree is what keeps the seller verified.
+// The last verified qualification stays, since it's what keeps the seller verified.
 router.post('/verification/education/:id/remove', async (req, res, next) => {
   if (!isUuid(req.params.id)) return next();
   const s = req.seller;
@@ -338,9 +336,9 @@ router.post('/verification/education/:id/remove', async (req, res, next) => {
     flash(req, 'error', 'This is under review, so it can’t be changed until we’ve checked it.');
     return res.redirect('/seller/verification');
   }
-  const isDegree = (x) => x.review_status === 'approved' && x.status === 'completed';
-  if (isDegree(q) && quals.filter(isDegree).length === 1) {
-    flash(req, 'error', 'This is the completed degree your verification is based on, so it can’t be removed.');
+  const isVerified = (x) => x.review_status === 'approved';
+  if (isVerified(q) && quals.filter(isVerified).length === 1) {
+    flash(req, 'error', 'This is the qualification your verification is based on, so it can’t be removed.');
     return res.redirect('/seller/verification');
   }
   // A change waiting on this entry goes with it
