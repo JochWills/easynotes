@@ -50,7 +50,7 @@ const NOTE_PATH = /^\/note\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 
 let queue = [];
 let timer = null;
-let missingTable = false;
+let pausedUntil = 0; // after a failed write (say the table isn't there yet), stop for a few minutes, then try again
 
 async function flush() {
   timer = null;
@@ -58,14 +58,14 @@ async function flush() {
   const rows = queue;
   queue = [];
   const { error } = await db.from('site_visits').insert(rows);
-  if (error && !missingTable) {
-    missingTable = /site_visits/.test(error.message || '');
+  if (error) {
+    pausedUntil = Date.now() + 5 * 60 * 1000;
     console.error('[visits] not recorded', error.message);
   }
 }
 
 function add(row) {
-  if (missingTable) return;
+  if (Date.now() < pausedUntil) return;
   queue.push(row);
   if (queue.length >= FLUSH_AT) flush().catch(() => {});
   else if (!timer) timer = setTimeout(() => flush().catch(() => {}), FLUSH_MS).unref();
