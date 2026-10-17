@@ -12,7 +12,7 @@ const { isUuid, str } = require('../lib/helpers');
 const emails = require('../lib/emails');
 const education = require('../lib/education');
 const notify = require('../lib/notify');
-const { publicNotes } = require('../lib/queries');
+const { publicNotes, hiddenByAdmin } = require('../lib/queries');
 const paystack = require('../lib/paystack');
 const buyerUpdates = require('../lib/buyer-updates');
 
@@ -33,7 +33,7 @@ const backToReferer = (req, fallback) => {
 };
 
 // Reports, automatic upload flags and payments that didn't match an order stay open until an admin marks them resolved.
-const REPORT_KINDS = ['note.reported', 'note.flagged', 'payment.unmatched', 'payment.mismatch'];
+const REPORT_KINDS = ['note.reported', 'note.flagged', 'payment.unmatched', 'payment.mismatch', 'qualification.overdue'];
 // All of them, however old: an unresolved report must never drop off the list.
 async function openReports() {
   const [items, resolved] = await Promise.all([
@@ -118,8 +118,14 @@ router.get('/reports/:id/previous-file', async (req, res, next) => {
   const { data: e } = await db.from('events').select('kind,detail').eq('id', id).maybeSingle();
   const path = e && e.kind === 'note.flagged' && e.detail?.previous_file;
   if (!path) return next();
+  let url = null;
+  if (!e.detail.previous_file_deleted) url = await storage.signedUrl('notes', path, 120).catch(() => null);
+  if (!url) {
+    flash(req, 'error', 'The previous PDF isn’t kept any more (old versions are deleted 30 days after the report is resolved).');
+    return res.redirect('/admin/reports');
+  }
   res.set('Cache-Control', 'no-store');
-  res.redirect(await storage.signedUrl('notes', path, 120));
+  res.redirect(url);
 });
 
 // A replaced PDF that looked wrong: once an admin has checked it, email the buyers about it (and resolve the report).
@@ -194,7 +200,7 @@ router.get('/', async (req, res) => {
     L.pendingSellers && { tone: 'do', count: L.pendingSellers, title: plural(L.pendingSellers, 'new seller to verify', 'new sellers to verify'), sub: oldest?.[0]?.submitted_at ? `Oldest: ${oldest[0].display_name}, sent ${waited(oldest[0].submitted_at)}.` : 'Check their qualification and ID documents.', href: '/admin/verifications#sellers', label: 'Review' },
     L.pendingBanks && { tone: 'do', count: L.pendingBanks, title: plural(L.pendingBanks, 'bank account to verify in Paystack', 'bank accounts to verify in Paystack'), sub: 'Paystack holds the seller’s first payout until you do.', href: '/admin/verifications#bank-accounts', label: 'Review' },
     L.pendingUpdates && { tone: 'do', count: L.pendingUpdates, title: plural(L.pendingUpdates, 'education update to check', 'education updates to check'), sub: 'From sellers who are already verified.', href: '/admin/verifications#education', label: 'Review' },
-    others && { tone: 'do', count: others, title: plural(others, 'report to check', 'reports to check'), sub: 'From students, or flagged by the automatic upload check.', href: '/admin/reports', label: 'Open reports' },
+    others && { tone: 'do', count: others, title: plural(others, 'report to check', 'reports to check'), sub: 'From students, the automatic upload check, or students who haven’t updated their studies.', href: '/admin/reports', label: 'Open reports' },
     noPayouts?.length && { tone: 'later', count: noPayouts.length, title: `${plural(noPayouts.length, 'verified seller hasn’t', 'verified sellers haven’t')} added bank details`, sub: 'Their notes stay hidden until they do. You could email them a nudge.', href: '/admin/sellers?status=no-payouts', label: 'See who' },
   ].filter(Boolean);
 
@@ -325,6 +331,8 @@ router.get('/sellers/:id', async (req, res, next) => {
     education.forSeller(s.id).then((list) => Promise.all(list.map(docLinks))),
     events.page({ limit: 25, sellerId: s.id }),
   ]);
+  const hidden = await hiddenByAdmin((notes || []).filter((n) => n.status === 'unpublished').map((n) => n.id));
+  (notes || []).forEach((n) => { n.adminHidden = hidden.has(n.id); });
   const { data: sellerReviews } = await db.from('reviews').select('*').eq('seller_id', s.id).order('created_at', { ascending: false }).limit(100);
   const totals = (sales && sales[0]) || { sales: 0, earnings: 0 };
   res.render('admin/seller', { title: s.display_name, tab: 'sellers', s, notes: notes || [], totals, degreeUrl: docs[0], idUrl: docs[1], quals, reviews: sellerReviews || [], history, jobsIdDays: require('../lib/jobs').ID_KEEP_DAYS });
@@ -402,10 +410,11 @@ router.get('/notes', async (req, res) => {
     narrow(db.from('notes').select('id', { count: 'exact', head: true })),
     ...NOTE_VIEWS.map((v) => narrow(db.from('notes').select('id', { count: 'exact', head: true }).eq('status', v[0]))),
   ]);
+  const hidden = await hiddenByAdmin((notes || []).filter((n) => n.status === 'unpublished').map((n) => n.id));
   res.render('admin/notes', {
     title: 'Notes',
     tab: 'notes',
-    notes: notes || [],
+    notes: (notes || []).map((n) => ({ ...n, adminHidden: hidden.has(n.id) })),
     q,
     status,
     seller,
@@ -425,12 +434,12 @@ router.post('/notes/:id/status', async (req, res, next) => {
       flash(req, 'error', 'The seller deleted these notes, so they can’t be changed. Past buyers can still download them.');
       return res.redirect(backToReferer(req, '/admin/notes'));
     }
-    flash(req, 'ok', req.body.action === 'remove' ? 'Notes removed. The seller can’t republish them.' : 'Notes updated.');
+    flash(req, 'ok', req.body.action === 'remove' ? 'Notes removed. The seller can’t republish them.' : req.body.action === 'unpublish' ? 'Notes hidden. The seller can’t publish them again until you click “Allow publishing”.' : 'The seller can publish these notes again.');
     events.log(`note.${req.body.action === 'remove' ? 'removed' : req.body.action === 'restore' ? 'restored' : 'hidden'}`, { note_id: req.params.id, title: n?.title }, req.user.email);
     const support = `Email ${config.supportEmail} if you think this is a mistake.`;
     notify.add(n.seller_id, {
       remove: { kind: 'note', title: `EasyNotes removed “${n.title}”`, body: `It’s hidden from students and can’t be published again. ${support}`, link: '/seller/notes' },
-      unpublish: { kind: 'note', title: `EasyNotes hid “${n.title}” from students`, body: `Past buyers can still download it. ${support}`, link: '/seller/notes' },
+      unpublish: { kind: 'note', title: `EasyNotes hid “${n.title}” from students`, body: `Past buyers can still download it. It can’t be published again for now. ${support}`, link: '/seller/notes' },
       restore: { kind: 'note', title: `“${n.title}” can be published again`, body: 'Publish it from your notes when you’re ready.', link: '/seller/notes' },
     }[req.body.action]);
   }
@@ -567,7 +576,7 @@ router.get('/money', async (req, res) => {
 /* ---------- Activity ---------- */
 
 const ACTIVITY_GROUPS = [
-  ['sellers', 'Sellers', ['seller.approved', 'seller.rejected', 'seller.revoked', 'seller.payouts_changed', 'seller.payout_checked', 'seller.payout_denied', 'seller.slug_changed', 'seller.account_deleted', 'qualification.submitted', 'qualification.approved', 'qualification.rejected', 'qualification.removed', 'id.deleted', 'review.posted', 'review.hidden', 'review.shown']],
+  ['sellers', 'Sellers', ['seller.approved', 'seller.rejected', 'seller.revoked', 'seller.payouts_changed', 'seller.payout_checked', 'seller.payout_denied', 'seller.slug_changed', 'seller.account_deleted', 'qualification.submitted', 'qualification.approved', 'qualification.rejected', 'qualification.removed', 'qualification.overdue', 'id.deleted', 'review.posted', 'review.hidden', 'review.shown']],
   ['notes', 'Notes & reports', ['note.uploaded', 'note.flagged', 'note.reported', 'note.removed', 'note.hidden', 'note.restored', 'note.deleted', 'note.buyers_emailed', 'report.resolved']],
   ['payments', 'Payments', ['webhook.received', 'payment.unmatched', 'payment.mismatch', 'order.downloads_reset']],
   ['admin', 'Admins', ['admin.added', 'admin.removed', 'email.test']],

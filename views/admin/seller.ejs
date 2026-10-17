@@ -105,7 +105,7 @@
         <table class="data">
           <thead><tr><th>Title</th><th>Status</th><th class="num">Price</th><th class="num">Sales</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
-            <% notes.forEach(function (n) { %><tr><td><a href="<%= noteUrl(n) %>"><%= n.title %></a></td><td><%- include('../partials/status-pill', { status: n.status }) %></td><td class="num"><%= rand(n.price_cents) %></td><td class="num"><%= n.sales_count %></td><td><%- include('note-actions', { n: n }) %></td></tr><% }) %>
+            <% notes.forEach(function (n) { %><tr><td><a href="<%= noteUrl(n) %>"><%= n.title %></a></td><td><% if (n.adminHidden) { %><span class="pill pill-bad">Hidden by admin</span><% } else { %><%- include('../partials/status-pill', { status: n.status }) %><% } %></td><td class="num"><%= rand(n.price_cents) %></td><td class="num"><%= n.sales_count %></td><td><%- include('note-actions', { n: n }) %></td></tr><% }) %>
           </tbody>
         </table>
       </div>

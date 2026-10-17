@@ -8,6 +8,7 @@
     case 'review.posted': return 'New ' + d.rating + '-star review for ' + (d.seller || 'a seller');
     case 'review.hidden': return 'Hid a ' + d.rating + '-star review' + (d.by ? ' by ' + d.by : '');
     case 'review.shown': return 'Showed a ' + d.rating + '-star review again' + (d.by ? ' by ' + d.by : '');
+    case 'qualification.overdue': return (d.seller || 'A seller') + ' hasn’t updated “' + (d.name || 'education') + '” since their expected finish date';
     case 'qualification.removed': return (d.seller || 'A seller') + ' removed “' + (d.name || 'education') + '”';
     case 'id.deleted': return 'Deleted ' + (d.count || 0) + ' ID ' + (d.count === 1 ? 'document' : 'documents') + ' after verification';
     case 'qualification.approved': return 'Approved “' + (d.name || 'education') + '” for ' + (d.seller || 'a seller');

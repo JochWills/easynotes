@@ -31,7 +31,20 @@ const wordForms = (w) => [...new Set([w, w.replace(/([a-z])(\d)/g, '$1 $2')])];
 // "Popular at" on the home page: the institutions from our list with the most notes on sale right now (then the
 // most sales), so every link leads to notes. Shown by their short name (UCT, UJ...). Institutions sellers typed in
 // themselves ("Other") and "Private institution" are left out.
-async function popularInstitutions(max = 8) {
+// Lists built from every note on sale are kept for a few minutes instead of being rebuilt on every visit, so these
+// pages stay quick as the number of notes grows. (A new subject or institution can take that long to show up.)
+const LIST_MINUTES = 5;
+function memo(fn) {
+  let value, at = 0, pending = null;
+  return () => {
+    if (value !== undefined && Date.now() - at < LIST_MINUTES * 60 * 1000) return Promise.resolve(value);
+    pending ||= fn().then((v) => { value = v; at = Date.now(); return v; }).finally(() => { pending = null; });
+    return value !== undefined ? pending.catch(() => value) : pending; // a failed refresh keeps the last list
+  };
+}
+
+const popularInstitutions = memo(() => findPopularInstitutions());
+async function findPopularInstitutions(max = 8) {
   const { data } = await publicNotes('university,sales_count,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
   const byKey = new Map();
   for (const n of data || []) {
@@ -67,6 +80,12 @@ router.get('/', async (req, res) => {
   });
 });
 
+const filterRows = memo(async () => {
+  const { data, error } = await publicNotes('subject,university,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
+  if (error) throw error;
+  return data || [];
+});
+
 router.get('/notes', async (req, res) => {
   const q = cleanSearch(req.query.q);
   const level = LEVELS.includes(req.query.level) ? req.query.level : '';
@@ -80,7 +99,7 @@ router.get('/notes', async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
   // Subjects and added institutions that have notes on sale right now (so picking one never shows an empty page), one per spelling
-  const { data: optionRows } = await publicNotes('subject,university,sellers!inner(verification_status,paystack_subaccount_code)').limit(5000);
+  const optionRows = await filterRows();
   const distinct = (base, column) => {
     const byKey = new Map();
     for (const name of [...base, ...(optionRows || []).map((r) => String(r[column] || '').trim())]) {

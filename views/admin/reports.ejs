@@ -25,6 +25,21 @@
           </div>
         </li>
         <% return; } %>
+        <% if (e.kind === 'qualification.overdue') { var exp = String(d.expected || '').split('-'); var expLabel = exp[1] ? new Date(Date.UTC(Number(exp[0]), Number(exp[1]) - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }) : 'their expected date'; %>
+        <li class="report-item card">
+          <div class="report-head">
+            <span class="pill pill-wait">Studies not updated</span>
+            <time class="small muted" datetime="<%= new Date(e.created_at).toISOString() %>"><%= date(e.created_at) %></time>
+          </div>
+          <h3><a href="/admin/sellers/<%= d.seller_id %>"><%= d.seller || 'A seller' %></a></h3>
+          <p>Expected to finish <strong><%= d.name %></strong> by <%= expLabel %>, but it still says they’re studying more than 3 months later. They were emailed a reminder.</p>
+          <p class="small muted">Check they’re still a student: email them, or withdraw their verification on their seller page if they’ve stopped studying.</p>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/sellers/<%= d.seller_id %>">Open seller</a>
+            <form method="post" action="/admin/reports/<%= e.id %>/resolve"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Mark resolved</button></form>
+          </div>
+        </li>
+        <% return; } %>
         <li class="report-item card<%= takedown ? ' is-urgent' : '' %>">
           <div class="report-head">
             <% if (e.kind === 'note.flagged') { %>
@@ -53,7 +68,7 @@
           <% } %>
           <div class="actions">
             <% if (n) { %><a class="btn btn-ghost btn-sm" href="/admin/notes/<%= n.id %>/file" target="_blank" rel="noopener">Open PDF</a><% } %>
-            <% if (d.previous_file) { %><a class="btn btn-ghost btn-sm" href="/admin/reports/<%= e.id %>/previous-file" target="_blank" rel="noopener">Open previous PDF</a><% } %>
+            <% if (d.previous_file && !d.previous_file_deleted) { %><a class="btn btn-ghost btn-sm" href="/admin/reports/<%= e.id %>/previous-file" target="_blank" rel="noopener">Open previous PDF</a><% } %>
             <% if (d.held_email && n && n.status !== 'removed') { %><form method="post" action="/admin/reports/<%= e.id %>/email-buyers" data-confirm-title="Email the buyers?" data-confirm="Everyone who bought these notes gets a link to download the new version, and this report is marked resolved." data-confirm-yes="Email buyers"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-sm" type="submit">Email buyers</button></form><% } %>
             <% if (n && n.status !== 'removed' && n.status !== 'deleted') { %>
               <form method="post" action="/admin/notes/<%= n.id %>/status" data-confirm-title="Remove “<%= n.title %>”?" data-confirm="It’s taken off EasyNotes and the seller can’t publish it again. People who bought it can still download it." data-confirm-yes="Remove notes"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-sm" name="action" value="remove">Remove notes</button></form>

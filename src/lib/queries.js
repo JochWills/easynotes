@@ -19,4 +19,21 @@ function isPublic(note) {
   return note.status === 'published' && s && s.verification_status === 'approved' && !!s.paystack_subaccount_code;
 }
 
-module.exports = { NOTE_CARD, publicNotes, isPublic };
+// Notes an admin hid (Admin > Notes > Hide) and hasn't allowed back since: the seller can't publish them again.
+// Worked out from the activity log, so it needs no extra column. If the log can't be read, nothing counts as hidden.
+async function hiddenByAdmin(noteIds) {
+  const ids = [...new Set(noteIds.filter(Boolean))];
+  const hidden = new Set();
+  if (!ids.length) return hidden;
+  const { data } = await db.from('events').select('kind,detail').in('kind', ['note.hidden', 'note.restored']).in('detail->>note_id', ids).order('id', { ascending: false });
+  const seen = new Set();
+  for (const e of data || []) {
+    const id = e.detail?.note_id;
+    if (seen.has(id)) continue; // only the latest decision counts
+    seen.add(id);
+    if (e.kind === 'note.hidden') hidden.add(id);
+  }
+  return hidden;
+}
+
+module.exports = { NOTE_CARD, publicNotes, isPublic, hiddenByAdmin };

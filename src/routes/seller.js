@@ -13,6 +13,7 @@ const profanity = require('../lib/profanity');
 const { scanPdf } = require('../lib/scan');
 const emails = require('../lib/emails');
 const buyerUpdates = require('../lib/buyer-updates');
+const jobs = require('../lib/jobs');
 
 // After an upload: record the seller's declaration and flag anything that looks like someone else's
 // material for an admin to check (Admin > Reports). Never blocks the upload.
@@ -31,6 +32,7 @@ const { isReservedSlug } = require('../lib/constants');
 const { NOTE_INSTITUTIONS, LEVELS, DEGREE_UNIVERSITIES, OTHER_UNIVERSITY, SUBJECTS, QUAL_LEVELS, STUDY_YEARS, HONOURS } = require('../lib/constants');
 const education = require('../lib/education');
 const { previousFor } = require('../lib/reviews');
+const { hiddenByAdmin } = require('../lib/queries');
 
 const router = express.Router();
 router.use(requireSeller);
@@ -119,7 +121,8 @@ router.get('/notes', async (req, res) => {
     .eq('seller_id', req.seller.id)
     .neq('status', 'deleted')
     .order('created_at', { ascending: false });
-  res.render('seller/notes', { title: 'Your notes', tab: 'notes', notesList: true, notes: notes || [] });
+  const hidden = await hiddenByAdmin((notes || []).filter((n) => n.status === 'unpublished').map((n) => n.id));
+  res.render('seller/notes', { title: 'Your notes', tab: 'notes', notesList: true, notes: (notes || []).map((n) => ({ ...n, adminHidden: hidden.has(n.id) })) });
 });
 
 /* ---------- Storefront profile ---------- */
@@ -691,6 +694,10 @@ router.post('/notes/:id/status', ownNote, async (req, res) => {
   }
   const status = req.body.action === 'publish' ? 'published' : 'unpublished';
   if (status === 'published' && req.seller.verification_status !== 'approved') return requireApproved(req, res);
+  if (status === 'published' && (await hiddenByAdmin([n.id])).has(n.id)) {
+    flash(req, 'error', `EasyNotes hid “${n.title}”, so it can’t be published again yet. Email ${config.supportEmail} if you think this is a mistake.`);
+    return res.redirect('/seller/notes');
+  }
   await db.from('notes').update({ status }).eq('id', n.id);
   flash(req, 'ok', status === 'published' ? `“${n.title}” is published.` : `“${n.title}” is hidden from students. Past buyers can still download it.`);
   res.redirect('/seller/notes');
@@ -720,6 +727,23 @@ router.get('/notes/:id/delete', ownNote, async (req, res) => {
 // seller and students, but the PDF stays so past buyers can still download what they paid for.
 router.post('/notes/:id/delete', ownNote, async (req, res) => {
   const n = req.note;
+  // Someone started paying in the last few days and nobody has bought it yet: a slow payment may still come through, so
+  // the notes are only marked deleted (and their orders and PDF kept) so that buyer can download. jobs.js erases them later.
+  const since = new Date(Date.now() - jobs.LATE_PAYMENT_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const [{ count: paid }, { count: paying }] = await Promise.all([
+    db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', n.id).eq('status', 'paid'),
+    db.from('orders').select('id', { count: 'exact', head: true }).eq('note_id', n.id).neq('status', 'paid').gt('created_at', since),
+  ]);
+  if (paid === 0 && paying) {
+    const { data: kept, error } = await db.from('notes').update({ status: 'deleted' }).eq('id', n.id).eq('seller_id', req.seller.id).neq('status', 'deleted').select('id');
+    if (error) throw error;
+    if (kept && kept.length) {
+      await preview.removePreview(n.file_path, n.page_count);
+      events.log('note.deleted', { note_id: n.id, title: n.title, sold: false, kept_for_payment: true }, req.user.email);
+      flash(req, 'ok', `“${n.title}” is deleted.`);
+    }
+    return res.redirect('/seller/notes');
+  }
   const { data: gone, busy } = await deleteInDb('delete_note', { p_note_id: n.id, p_seller_id: req.seller.id });
   if (busy) {
     flash(req, 'error', `Someone is paying for “${n.title}” right now. Hide it instead, or try deleting again in a couple of hours.`);

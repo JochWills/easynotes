@@ -4,6 +4,9 @@
   <% if (n.status === 'published') { %>
     <form method="post" action="/admin/notes/<%= n.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" name="action" value="unpublish">Hide</button></form>
   <% } %>
+  <% if (n.adminHidden) { %>
+    <form method="post" action="/admin/notes/<%= n.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" name="action" value="restore" title="Hidden by an admin: the seller can’t publish it until you allow it">Allow publishing</button></form>
+  <% } %>
   <% if (n.status === 'deleted') { %>
     <span class="small muted">Deleted by the seller</span>
   <% } else if (n.status !== 'removed') { %>

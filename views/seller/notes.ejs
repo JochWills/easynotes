@@ -16,7 +16,7 @@
           <% notes.forEach(function (n) { %>
             <tr>
               <td><a href="<%= noteUrl(n) %>"><%= n.title %></a><% if (n.module_code) { %> <span class="muted small"><%= n.module_code %></span><% } %><% if (n.subject) { %><br><span class="muted small"><%= n.subject %></span><% } %></td>
-              <td><%- include('../partials/status-pill', { status: n.status }) %></td>
+              <td><% if (n.adminHidden) { %><span class="pill pill-bad">Hidden by EasyNotes</span><% } else { %><%- include('../partials/status-pill', { status: n.status }) %><% } %></td>
               <td class="nowrap"><%= date(n.created_at) %></td>
               <td class="num"><%= rand(n.price_cents) %></td>
               <td class="num"><%= n.sales_count %></td>
@@ -41,7 +41,7 @@
                           <input type="hidden" name="_csrf" value="<%= csrf %>">
                           <% if (n.status === 'published') { %>
                             <input type="hidden" name="action" value="unpublish"><button role="menuitem" type="submit">Hide from students</button>
-                          <% } else if (verified) { %>
+                          <% } else if (verified && !n.adminHidden) { %>
                             <input type="hidden" name="action" value="publish"><button role="menuitem" type="submit">Publish</button>
                           <% } %>
                         </form>
