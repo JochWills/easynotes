@@ -1728,7 +1728,7 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
 .bar { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
 
 /* Visitors: a column for each day's unique visitors, with a tooltip on hover or focus */
-.vchart { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 180px auto; column-gap: 10px; row-gap: 6px; padding: 18px 18px 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); }
+.vchart { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 170px auto; column-gap: 10px; row-gap: 6px; }
 .vchart-axis { display: flex; flex-direction: column; justify-content: space-between; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .vchart-plot { display: flex; align-items: flex-end; gap: 2px; height: 100%; border-bottom: 1px solid var(--rule); background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat; }
 .vchart-col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; outline: none; }
@@ -1741,11 +1741,30 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
 .vchart-col:first-child .vchart-tip { left: 0; transform: translateY(-100%); }
 .vchart-col:last-child .vchart-tip { left: auto; right: 0; transform: translateY(-100%); }
 .vchart-days { grid-column: 2; display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
-.vchart-table { margin-top: 10px; }
-.vchart-table summary { cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--blue); }
-.vchart-table .table-wrap { margin-top: 10px; max-height: 360px; overflow-y: auto; }
-.visitors-lists { gap: 32px; }
-.visitors-lists .admin-block { margin-top: 36px; min-width: 0; }
+.vis-card { margin-top: 16px; padding: 20px 22px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); min-width: 0; }
+.kpis + .vis-card { margin-top: 20px; }
+.vis-h { margin: 0 0 16px; font-size: 1.05rem; }
+.vis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.vis-grid .vis-card { margin-top: 0; }
+.vis-rows, .vis-list { list-style: none; margin: 0; padding: 0; }
+.vis-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 12px; padding: 7px 0; }
+.vis-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; }
+.vis-num { font-weight: 700; font-variant-numeric: tabular-nums; }
+.vis-num small, .vis-list-num small { font-weight: 500; color: var(--muted); font-size: .82rem; }
+.vis-track { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--blue-soft); overflow: hidden; }
+.vis-track span { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+.vis-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); }
+.vis-list li:first-child { border-top: 0; padding-top: 0; }
+.vis-list-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vis-list-name a { color: var(--ink); text-decoration: none; }
+.vis-list-name a:hover { color: var(--blue); }
+.vis-list-num { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vis-foot { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); }
+.vis-empty { margin: 0; color: var(--muted); font-size: .95rem; }
+.vis-help { margin-top: 24px; font-size: .9rem; color: var(--ink-soft); }
+.vis-help summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.vis-help ul { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+@media (max-width: 760px) { .vis-grid { grid-template-columns: 1fr; } .vis-card { padding: 16px; } }
 
 @media (max-width: 1000px) {
   .admin { grid-template-columns: 1fr; gap: 0; padding-top: 18px; }
