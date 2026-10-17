@@ -1,21 +1,24 @@
-<%- include('../partials/admin-top', { sub: 'Who visits, where they come from, and how many buy. Anonymous, no cookies.' }) %>
+<%- include('../partials/admin-top', { sub: 'Who visits EasyNotes, where they come from, and how many go on to buy. Anonymous: no cookies, and a visitor’s code changes every day.' }) %>
 
-<div class="filter-bar">
-  <nav class="chips" aria-label="Time period">
-    <% periods.forEach(function (p) { %><a class="chip" href="/admin/visitors?period=<%= p[0] %>" <%- p[0] === period ? 'aria-current="page"' : '' %>><%= p[1] %></a><% }) %>
-  </nav>
+<div class="period-row">
+  <h2 class="period-title"><%= periodLabel %></h2>
+  <form class="sort-by period-form" method="get" action="/admin/visitors" data-autosubmit>
+    <label for="period" class="sr-only">Time period</label>
+    <select id="period" name="period">
+      <% periods.forEach(function (p) { %><option value="<%= p[0] %>" <%= p[0] === period ? 'selected' : '' %>><%= p[1] %></option><% }) %>
+    </select>
+  </form>
 </div>
 
 <% if (!stats) { %>
   <div class="alert alert-info">
     <strong>Visitor stats aren’t set up in the database yet.</strong>
-    <p>Run <code>supabase/schema.sql</code> in Supabase → SQL Editor. Visits are counted from then on.</p>
+    <p>Run <code>supabase/schema.sql</code> in Supabase → SQL Editor (it adds the <code>site_visits</code> table). Visits are counted from then on.</p>
   </div>
 <% } else { %>
   <%
     var f = stats.funnel || {};
-    var pct = function (n, of) { return of ? Math.round(n / of * 100) + '%' : '0%'; };
-    var num = function (n) { return Number(n || 0).toLocaleString('en-ZA'); };
+    var pct = function (n, of) { return of ? Math.round(n / of * 1000) / 10 + '%' : '–'; };
     var daily = stats.daily || [];
     var totalVisitors = daily.reduce(function (t, d) { return t + d.visitors; }, 0);
     var peak = Math.max(1, ...daily.map(function (d) { return d.visitors; }));
@@ -23,97 +26,111 @@
     var shortDay = function (d) { return new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
     var dev = stats.devices || {};
     var devTotal = Object.keys(dev).reduce(function (t, k) { return t + dev[k]; }, 0);
-    var sources = stats.sources || [];
-    var srcTop = Math.max(1, ...sources.map(function (s) { return s.visitors; }));
   %>
-
   <div class="kpis">
-    <div class="kpi"><span>Visitors</span><b><%= num(totalVisitors) %></b></div>
-    <div class="kpi"><span>Page views</span><b><%= num(stats.views) %></b></div>
-    <div class="kpi"><span>Added to cart</span><b><%= num(f.cart) %></b><small><%= pct(f.cart, f.visitors) %> of visitors</small></div>
-    <div class="kpi"><span>Paid</span><b><%= num(f.paid) %></b><small><%= pct(f.paid, f.visitors) %> of visitors</small></div>
+    <div class="kpi"><span>Visitors</span><b><%= totalVisitors.toLocaleString('en-ZA') %></b><small><%= daily.length > 1 ? 'Daily unique visitors, added up' : 'Unique visitors' %></small></div>
+    <div class="kpi"><span>Page views</span><b><%= Number(stats.views || 0).toLocaleString('en-ZA') %></b><small><%= totalVisitors ? (Math.round(stats.views / totalVisitors * 10) / 10) + ' per visitor' : '–' %></small></div>
+    <div class="kpi"><span>Added to cart</span><b><%= f.cart || 0 %></b><small><%= pct(f.cart || 0, f.visitors) %> of visitors</small></div>
+    <div class="kpi"><span>Paid</span><b><%= f.paid || 0 %></b><small><%= pct(f.paid || 0, f.visitors) %> of visitors</small></div>
   </div>
 
   <% if (daily.length > 1) { %>
-  <section class="vis-card" aria-labelledby="daily-h">
-    <h2 class="vis-h" id="daily-h">Visitors per day</h2>
-    <div class="vchart" role="img" aria-label="Unique visitors per day, from <%= dayLabel(daily[0].day) %> to <%= dayLabel(daily[daily.length - 1].day) %>. Busiest day: <%= peak %>.">
+  <section class="admin-block" aria-labelledby="daily-h">
+    <h2 class="admin-h2" id="daily-h">Unique visitors per day</h2>
+    <div class="vchart" role="img" aria-label="Unique visitors per day, from <%= dayLabel(daily[0].day) %> to <%= dayLabel(daily[daily.length - 1].day) %>. Busiest day: <%= peak %> visitors.">
       <div class="vchart-axis" aria-hidden="true"><span><%= peak %></span><span>0</span></div>
-      <div class="vchart-plot">
+      <div class="vchart-plot<%= daily.length > 40 ? ' is-dense' : '' %>">
         <% daily.forEach(function (d) { %>
           <div class="vchart-col" tabindex="0">
-            <span class="vchart-bar" style="height:<%= d.visitors ? Math.max(2, Math.round(d.visitors / peak * 100)) : 0 %>%"></span>
-            <span class="vchart-tip" role="tooltip"><strong><%= dayLabel(d.day) %></strong><%= d.visitors %> <%= d.visitors === 1 ? 'visitor' : 'visitors' %> · <%= d.views %> <%= d.views === 1 ? 'view' : 'views' %></span>
+            <span class="vchart-bar<%= d.visitors ? '' : ' is-zero' %>" style="height:<%= d.visitors ? Math.max(2, Math.round(d.visitors / peak * 100)) : 0 %>%"></span>
+            <span class="vchart-tip" role="tooltip"><strong><%= dayLabel(d.day) %></strong><%= d.visitors %> <%= d.visitors === 1 ? 'visitor' : 'visitors' %> · <%= d.views %> <%= d.views === 1 ? 'page view' : 'page views' %></span>
           </div>
         <% }) %>
       </div>
-      <div class="vchart-days" aria-hidden="true"><span><%= shortDay(daily[0].day) %></span><span><%= shortDay(daily[daily.length - 1].day) %></span></div>
+      <div class="vchart-days" aria-hidden="true"><span><%= shortDay(daily[0].day) %></span><span><%= shortDay(daily[Math.floor((daily.length - 1) / 2)].day) %></span><span><%= shortDay(daily[daily.length - 1].day) %></span></div>
     </div>
+    <details class="vchart-table">
+      <summary>Show as a table</summary>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Day</th><th class="num">Visitors</th><th class="num">Page views</th></tr></thead>
+          <tbody><% daily.slice().reverse().forEach(function (d) { %><tr><td><%= dayLabel(d.day) %></td><td class="num"><%= d.visitors %></td><td class="num"><%= d.views %></td></tr><% }) %></tbody>
+        </table>
+      </div>
+    </details>
   </section>
   <% } %>
 
-  <div class="vis-grid">
-    <section class="vis-card" aria-labelledby="funnel-h">
-      <h2 class="vis-h" id="funnel-h">From visit to sale</h2>
-      <ol class="vis-rows">
-        <% [['Visited', f.visitors], ['Looked at notes', f.notes], ['Added to cart', f.cart], ['Started paying', f.checkout], ['Paid', f.paid]].forEach(function (s, i) { %>
-          <li class="vis-row">
-            <span class="vis-label"><%= s[0] %></span>
-            <span class="vis-num"><%= num(s[1]) %><% if (i) { %> <small><%= pct(s[1], f.visitors) %></small><% } %></span>
-            <span class="vis-track" aria-hidden="true"><span style="width:<%= f.visitors ? Math.round((s[1] || 0) / f.visitors * 100) : 0 %>%"></span></span>
-          </li>
-        <% }) %>
-      </ol>
-    </section>
-
-    <section class="vis-card" aria-labelledby="sources-h">
-      <h2 class="vis-h" id="sources-h">Where they come from</h2>
-      <% if (sources.length) { %>
-        <ol class="vis-rows">
-          <% sources.forEach(function (s) { %>
-            <li class="vis-row">
-              <span class="vis-label" <%- sourceHints[s.source] ? 'title="' + sourceHints[s.source] + '"' : '' %>><%= s.source %></span>
-              <span class="vis-num"><%= num(s.visitors) %><% if (s.paid) { %> <small><%= s.paid %> paid</small><% } %></span>
-              <span class="vis-track" aria-hidden="true"><span style="width:<%= Math.round(s.visitors / srcTop * 100) %>%"></span></span>
-            </li>
+  <section class="admin-block" aria-labelledby="funnel-h">
+    <h2 class="admin-h2" id="funnel-h">From visit to sale</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Step</th><th>Visitors</th><th class="num">Of all visitors</th><th class="num">Of the step before</th></tr></thead>
+        <tbody>
+          <% var steps = [['Visited the site', f.visitors || 0], ['Looked at a set of notes', f.notes || 0], ['Added to cart', f.cart || 0], ['Started paying', f.checkout || 0], ['Paid', f.paid || 0]];
+             var top = Math.max(1, steps[0][1]);
+             steps.forEach(function (s, i) { %>
+            <tr>
+              <td><%= s[0] %></td>
+              <td><span class="bar-cell"><span class="bar-num"><%= s[1] %></span><span class="bar-track" aria-hidden="true"><span class="bar" style="width:<%= Math.round(s[1] / top * 100) %>%"></span></span></span></td>
+              <td class="num"><%= i ? pct(s[1], steps[0][1]) : '' %></td>
+              <td class="num"><%= i ? pct(s[1], steps[i - 1][1]) : '' %></td>
+            </tr>
           <% }) %>
-        </ol>
-        <% if (devTotal) { %><p class="vis-foot"><%= ['phone', 'computer', 'tablet'].filter(function (k) { return dev[k]; }).map(function (k) { return pct(dev[k], devTotal) + ' on ' + (k === 'phone' ? 'phones' : k === 'computer' ? 'computers' : 'tablets'); }).join(' · ') %></p><% } %>
-      <% } else { %><p class="vis-empty">No visits yet.</p><% } %>
-    </section>
+        </tbody>
+      </table>
+    </div>
+    <p class="fineprint">Counted per visitor per day. “Started paying” means they opened the Paystack payment. People can buy straight from a note page without using the cart, so “Started paying” can be higher than “Added to cart”.</p>
+  </section>
 
-    <section class="vis-card" aria-labelledby="notes-h">
-      <h2 class="vis-h" id="notes-h">Most viewed notes</h2>
+  <section class="admin-block" aria-labelledby="sources-h">
+    <h2 class="admin-h2" id="sources-h">Where visitors come from</h2>
+    <% var sources = stats.sources || []; var srcTop = Math.max(1, ...sources.map(function (s) { return s.visitors; })); %>
+    <% if (sources.length) { %>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Source</th><th>Visitors</th><th class="num">Paid</th></tr></thead>
+          <tbody>
+            <% sources.forEach(function (s) { %>
+              <tr>
+                <td><%= s.source %><% if (sourceHints[s.source]) { %><br><span class="small muted"><%= sourceHints[s.source] %></span><% } %></td>
+                <td><span class="bar-cell"><span class="bar-num"><%= s.visitors %></span><span class="bar-track" aria-hidden="true"><span class="bar" style="width:<%= Math.round(s.visitors / srcTop * 100) %>%"></span></span></span></td>
+                <td class="num"><%= s.paid %><% if (s.paid) { %> <span class="small muted">(<%= pct(s.paid, s.visitors) %>)</span><% } %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p class="fineprint">Want to know which post or group a visit came from? Add <code>?utm_source=</code> to links you share, e.g. <code><%= baseUrl %>/?utm_source=whatsapp-ucc-group</code>.</p>
+    <% } else { %><p class="admin-none">No visits yet in this period.</p><% } %>
+    <% if (devTotal) { %><p class="small muted">Devices: <%= ['phone', 'computer', 'tablet'].filter(function (k) { return dev[k]; }).map(function (k) { return pct(dev[k], devTotal) + ' ' + (k === 'phone' ? 'phones' : k === 'computer' ? 'computers' : 'tablets'); }).join(' · ') %></p><% } %>
+  </section>
+
+  <div class="two-col visitors-lists">
+    <section class="admin-block" aria-labelledby="notes-h">
+      <h2 class="admin-h2" id="notes-h">Most viewed notes</h2>
       <% if ((stats.notes || []).length) { %>
-        <ol class="vis-list">
-          <% stats.notes.forEach(function (n) { %>
-            <li><span class="vis-list-name"><% if (n.title) { %><a href="<%= noteUrl(n) %>"><%= n.title %></a><% } else { %><span class="muted">Deleted notes</span><% } %></span><span class="vis-list-num"><%= num(n.views) %> <small><%= n.views === 1 ? 'view' : 'views' %><%= n.carts ? ' · ' + n.carts + ' in cart' : '' %></small></span></li>
-          <% }) %>
-        </ol>
-      <% } else { %><p class="vis-empty">No note views yet.</p><% } %>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Notes</th><th class="num">Views</th><th class="num">Carts</th></tr></thead>
+            <tbody><% stats.notes.forEach(function (n) { %><tr><td><% if (n.title) { %><a href="<%= noteUrl(n) %>"><%= n.title %></a><% } else { %><span class="muted">Deleted notes</span><% } %></td><td class="num"><%= n.views %></td><td class="num"><%= n.carts %></td></tr><% }) %></tbody>
+          </table>
+        </div>
+      <% } else { %><p class="admin-none">No note views yet in this period.</p><% } %>
     </section>
-
-    <section class="vis-card" aria-labelledby="pages-h">
-      <h2 class="vis-h" id="pages-h">Top pages</h2>
+    <section class="admin-block" aria-labelledby="pages-h">
+      <h2 class="admin-h2" id="pages-h">Other top pages</h2>
       <% if ((stats.pages || []).length) { %>
-        <ol class="vis-list">
-          <% stats.pages.forEach(function (p) { %>
-            <li><span class="vis-list-name"><a href="<%= p.path %>"><%= p.path === '/' ? 'Home' : p.path %></a></span><span class="vis-list-num"><%= num(p.views) %> <small><%= p.views === 1 ? 'view' : 'views' %></small></span></li>
-          <% }) %>
-        </ol>
-      <% } else { %><p class="vis-empty">No page views yet.</p><% } %>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Page</th><th class="num">Views</th><th class="num">Visitors</th></tr></thead>
+            <tbody><% stats.pages.forEach(function (p) { %><tr><td><a href="<%= p.path %>"><%= p.path === '/' ? 'Home' : p.path %></a></td><td class="num"><%= p.views %></td><td class="num"><%= p.visitors %></td></tr><% }) %></tbody>
+          </table>
+        </div>
+      <% } else { %><p class="admin-none">No page views yet in this period.</p><% } %>
     </section>
   </div>
-
-  <details class="vis-help">
-    <summary>How this is counted</summary>
-    <ul>
-      <li>Each visitor is an anonymous code that changes daily, so visitors are counted per day. Logged-in sellers and admins, and search engine robots, aren’t counted.</li>
-      <li><strong>Direct</strong> means typed in, bookmarks, or apps that hide where a link came from (WhatsApp usually does).</li>
-      <li>To see which post or group sent people, add <code>?utm_source=</code> to links you share, e.g. <code><%= locals.baseUrl || "https://easynotes.co.za" %>/?utm_source=ucc-whatsapp-group</code>.</li>
-      <li><strong>Started paying</strong> means they opened the Paystack payment. People can buy straight from a note page, so it can be higher than “Added to cart”.</li>
-    </ul>
-  </details>
+  <p class="fineprint">Sellers and admins who are logged in aren’t counted, and neither are search engine robots.</p>
 <% } %>
 
 <%- include('../partials/admin-bottom') %>
