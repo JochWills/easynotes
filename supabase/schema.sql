@@ -348,3 +348,56 @@ create or replace function credit_download(p_note_id uuid) returns void
 language sql as $$ update orders set download_count = greatest(download_count - 1, 0) where note_id = p_note_id and status = 'paid'; $$;
 revoke execute on function credit_download(uuid) from public, anon, authenticated;
 grant execute on function credit_download(uuid) to service_role;
+
+-- Visitor stats (Admin > Visitors, src/lib/visits.js). Anonymous: visitor is a keyed hash of IP + browser that changes
+-- every day, so it counts unique visitors per day without cookies and no IP address is stored.
+create table if not exists site_visits (
+  id bigint generated always as identity primary key,
+  day date not null,                  -- South African date
+  created_at timestamptz not null default now(),
+  visitor text not null,
+  kind text not null check (kind in ('view','cart_add','checkout','paid')),
+  path text,
+  note_id uuid,
+  source text,                        -- where a page view came from (Google, Instagram...); null: from this site or direct
+  device text
+);
+create index if not exists site_visits_day_idx on site_visits (day);
+alter table site_visits enable row level security;
+
+-- Everything Admin > Visitors shows for the days p_from to p_to, worked out in the database so it stays quick.
+-- Funnel and sources count visitor-days (one person on one day), since a visitor's id changes daily.
+create or replace function visitor_stats(p_from date, p_to date)
+returns jsonb language sql stable as $$
+with v as (
+  select * from site_visits where day between p_from and p_to
+), vd as (
+  select day, visitor,
+    bool_or(kind = 'view' and note_id is not null) as saw_note,
+    bool_or(kind = 'cart_add') as added,
+    bool_or(kind = 'checkout') as checked_out,
+    bool_or(kind = 'paid') as paid,
+    coalesce((array_agg(source order by created_at) filter (where kind = 'view'))[1], 'Direct') as source,
+    (array_agg(device order by created_at))[1] as device
+  from v group by day, visitor
+)
+select jsonb_build_object(
+  'daily', (select coalesce(jsonb_agg(jsonb_build_object('day', d.day, 'visitors', coalesce(x.visitors, 0), 'views', coalesce(x.views, 0)) order by d.day), '[]'::jsonb)
+            from (select g::date as day from generate_series(p_from::timestamp, p_to::timestamp, interval '1 day') g) d
+            left join (select day, count(distinct visitor) as visitors, count(*) filter (where kind = 'view') as views from v group by day) x on x.day = d.day),
+  'views', (select count(*) from v where kind = 'view'),
+  'funnel', (select jsonb_build_object('visitors', count(*), 'notes', count(*) filter (where saw_note), 'cart', count(*) filter (where added),
+                                       'checkout', count(*) filter (where checked_out), 'paid', count(*) filter (where paid)) from vd),
+  'sources', (select coalesce(jsonb_agg(jsonb_build_object('source', source, 'visitors', visitors, 'paid', paid) order by visitors desc, source), '[]'::jsonb)
+              from (select source, count(*) as visitors, count(*) filter (where paid) as paid from vd group by source order by count(*) desc limit 15) s),
+  'devices', (select coalesce(jsonb_object_agg(coalesce(device, 'unknown'), n), '{}'::jsonb) from (select device, count(*) as n from vd group by device) dv),
+  'pages', (select coalesce(jsonb_agg(jsonb_build_object('path', path, 'views', views, 'visitors', visitors) order by views desc, path), '[]'::jsonb)
+            from (select path, count(*) as views, count(distinct (day, visitor)) as visitors from v where kind = 'view' and note_id is null group by path order by count(*) desc limit 10) p),
+  'notes', (select coalesce(jsonb_agg(jsonb_build_object('id', t.note_id, 'title', n.title, 'slug', n.slug, 'views', t.views, 'carts', t.carts) order by t.views desc), '[]'::jsonb)
+            from (select note_id, count(*) filter (where kind = 'view') as views, count(distinct (day, visitor)) filter (where kind = 'cart_add') as carts
+                  from v where note_id is not null group by note_id order by count(*) filter (where kind = 'view') desc limit 10) t
+            left join notes n on n.id = t.note_id)
+)
+$$;
+revoke execute on function visitor_stats(date, date) from public, anon, authenticated;
+grant execute on function visitor_stats(date, date) to service_role;

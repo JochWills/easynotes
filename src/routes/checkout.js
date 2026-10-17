@@ -12,6 +12,7 @@ const { isUuid, feeFor, fileName, noteUrl, str } = require('../lib/helpers');
 const flash = require('../lib/flash');
 const profanity = require('../lib/profanity');
 const { limit } = require('../lib/limits');
+const visits = require('../lib/visits');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -85,6 +86,7 @@ async function startCheckout(req, res, notes, back) {
     await db.from('orders').update({ status: 'failed' }).eq('payment_ref', lastRef).eq('status', 'pending');
   }
   req.session.checkoutRef = paymentRef;
+  visits.record(req, 'checkout');
 
   const total = rows.reduce((s, r) => s + r.amount_cents, 0);
   const sellers = {};
@@ -172,6 +174,7 @@ router.post('/cart/add/:noteId', async (req, res, next) => {
   const { data } = await publicNotes('id,title,seller_id,sellers!inner(verification_status,paystack_subaccount_code)').eq('id', req.params.noteId).maybeSingle();
   if (!data) return next();
   const result = req.seller && req.seller.id === data.seller_id ? 'own' : cart.add(req, data.id);
+  if (result === 'added') visits.record(req, 'cart_add', data.id);
   // The add-to-cart buttons on note cards ask for JSON so the page doesn't reload.
   if (req.get('accept') === 'application/json') {
     return res.json({ result, count: cart.ids(req).length, max: cart.MAX_ITEMS });
@@ -230,6 +233,11 @@ router.get('/checkout/callback', callbackLimiter, async (req, res) => {
     // Bought: empty the cart of anything just paid for.
     const bought = new Set(orders.map((o) => o.note_id));
     req.session.cart = cart.ids(req).filter((id) => !bought.has(id));
+    // Counted once per payment, not on every refresh of this page
+    if (req.session.countedPaid !== paymentRef) {
+      req.session.countedPaid = paymentRef;
+      visits.record(req, 'paid');
+    }
   }
   res.set('Cache-Control', 'no-store');
   res.render('checkout-complete', {

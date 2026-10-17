@@ -1727,6 +1727,26 @@ body:has(.admin) .toast { top: auto; bottom: 20px; }
 .bar-track { flex: 1; height: 8px; border-radius: 999px; background: var(--blue-soft); overflow: hidden; }
 .bar { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
 
+/* Visitors: a column for each day's unique visitors, with a tooltip on hover or focus */
+.vchart { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 180px auto; column-gap: 10px; row-gap: 6px; padding: 18px 18px 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); }
+.vchart-axis { display: flex; flex-direction: column; justify-content: space-between; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.vchart-plot { display: flex; align-items: flex-end; gap: 2px; height: 100%; border-bottom: 1px solid var(--rule); background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat; }
+.vchart-col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; outline: none; }
+.vchart-bar { display: block; width: 100%; max-width: 28px; margin: 0 auto; background: var(--blue); border-radius: 4px 4px 0 0; }
+.vchart-col:hover .vchart-bar, .vchart-col:focus-visible .vchart-bar { background: var(--blue-deep); }
+.vchart-col:focus-visible { box-shadow: inset 0 0 0 2px var(--blue); border-radius: 4px; }
+.vchart-tip { position: absolute; top: -8px; left: 50%; transform: translate(-50%, -100%); z-index: 5; display: none; width: max-content; max-width: 220px; padding: 7px 10px; border-radius: 8px; background: var(--ink); color: #fff; font-size: .8rem; line-height: 1.35; box-shadow: var(--shadow); pointer-events: none; }
+.vchart-tip strong { display: block; }
+.vchart-col:hover .vchart-tip, .vchart-col:focus-visible .vchart-tip { display: block; }
+.vchart-col:first-child .vchart-tip { left: 0; transform: translateY(-100%); }
+.vchart-col:last-child .vchart-tip { left: auto; right: 0; transform: translateY(-100%); }
+.vchart-days { grid-column: 2; display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+.vchart-table { margin-top: 10px; }
+.vchart-table summary { cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--blue); }
+.vchart-table .table-wrap { margin-top: 10px; max-height: 360px; overflow-y: auto; }
+.visitors-lists { gap: 32px; }
+.visitors-lists .admin-block { margin-top: 36px; min-width: 0; }
+
 @media (max-width: 1000px) {
   .admin { grid-template-columns: 1fr; gap: 0; padding-top: 18px; }
   .admin-side { position: static; margin-bottom: 22px; }

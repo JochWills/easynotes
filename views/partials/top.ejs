@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="/css/style.css?v=117">
   <noscript><link rel="stylesheet" href="/css/noscript.css"></noscript>
 </head>
-<body>
+<body<%- locals.trackVisit ? ' data-track' : '' %>>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="wrap">

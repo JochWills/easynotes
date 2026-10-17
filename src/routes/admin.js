@@ -15,6 +15,7 @@ const notify = require('../lib/notify');
 const { publicNotes, hiddenByAdmin } = require('../lib/queries');
 const paystack = require('../lib/paystack');
 const buyerUpdates = require('../lib/buyer-updates');
+const visits = require('../lib/visits');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -570,6 +571,29 @@ router.get('/money', async (req, res) => {
     sellers: Object.values(bySeller).sort((a, b) => b.gross - a.gross),
     best: Math.max(1, ...months.map((m) => m.gross)),
     feeBearerText: config.feeBearer === 'account' ? 'paid by EasyNotes out of its share' : 'deducted from the seller’s share',
+  });
+});
+
+/* ---------- Visitors ---------- */
+
+// Visitor stats (src/lib/visits.js), worked out by visitor_stats() in the database.
+const VISITOR_PERIODS = [['today', 'Today', 0], ['7d', 'Last 7 days', 6], ['30d', 'Last 30 days', 29], ['90d', 'Last 90 days', 89]];
+const SOURCE_HINTS = { Direct: 'Typed in, bookmarks, or apps that hide where links come from (often WhatsApp)' };
+
+router.get('/visitors', async (req, res) => {
+  const period = VISITOR_PERIODS.find((p) => p[0] === req.query.period) || VISITOR_PERIODS[2];
+  const to = visits.saDay();
+  const from = new Date(Date.parse(to + 'T00:00:00Z') - period[2] * 864e5).toISOString().slice(0, 10);
+  const { data: stats, error } = await db.rpc('visitor_stats', { p_from: from, p_to: to });
+  if (error) console.error('[admin] visitor stats', error.message);
+  res.render('admin/visitors', {
+    title: 'Visitors',
+    tab: 'visitors',
+    periods: VISITOR_PERIODS,
+    period: period[0],
+    periodLabel: period[1],
+    stats: error ? null : stats,
+    sourceHints: SOURCE_HINTS,
   });
 });
 

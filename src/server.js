@@ -119,8 +119,17 @@ app.use((req, res, next) => {
 const NO_STATS = /^\/(seller|admin|library|download|reset|confirm-email|forgot|login|signup)(\/|$)/;
 app.use((req, res, next) => {
   res.locals.statsId = config.umamiWebsiteId && !req.user && !NO_STATS.test(req.path) ? config.umamiWebsiteId : null;
+  res.locals.trackVisit = !req.user && !NO_STATS.test(req.path); // our own visitor stats (Admin > Visitors)
   res.locals.statsDomain = new URL(config.baseUrl).hostname;
   next();
+});
+
+// Page views for Admin > Visitors, sent by each page once it's shown. No form token (it isn't a form, and it changes
+// nothing anyone owns); rate limited so it can't be used to pad the numbers much.
+const visits = require('./lib/visits');
+app.post('/v', require('./lib/limits').limit(1, 300), (req, res) => {
+  visits.pageView(req);
+  res.sendStatus(204);
 });
 
 // Every POST must carry the CSRF token. The upload routes below verify it themselves after multer parses
@@ -140,12 +149,13 @@ app.use('/seller', require('./routes/seller'));
 app.use('/admin', require('./routes/admin'));
 app.use(require('./routes/storefront'));
 
-app.use((req, res) => res.status(404).render('404', { title: 'Page not found' }));
+app.use((req, res) => res.status(404).render('404', { title: 'Page not found', trackVisit: false }));
 
 app.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) return next(err);
   res.status(500).render('error', {
+    trackVisit: false,
     title: 'Something went wrong',
     message: `The page didn't load because of an error on our side. Try again in a minute, or email ${config.supportEmail} if it keeps happening.`,
   });

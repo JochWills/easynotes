@@ -17,6 +17,17 @@
     if (f.hasAttribute('data-download') || f.hasAttribute('data-cart-add') || f.hasAttribute('data-cart-remove')) return;
     setTimeout(function () { if (!e.defaultPrevented) startBar(); }, 0);
   });
+  // Anonymous visitor stats (Admin > Visitors). A page loaded ahead on hover only counts once it's actually opened.
+  if (document.body.hasAttribute('data-track') && navigator.sendBeacon) {
+    var countVisit = function () {
+      var utm = (location.search.match(/[?&]utm_source=([^&]*)/) || [])[1] || '';
+      try { utm = decodeURIComponent(utm.replace(/\+/g, ' ')); } catch (err) { utm = ''; }
+      navigator.sendBeacon('/v', new URLSearchParams({ p: location.pathname, r: document.referrer || '', s: utm }));
+    };
+    if (document.prerendering) document.addEventListener('prerenderingchange', countVisit, { once: true });
+    else countVisit();
+  }
+
   // Coming back with the Back button: don't leave the bar running.
   window.addEventListener('pageshow', function () { bar.classList.remove('is-loading'); });
 

@@ -11,6 +11,7 @@
      notes: svg('M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6'),
      orders: svg('M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3'),
      money: svg('M3 17l6-6 4 4 8-8M15 7h6v6'),
+     visitors: svg('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 100-6 3 3 0 000 6z'),
      activity: svg('M3 12h4l3-7 4 14 3-7h4'),
      health: svg('M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z'),
      settings: svg('M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4'),
@@ -18,7 +19,7 @@
    var groups = [
      [null, [['overview', '/admin', 'Home'], ['verifications', '/admin/verifications', 'Review', locals.pendingCount], ['reports', '/admin/reports', 'Reports', locals.reportCount]]],
      ['Manage', [['sellers', '/admin/sellers', 'Sellers'], ['notes', '/admin/notes', 'Notes'], ['orders', '/admin/orders', 'Orders']]],
-     ['Insights', [['money', '/admin/money', 'Money'], ['activity', '/admin/activity', 'Activity']]],
+     ['Insights', [['visitors', '/admin/visitors', 'Visitors'], ['money', '/admin/money', 'Money'], ['activity', '/admin/activity', 'Activity']]],
      ['System', [['health', '/admin/health', 'Health'], ['settings', '/admin/settings', 'Settings']]],
    ];
    var waiting = (locals.pendingCount || 0) + (locals.reportCount || 0);

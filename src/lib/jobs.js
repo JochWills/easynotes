@@ -14,6 +14,7 @@ const WEBHOOK_LOG_KEEP_DAYS = 30; // every Paystack webhook is logged; old entri
 const READ_NOTIFICATIONS_KEEP_DAYS = 180; // sellers see the newest 50 anyway
 const OVERDUE_FLAG_MONTHS = 3; // still "studying" this long after the expected finish: an admin checks
 const LATE_PAYMENT_DAYS = 3; // a payment can still come through this long after checkout started (see routes/seller.js)
+const VISITS_KEEP_DAYS = 400; // visitor stats: a year back, plus a little to compare with
 const REPLACED_KEEP_DAYS = 30; // a PDF replaced after sales is kept this long (and until its report is resolved)
 
 const thisMonth = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -159,8 +160,15 @@ async function pruneReadNotifications() {
   return (data || []).length;
 }
 
+async function pruneVisits() {
+  const before = new Date(Date.now() - VISITS_KEEP_DAYS * DAY).toISOString().slice(0, 10);
+  const { error, count } = await db.from('site_visits').delete({ count: 'exact' }).lt('day', before);
+  if (error) return 0; // the table may not exist yet
+  return count || 0;
+}
+
 async function runAll() {
-  for (const [name, task] of [['study reminders', remindOverdueStudies], ['overdue studies', flagOverdueStudies], ['deleted notes', eraseDeletedNotes], ['replaced PDFs', deleteReplacedPdfs], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog], ['notification clean-up', pruneReadNotifications], ['update emails', buyerUpdates.sendQueued]]) {
+  for (const [name, task] of [['study reminders', remindOverdueStudies], ['overdue studies', flagOverdueStudies], ['deleted notes', eraseDeletedNotes], ['replaced PDFs', deleteReplacedPdfs], ['ID clean-up', deleteOldIdDocs], ['webhook log clean-up', pruneWebhookLog], ['notification clean-up', pruneReadNotifications], ['update emails', buyerUpdates.sendQueued], ['visitor stats clean-up', pruneVisits]]) {
     try {
       const n = await task();
       if (n) console.log(`[jobs] ${name}: ${n}`);
